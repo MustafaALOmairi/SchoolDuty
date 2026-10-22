@@ -1064,6 +1064,8 @@ const Cloud = (() => {
   async function resetPassword(email) { must(await sb.auth.resetPasswordForEmail(email.trim(), { redirectTo: location.href.split('#')[0].split('?')[0] })); }
   async function updatePassword(password) { must(await sb.auth.updateUser({ password })); }
   async function settingsExist() { return !!must(await sb.from('settings').select('id').eq('id', 'main').maybeSingle()); }
+  async function needsSetup() { return !!must(await sb.rpc('needs_setup')); }
+  async function loadPublicSettings() { await loadSettings(); changed(); }
 
   // الإعداد لأول مرة: حساب المدير + إعدادات المدرسة
   async function setup({ name, email, password, settings, drivers }) {
@@ -1081,7 +1083,7 @@ const Cloud = (() => {
       const mine = must(await sb.from('profiles').select('id').eq('id', uid).maybeSingle());
       if (!mine) must(await sb.from('profiles').insert({ id: uid, name, email: mail, role: 'admin' }));
       const st = clean(settings); delete st.setupDone; delete st.pin;
-      must(await sb.from('settings').insert({ id: 'main', data: st }));
+      must(await sb.from('settings').upsert({ id: 'main', data: st }));
       profile = { id: uid, name, email: mail, role: 'admin' };
       await subscribeStaff();
       (drivers || []).forEach(d => S().db.drivers.push(d));
@@ -1104,7 +1106,7 @@ const Cloud = (() => {
   async function removeUser(uid) { must(await sb.from('profiles').delete().eq('id', uid)); await loadUsers(); }
 
   return {
-    configured, get ready() { return !!sb; }, on, save, watchAuth, signIn, signOut, resetPassword, updatePassword, setup, settingsExist,
+    configured, get ready() { return !!sb; }, on, save, watchAuth, signIn, signOut, resetPassword, updatePassword, setup, settingsExist, needsSetup, loadPublicSettings,
     addUser, setRole, removeUser, subscribePublic, errText,
     get signedIn() { return !!currentUser; }, get settingsLoaded() { return settingsLoaded; },
     get profile() { return profile; }, get users() { return users; }, isAdmin: () => !!profile && profile.role === 'admin'
@@ -1691,8 +1693,15 @@ const Cloud = (() => {
   if (!Cloud.ready) show('noConfig');
   else Cloud.watchAuth(async st => {
     if (st.state === 'staff') return showApp();
-    const exists = await Cloud.settingsExist().catch(() => true);
-    if (!exists) {
+    const need = await Cloud.needsSetup().catch(() => false);
+    if (need) {
+      await Cloud.loadPublicSettings().catch(() => {});
+      const st = db().settings;
+      if (st.school) $('#suSchool').value = st.school;
+      if (st.destinations && st.destinations.length) $('#suDest').value = st.destinations.join('، ');
+      if (st.weekend) $$('#suWeekend input').forEach(i => i.checked = st.weekend.includes(+i.value));
+      if (st.logo) { setupLogo = st.logo; $('#setupLogoPrev').src = st.logo; }
+      $('#suSample').closest('label').hidden = !!st.school;
       $('#suAccount').hidden = Cloud.signedIn;
       $$('#suAccount input').forEach(i => i.required = !Cloud.signedIn);
       return show('setup');
