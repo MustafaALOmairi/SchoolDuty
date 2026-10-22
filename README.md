@@ -10,5 +10,5 @@
 |---|---|
 | `index.html` | الصفحة العامة |
 | `admin.html` | لوحة التحكم |
-| `assets/js/supabase-config.js` | بيانات الربط مع Supabase (تعدّلها مرة واحدة) |
+| `config.js` | بيانات الربط مع Supabase (تعدّلها مرة واحدة) |
 | `supabase.sql` | الجداول وقواعد الأمان (تشغّله في SQL Editor) |
