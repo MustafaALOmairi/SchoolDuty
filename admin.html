@@ -308,7 +308,7 @@ section[data-panel="notify"]{display:flex;flex-direction:column;gap:22px}
     <div class="f"><span>أيام العطلة الأسبوعية</span><div id="suWeekend" style="display:flex;gap:14px;flex-wrap:wrap"></div></div>
     <div class="grid-form" id="suAccount">
       <label class="f">اسمك (مدير النظام)<input class="input" id="suName" required></label>
-      <label class="f">إيميلك<input type="email" class="input num" id="suEmail" required autocomplete="username"></label>
+      <label class="f">اسم المستخدم<input class="input" id="suUser" required minlength="3" autocomplete="username" autocapitalize="off"></label>
       <label class="f">كلمة المرور<input type="password" class="input" id="suPass" required minlength="6" autocomplete="new-password"></label>
     </div>
     <label class="check"><input type="checkbox" id="suSample"> أضف 4 سائقين تجريبيين لأجرّب النظام</label>
@@ -335,11 +335,11 @@ section[data-panel="notify"]{display:flex;flex-direction:column;gap:22px}
       <div class="logo-disc" style="width:70px;height:70px;border:3px solid var(--line)"><img class="brand-logo" alt="شعار المدرسة"></div>
       <div><h2>دخول لوحة التحكم</h2><span class="muted" data-school></span></div>
     </div>
-    <label class="f">الإيميل<input type="email" class="input num" id="lgEmail" required autocomplete="username"></label>
+    <label class="f">اسم المستخدم<input class="input" id="lgUser" required autocomplete="username" autocapitalize="off"></label>
     <label class="f">كلمة المرور<input type="password" class="input" id="lgPass" required autocomplete="current-password"></label>
     <button class="btn primary" style="justify-content:center"><i class="fa-solid fa-right-to-bracket"></i> دخول</button>
     <div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;align-items:center">
-      <button type="button" class="btn sm ghost" id="lgForgot">نسيت كلمة المرور؟</button>
+      <span class="muted" style="font-size:13px">نسيت كلمة المرور؟ اطلبها من مدير النظام</span>
       <a href="index.html" class="muted" style="font-size:13px">الصفحة العامة</a>
     </div>
   </form>
@@ -554,16 +554,16 @@ section[data-panel="notify"]{display:flex;flex-direction:column;gap:22px}
           <div class="panel-head"><h2>إضافة مستخدم</h2></div>
           <form class="grid-form" id="userForm">
             <label class="f">الاسم<input class="input" id="uName" required></label>
-            <label class="f">الإيميل<input type="email" class="input num" id="uEmail" required autocomplete="off"></label>
+            <label class="f">اسم المستخدم<input class="input" id="uUser" required minlength="3" autocomplete="off" autocapitalize="off"></label>
             <label class="f">كلمة مرور مؤقتة<input type="text" class="input" id="uPass" required minlength="6" autocomplete="off"></label>
             <label class="f">الصلاحية<select class="input" id="uRole"><option value="supervisor">مشرف</option><option value="admin">مدير</option></select></label>
             <div style="display:flex;align-items:flex-end"><button class="btn primary"><i class="fa-solid fa-user-plus"></i> إضافة</button></div>
           </form>
-          <p class="muted" style="margin:0">المشرف يدير المناوبات والسائقين والإجازات والتنبيهات. المدير يقدر كذلك يغيّر الإعدادات ويضيف المستخدمين. أرسل للمستخدم إيميله وكلمة المرور المؤقتة، ويقدر يغيّرها بعد الدخول بالضغط على اسمه في القائمة.</p>
+          <p class="muted" style="margin:0">المشرف يدير المناوبات والسائقين والإجازات والتنبيهات. المدير يقدر كذلك يغيّر الإعدادات ويضيف المستخدمين. أعطِ المستخدم اسم المستخدم وكلمة المرور، ويقدر يغيّرها بعد الدخول بالضغط على اسمه في القائمة. وإذا نسيها، عيّن له كلمة جديدة من زر المفتاح.</p>
         </div>
         <div class="card table-wrap">
           <table class="data">
-            <thead><tr><th>الاسم</th><th>الإيميل</th><th>الصلاحية</th><th></th></tr></thead>
+            <thead><tr><th>الاسم</th><th>اسم المستخدم</th><th>الصلاحية</th><th></th></tr></thead>
             <tbody id="userBody"></tbody>
           </table>
         </div>
@@ -652,7 +652,7 @@ section[data-panel="notify"]{display:flex;flex-direction:column;gap:22px}
 <!-- نافذة كلمة المرور -->
 <dialog id="pwDlg" style="width:min(420px,calc(100vw - 32px))">
   <form method="dialog" id="pwForm">
-    <div class="dlg-head"><h3>تغيير كلمة المرور</h3><button class="btn icon ghost" value="cancel" formnovalidate aria-label="إغلاق"><i class="fa-solid fa-xmark"></i></button></div>
+    <div class="dlg-head"><h3 id="pwTitle">تغيير كلمة المرور</h3><button class="btn icon ghost" value="cancel" formnovalidate aria-label="إغلاق"><i class="fa-solid fa-xmark"></i></button></div>
     <div class="dlg-body">
       <label class="f">كلمة المرور الجديدة<input type="password" class="input" id="pwNew" required minlength="6" autocomplete="new-password"></label>
       <label class="f">تأكيد كلمة المرور<input type="password" class="input" id="pwNew2" required minlength="6" autocomplete="new-password"></label>
@@ -868,7 +868,19 @@ const Cloud = (() => {
   const URL_ = String(window.SUPABASE_URL || '').trim().replace(/\/+$/, '');
   const KEY_ = String(window.SUPABASE_ANON_KEY || '').trim();
   const configured = /^https:\/\/[^/]+\.supabase\.co$/.test(URL_) && KEY_.length > 20 && !/ضع/.test(KEY_);
-  const sb = configured && window.supabase ? window.supabase.createClient(URL_, KEY_) : null;
+  const TOKEN_KEY = 'schoolduty-session';
+  let token = null; try { token = localStorage.getItem(TOKEN_KEY); } catch (e) {}
+  const makeClient = () => window.supabase.createClient(URL_, KEY_, {
+    auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
+    global: { headers: token ? { 'x-session': token } : {} }
+  });
+  let sb = configured && window.supabase ? makeClient() : null;
+  function setToken(t) {
+    token = t || null;
+    try { if (token) localStorage.setItem(TOKEN_KEY, token); else localStorage.removeItem(TOKEN_KEY); } catch (e) {}
+    if (channel) { sb.removeChannel(channel); channel = null; }
+    sb = makeClient();
+  }
   const S = () => Store;
 
   // أسماء الأعمدة في قاعدة البيانات
@@ -894,7 +906,7 @@ const Cloud = (() => {
 
   let shadow = { settings: null, drivers: {}, duties: {}, leaves: {} };
   let profile = null, users = [], settingsLoaded = false, setupInProgress = false, channel = null, poll = null, mode = null;
-  const listeners = { change: [], status: [], recovery: [] };
+  const listeners = { change: [], status: [] };
   const emit = (k, v) => listeners[k].forEach(f => f(v));
   const on = (k, f) => listeners[k].push(f);
   let changeTimer = null;
@@ -944,7 +956,7 @@ const Cloud = (() => {
     const rows = must(await sb.from('log').select('*').order('t', { ascending: false }).limit(60));
     S().db.log = [...S().db.log.filter(l => !l.id), ...rows.map(r => fromRow('log', r))];
   }
-  async function loadUsers() { users = must(await sb.from('profiles').select('*').order('name')); changed(); }
+  async function loadUsers() { users = must(await sb.rpc('app_list_users')) || []; changed(); }
 
   const pending = new Set(); let reloadTimer = null;
   function reload(what) {
@@ -957,7 +969,6 @@ const Cloud = (() => {
           if (w === 'settings') await loadSettings();
           else if (w === 'public_drivers') await loadPublicDrivers();
           else if (w === 'log') await loadLog();
-          else if (w === 'profiles') { if (profile && profile.role === 'admin') await loadUsers(); }
           else await loadTable(w);
         }
         changed();
@@ -986,8 +997,8 @@ const Cloud = (() => {
       if (profile.role === 'admin') await loadUsers();
       changed();
     } catch (e) { fail(e); }
-    listen(['settings', 'drivers', 'duties', 'leaves', 'log', 'profiles'], {});
-    poll = setInterval(() => { if (!document.hidden) reload(['settings', 'drivers', 'duties', 'leaves', 'log']); }, 120000);
+    listen(['settings', 'duties'], {});
+    poll = setInterval(() => { if (!document.hidden) reload(['settings', 'drivers', 'duties', 'leaves', 'log']); }, 30000);
   }
 
   /* ===== الحفظ ===== */
@@ -1020,95 +1031,83 @@ const Cloud = (() => {
     emit('status', { level: 'ok', text: 'تم الحفظ' });
   }
 
-  /* ===== الدخول والحسابات ===== */
+  /* ===== الدخول والحسابات (اسم مستخدم وكلمة مرور) ===== */
+  const ERR = {
+    bad_login: 'اسم المستخدم أو كلمة المرور غير صحيحة',
+    username_taken: 'اسم المستخدم مستخدم مسبقاً، اختر اسماً آخر',
+    short_username: 'اسم المستخدم لازم يكون 3 أحرف أو أكثر',
+    weak_password: 'كلمة المرور لازم تكون 6 أحرف أو أكثر',
+    already_setup: 'تم إعداد النظام مسبقاً. ادخل باسم المستخدم وكلمة المرور',
+    not_allowed: 'لا تملك صلاحية لهذا الإجراء'
+  };
   function errText(e) {
     const m = String((e && (e.message || e.code)) || '');
-    if (e && e.code === 'confirm_email') return 'أرسلنا رابط تأكيد إلى إيميلك. افتحه، ثم ارجع هنا وادخل بنفس الإيميل وكلمة المرور لإكمال الإعداد';
-    if (/Invalid login credentials/i.test(m)) return 'الإيميل أو كلمة المرور غير صحيحة';
-    if (/Email not confirmed/i.test(m)) return 'لم يتم تأكيد الإيميل بعد. افتح رابط التأكيد اللي وصلك';
-    if (/already registered|already exists/i.test(m)) return 'هذا الإيميل مسجل مسبقاً';
-    if (/at least 6|Password should/i.test(m)) return 'كلمة المرور ضعيفة، استخدم 6 أحرف أو أكثر';
-    if (/invalid.*email|email.*invalid/i.test(m)) return 'صيغة الإيميل غير صحيحة';
-    if (/rate limit|too many/i.test(m)) return 'محاولات كثيرة، انتظر قليلاً ثم حاول مرة أخرى';
+    for (const k of Object.keys(ERR)) if (m.includes(k) || (e && e.code === k)) return ERR[k];
     if (/Failed to fetch|NetworkError|network/i.test(m)) return 'لا يوجد اتصال بالإنترنت';
-    if ((e && e.code === '42501') || /row-level security/i.test(m)) return 'لا تملك صلاحية لهذا الإجراء';
+    if ((e && e.code === '42501') || /row-level security|permission/i.test(m)) return ERR.not_allowed;
+    if (/Could not find the function|PGRST202/i.test(m)) return 'قاعدة البيانات تحتاج تحديث: شغّل ملف SQL الجديد في Supabase';
     return 'حدث خطأ، حاول مرة أخرى';
   }
 
-  let currentUser = null;
-  function watchAuth(fn) {
-    let lastUid;
-    sb.auth.onAuthStateChange((event, session) => {
-      currentUser = session ? session.user : null;
-      if (event === 'PASSWORD_RECOVERY') setTimeout(() => emit('recovery'), 0);
-      const uid = currentUser ? currentUser.id : null;
-      if (uid === lastUid) return;
-      lastUid = uid;
-      setTimeout(() => handle(fn), 0); // لا نستدعي Supabase داخل هذا الحدث مباشرة
-    });
+  let authFn = () => {};
+  async function enter(info) {
+    stop(); users = [];
+    profile = info ? { id: info.id, name: info.name, username: info.username, role: info.role } : null;
+    if (!profile) return authFn({ state: 'out' });
+    await subscribeStaff();
+    authFn({ state: 'staff', profile });
   }
-  async function handle(fn) {
-    if (setupInProgress) return;
-    stop(); profile = null; users = [];
-    if (!currentUser) return fn({ state: 'out' });
+  async function watchAuth(fn) {
+    authFn = fn;
+    if (!token) return enter(null);
     try {
-      const p = must(await sb.from('profiles').select('*').eq('id', currentUser.id).maybeSingle());
-      if (!p) return fn({ state: 'inactive', email: currentUser.email });
-      profile = p;
-      await subscribeStaff();
-      fn({ state: 'staff', profile });
-    } catch (e) { fail(e); fn({ state: 'inactive', email: currentUser.email }); }
+      const me = must(await sb.rpc('app_me'));
+      if (!me) setToken(null);
+      await enter(me);
+    } catch (e) { fail(e); setToken(null); enter(null); }
   }
-  async function signIn(email, password) { must(await sb.auth.signInWithPassword({ email: email.trim(), password })); }
-  async function signOut() { await sb.auth.signOut(); }
-  async function resetPassword(email) { must(await sb.auth.resetPasswordForEmail(email.trim(), { redirectTo: location.href.split('#')[0].split('?')[0] })); }
-  async function updatePassword(password) { must(await sb.auth.updateUser({ password })); }
+  async function signIn(username, password) {
+    const r = must(await sb.rpc('app_login', { p_username: username.trim(), p_password: password }));
+    if (!r) throw Object.assign(new Error('bad_login'), { code: 'bad_login' });
+    setToken(r.token);
+    await enter(r);
+  }
+  async function signOut() {
+    try { await sb.rpc('app_logout'); } catch (e) {}
+    setToken(null);
+    await enter(null);
+  }
+  async function updatePassword(password) { must(await sb.rpc('app_change_password', { p_password: password })); }
   async function settingsExist() { return !!must(await sb.from('settings').select('id').eq('id', 'main').maybeSingle()); }
   async function needsSetup() { return !!must(await sb.rpc('needs_setup')); }
   async function loadPublicSettings() { await loadSettings(); changed(); }
 
-  // الإعداد لأول مرة: حساب المدير + إعدادات المدرسة
-  async function setup({ name, email, password, settings, drivers }) {
-    setupInProgress = true;
-    try {
-      let session = must(await sb.auth.getSession()).session;
-      if (!session) {
-        const r = await sb.auth.signUp({ email: email.trim(), password });
-        if (r.error && /already registered|already exists/i.test(r.error.message || '')) session = must(await sb.auth.signInWithPassword({ email: email.trim(), password })).session;
-        else session = must(r).session;
-        if (!session) throw Object.assign(new Error('confirm'), { code: 'confirm_email' });
-      }
-      currentUser = session.user;
-      const uid = session.user.id, mail = session.user.email;
-      const mine = must(await sb.from('profiles').select('id').eq('id', uid).maybeSingle());
-      if (!mine) must(await sb.from('profiles').insert({ id: uid, name, email: mail, role: 'admin' }));
-      const st = clean(settings); delete st.setupDone; delete st.pin;
-      must(await sb.from('settings').upsert({ id: 'main', data: st }));
-      profile = { id: uid, name, email: mail, role: 'admin' };
-      await subscribeStaff();
-      (drivers || []).forEach(d => S().db.drivers.push(d));
-      S().log(`إعداد النظام لـ ${st.school}`);
-      save();
-      return profile;
-    } finally { setupInProgress = false; }
+  // الإعداد الأول: حساب المدير + إعدادات المدرسة
+  async function setup({ name, username, password, settings, drivers }) {
+    const r = must(await sb.rpc('app_setup', { p_name: name, p_username: username.trim(), p_password: password }));
+    setToken(r.token);
+    const st = clean(settings); delete st.setupDone; delete st.pin;
+    must(await sb.from('settings').upsert({ id: 'main', data: st }));
+    profile = { id: r.id, name: r.name, username: r.username, role: r.role };
+    await subscribeStaff();
+    (drivers || []).forEach(d => S().db.drivers.push(d));
+    S().log(`إعداد النظام لـ ${st.school}`);
+    save();
+    return profile;
   }
 
-  // المدير يضيف مستخدماً بدون الخروج من حسابه (اتصال مؤقت منفصل)
-  async function addUser({ name, email, password, role }) {
-    const tmp = window.supabase.createClient(URL_, KEY_, { auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false, storageKey: 'tmp-' + Date.now() } });
-    const data = must(await tmp.auth.signUp({ email: email.trim(), password }));
-    const uid = data.user && data.user.id;
-    if (!uid) throw new Error('signup');
-    must(await sb.from('profiles').insert({ id: uid, name, email: email.trim(), role }));
+  async function addUser({ name, username, password, role }) {
+    must(await sb.rpc('app_add_user', { p_name: name, p_username: username.trim(), p_password: password, p_role: role }));
     await loadUsers();
   }
-  async function setRole(uid, role) { must(await sb.from('profiles').update({ role }).eq('id', uid)); await loadUsers(); }
-  async function removeUser(uid) { must(await sb.from('profiles').delete().eq('id', uid)); await loadUsers(); }
+  async function setRole(id, role) { must(await sb.rpc('app_set_role', { p_id: id, p_role: role })); await loadUsers(); }
+  async function removeUser(id) { must(await sb.rpc('app_remove_user', { p_id: id })); await loadUsers(); }
+  async function resetUserPassword(id, password) { must(await sb.rpc('app_set_password', { p_id: id, p_password: password })); }
 
   return {
-    configured, get ready() { return !!sb; }, on, save, watchAuth, signIn, signOut, resetPassword, updatePassword, setup, settingsExist, needsSetup, loadPublicSettings,
-    addUser, setRole, removeUser, subscribePublic, errText,
-    get signedIn() { return !!currentUser; }, get settingsLoaded() { return settingsLoaded; },
+    configured, get ready() { return !!sb; }, on, save, watchAuth, signIn, signOut, updatePassword, setup, settingsExist, needsSetup, loadPublicSettings,
+    addUser, setRole, removeUser, resetUserPassword, subscribePublic, errText,
+    get signedIn() { return !!token; }, get settingsLoaded() { return settingsLoaded; },
     get profile() { return profile; }, get users() { return users; }, isAdmin: () => !!profile && profile.role === 'admin'
   };
 })();
@@ -1128,33 +1127,34 @@ const Cloud = (() => {
   function applyRole() {
     const admin = Cloud.isAdmin(), p = Cloud.profile;
     $$('.admin-only').forEach(el => el.hidden = !admin);
-    $('#whoami').textContent = p ? `${p.name || p.email} · ${admin ? 'مدير' : 'مشرف'}` : '';
+    $('#whoami').textContent = p ? `${p.name || p.username} · ${admin ? 'مدير' : 'مشرف'}` : '';
   }
   function showApp() { show('app'); applyRole(); if (!Cloud.isAdmin() && ['settings', 'users'].includes(view)) view = 'dash'; renderAll(); }
   $('#loginForm').onsubmit = async e => {
     e.preventDefault();
     const b = e.submitter; if (b) b.disabled = true;
-    try { await Cloud.signIn($('#lgEmail').value, $('#lgPass').value); $('#lgPass').value = ''; }
+    try { await Cloud.signIn($('#lgUser').value, $('#lgPass').value); $('#lgPass').value = ''; }
     catch (err) { S.toast(Cloud.errText(err), true); }
     if (b) b.disabled = false;
-  };
-  $('#lgForgot').onclick = async () => {
-    const em = $('#lgEmail').value.trim();
-    if (!em) return S.toast('اكتب إيميلك أولاً ثم اضغط "نسيت كلمة المرور"', true);
-    try { await Cloud.resetPassword(em); S.toast('أرسلنا رابط تغيير كلمة المرور إلى إيميلك'); }
-    catch (err) { S.toast(Cloud.errText(err), true); }
   };
   $('#logout').onclick = () => Cloud.signOut();
   $('#inactiveOut').onclick = () => Cloud.signOut();
 
   /* ========== كلمة المرور ========== */
-  const openPw = () => { $('#pwForm').reset(); $('#pwDlg').returnValue = ''; $('#pwDlg').showModal(); };
-  $('#pwBtn').onclick = openPw;
-  Cloud.on('recovery', () => { S.toast('اكتب كلمة المرور الجديدة'); openPw(); });
+  let pwTarget = null;
+  const openPw = (target) => {
+    pwTarget = target || null;
+    $('#pwTitle').textContent = pwTarget ? `كلمة مرور جديدة لـ ${pwTarget.name || pwTarget.username}` : 'تغيير كلمة المرور';
+    $('#pwForm').reset(); $('#pwDlg').returnValue = ''; $('#pwDlg').showModal();
+  };
+  $('#pwBtn').onclick = () => openPw();
   $('#pwDlg').addEventListener('close', async () => {
     if ($('#pwDlg').returnValue !== 'save') return;
     if ($('#pwNew').value !== $('#pwNew2').value) { S.toast('كلمتا المرور غير متطابقتين', true); return openPw(); }
-    try { await Cloud.updatePassword($('#pwNew').value); S.toast('تم تغيير كلمة المرور'); }
+    try {
+      if (pwTarget) { await Cloud.resetUserPassword(pwTarget.id, $('#pwNew').value); S.toast(`تم تعيين كلمة مرور جديدة لـ ${pwTarget.name || pwTarget.username}`); }
+      else { await Cloud.updatePassword($('#pwNew').value); S.toast('تم تغيير كلمة المرور'); }
+    }
     catch (err) { S.toast(Cloud.errText(err), true); }
   });
 
@@ -1175,7 +1175,7 @@ const Cloud = (() => {
     st.weekend = $$('#suWeekend input:checked').map(i => +i.value);
     const b = e.submitter; if (b) b.disabled = true;
     try {
-      await Cloud.setup({ name: $('#suName').value.trim(), email: $('#suEmail').value, password: $('#suPass').value, settings: st, drivers: $('#suSample').checked ? S.sampleDrivers() : [] });
+      await Cloud.setup({ name: $('#suName').value.trim(), username: $('#suUser').value, password: $('#suPass').value, settings: st, drivers: $('#suSample').checked ? S.sampleDrivers() : [] });
       st.setupDone = true;
       showApp();
       if (!db().drivers.length) { go('drivers'); S.toast('أهلاً بك. ابدأ بإضافة السائقين'); } else S.toast('تم إعداد النظام');
@@ -1648,15 +1648,16 @@ const Cloud = (() => {
     const me = Cloud.profile || {};
     $('#userBody').innerHTML = Cloud.users.map(u => {
       const self = u.id === me.id, role = u.role === 'admin' ? 'مدير' : 'مشرف';
-      return `<tr><td><strong>${S.esc(u.name)}</strong>${self ? ' <span class="chip">أنت</span>' : ''}</td><td class="num">${S.esc(u.email)}</td>
+      return `<tr><td><strong>${S.esc(u.name)}</strong>${self ? ' <span class="chip">أنت</span>' : ''}</td><td class="num">${S.esc(u.username)}</td>
         <td>${self ? role : `<select class="input" data-role="${u.id}" style="width:auto" aria-label="الصلاحية"><option value="supervisor"${u.role !== 'admin' ? ' selected' : ''}>مشرف</option><option value="admin"${u.role === 'admin' ? ' selected' : ''}>مدير</option></select>`}</td>
-        <td>${self ? '' : `<button class="btn sm icon" data-del-user="${u.id}" aria-label="إزالة"><i class="fa-solid fa-trash" style="color:var(--red)"></i></button>`}</td></tr>`;
+        <td style="white-space:nowrap">${self ? '' : `<button class="btn sm icon" data-reset-pw="${u.id}" title="تعيين كلمة مرور جديدة" aria-label="تعيين كلمة مرور جديدة"><i class="fa-solid fa-key"></i></button>
+          <button class="btn sm icon" data-del-user="${u.id}" aria-label="إزالة"><i class="fa-solid fa-trash" style="color:var(--red)"></i></button>`}</td></tr>`;
     }).join('') || '<tr><td colspan="4" class="empty-state">لا يوجد مستخدمون</td></tr>';
   }
   $('#userForm').onsubmit = async e => {
     e.preventDefault();
     const b = e.submitter; if (b) b.disabled = true;
-    const data = { name: $('#uName').value.trim(), email: $('#uEmail').value, password: $('#uPass').value, role: $('#uRole').value };
+    const data = { name: $('#uName').value.trim(), username: $('#uUser').value, password: $('#uPass').value, role: $('#uRole').value };
     try { await Cloud.addUser(data); S.log(`إضافة المستخدم ${data.name}`); S.save(); $('#userForm').reset(); S.toast(`تمت إضافة ${data.name}`); }
     catch (err) { S.toast(Cloud.errText(err), true); }
     if (b) b.disabled = false;
@@ -1664,6 +1665,10 @@ const Cloud = (() => {
   document.addEventListener('change', async e => {
     const s = e.target.closest('select[data-role]'); if (!s) return;
     try { await Cloud.setRole(s.dataset.role, s.value); S.toast('تم تغيير الصلاحية'); } catch (err) { S.toast(Cloud.errText(err), true); }
+  });
+  document.addEventListener('click', e => {
+    const b = e.target.closest('[data-reset-pw]'); if (!b) return;
+    const u = Cloud.users.find(x => x.id === b.dataset.resetPw); if (u) openPw(u);
   });
   document.addEventListener('click', async e => {
     const b = e.target.closest('[data-del-user]'); if (!b) return;
@@ -1707,7 +1712,7 @@ const Cloud = (() => {
       return show('setup');
     }
     Cloud.subscribePublic();
-    if (st.state === 'inactive') { $('#inactiveText').textContent = `الحساب ${st.email || ''} غير مضاف للنظام. اطلب من مدير النظام إضافتك.`; return show('inactive'); }
+    if (st.state === 'inactive') { $('#inactiveText').textContent = `الحساب غير مضاف للنظام. اطلب من مدير النظام إضافتك.`; return show('inactive'); }
     show('login');
   });
 })();

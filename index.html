@@ -551,7 +551,19 @@ const Cloud = (() => {
   const URL_ = String(window.SUPABASE_URL || '').trim().replace(/\/+$/, '');
   const KEY_ = String(window.SUPABASE_ANON_KEY || '').trim();
   const configured = /^https:\/\/[^/]+\.supabase\.co$/.test(URL_) && KEY_.length > 20 && !/ضع/.test(KEY_);
-  const sb = configured && window.supabase ? window.supabase.createClient(URL_, KEY_) : null;
+  const TOKEN_KEY = 'schoolduty-session';
+  let token = null; try { token = localStorage.getItem(TOKEN_KEY); } catch (e) {}
+  const makeClient = () => window.supabase.createClient(URL_, KEY_, {
+    auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
+    global: { headers: token ? { 'x-session': token } : {} }
+  });
+  let sb = configured && window.supabase ? makeClient() : null;
+  function setToken(t) {
+    token = t || null;
+    try { if (token) localStorage.setItem(TOKEN_KEY, token); else localStorage.removeItem(TOKEN_KEY); } catch (e) {}
+    if (channel) { sb.removeChannel(channel); channel = null; }
+    sb = makeClient();
+  }
   const S = () => Store;
 
   // أسماء الأعمدة في قاعدة البيانات
@@ -577,7 +589,7 @@ const Cloud = (() => {
 
   let shadow = { settings: null, drivers: {}, duties: {}, leaves: {} };
   let profile = null, users = [], settingsLoaded = false, setupInProgress = false, channel = null, poll = null, mode = null;
-  const listeners = { change: [], status: [], recovery: [] };
+  const listeners = { change: [], status: [] };
   const emit = (k, v) => listeners[k].forEach(f => f(v));
   const on = (k, f) => listeners[k].push(f);
   let changeTimer = null;
@@ -627,7 +639,7 @@ const Cloud = (() => {
     const rows = must(await sb.from('log').select('*').order('t', { ascending: false }).limit(60));
     S().db.log = [...S().db.log.filter(l => !l.id), ...rows.map(r => fromRow('log', r))];
   }
-  async function loadUsers() { users = must(await sb.from('profiles').select('*').order('name')); changed(); }
+  async function loadUsers() { users = must(await sb.rpc('app_list_users')) || []; changed(); }
 
   const pending = new Set(); let reloadTimer = null;
   function reload(what) {
@@ -640,7 +652,6 @@ const Cloud = (() => {
           if (w === 'settings') await loadSettings();
           else if (w === 'public_drivers') await loadPublicDrivers();
           else if (w === 'log') await loadLog();
-          else if (w === 'profiles') { if (profile && profile.role === 'admin') await loadUsers(); }
           else await loadTable(w);
         }
         changed();
@@ -669,8 +680,8 @@ const Cloud = (() => {
       if (profile.role === 'admin') await loadUsers();
       changed();
     } catch (e) { fail(e); }
-    listen(['settings', 'drivers', 'duties', 'leaves', 'log', 'profiles'], {});
-    poll = setInterval(() => { if (!document.hidden) reload(['settings', 'drivers', 'duties', 'leaves', 'log']); }, 120000);
+    listen(['settings', 'duties'], {});
+    poll = setInterval(() => { if (!document.hidden) reload(['settings', 'drivers', 'duties', 'leaves', 'log']); }, 30000);
   }
 
   /* ===== الحفظ ===== */
@@ -703,93 +714,83 @@ const Cloud = (() => {
     emit('status', { level: 'ok', text: 'تم الحفظ' });
   }
 
-  /* ===== الدخول والحسابات ===== */
+  /* ===== الدخول والحسابات (اسم مستخدم وكلمة مرور) ===== */
+  const ERR = {
+    bad_login: 'اسم المستخدم أو كلمة المرور غير صحيحة',
+    username_taken: 'اسم المستخدم مستخدم مسبقاً، اختر اسماً آخر',
+    short_username: 'اسم المستخدم لازم يكون 3 أحرف أو أكثر',
+    weak_password: 'كلمة المرور لازم تكون 6 أحرف أو أكثر',
+    already_setup: 'تم إعداد النظام مسبقاً. ادخل باسم المستخدم وكلمة المرور',
+    not_allowed: 'لا تملك صلاحية لهذا الإجراء'
+  };
   function errText(e) {
     const m = String((e && (e.message || e.code)) || '');
-    if (e && e.code === 'confirm_email') return 'أرسلنا رابط تأكيد إلى إيميلك. افتحه، ثم ارجع هنا وادخل بنفس الإيميل وكلمة المرور لإكمال الإعداد';
-    if (/Invalid login credentials/i.test(m)) return 'الإيميل أو كلمة المرور غير صحيحة';
-    if (/Email not confirmed/i.test(m)) return 'لم يتم تأكيد الإيميل بعد. افتح رابط التأكيد اللي وصلك';
-    if (/already registered|already exists/i.test(m)) return 'هذا الإيميل مسجل مسبقاً';
-    if (/at least 6|Password should/i.test(m)) return 'كلمة المرور ضعيفة، استخدم 6 أحرف أو أكثر';
-    if (/invalid.*email|email.*invalid/i.test(m)) return 'صيغة الإيميل غير صحيحة';
-    if (/rate limit|too many/i.test(m)) return 'محاولات كثيرة، انتظر قليلاً ثم حاول مرة أخرى';
+    for (const k of Object.keys(ERR)) if (m.includes(k) || (e && e.code === k)) return ERR[k];
     if (/Failed to fetch|NetworkError|network/i.test(m)) return 'لا يوجد اتصال بالإنترنت';
-    if ((e && e.code === '42501') || /row-level security/i.test(m)) return 'لا تملك صلاحية لهذا الإجراء';
+    if ((e && e.code === '42501') || /row-level security|permission/i.test(m)) return ERR.not_allowed;
+    if (/Could not find the function|PGRST202/i.test(m)) return 'قاعدة البيانات تحتاج تحديث: شغّل ملف SQL الجديد في Supabase';
     return 'حدث خطأ، حاول مرة أخرى';
   }
 
-  let currentUser = null;
-  function watchAuth(fn) {
-    let lastUid;
-    sb.auth.onAuthStateChange((event, session) => {
-      currentUser = session ? session.user : null;
-      if (event === 'PASSWORD_RECOVERY') setTimeout(() => emit('recovery'), 0);
-      const uid = currentUser ? currentUser.id : null;
-      if (uid === lastUid) return;
-      lastUid = uid;
-      setTimeout(() => handle(fn), 0); // لا نستدعي Supabase داخل هذا الحدث مباشرة
-    });
+  let authFn = () => {};
+  async function enter(info) {
+    stop(); users = [];
+    profile = info ? { id: info.id, name: info.name, username: info.username, role: info.role } : null;
+    if (!profile) return authFn({ state: 'out' });
+    await subscribeStaff();
+    authFn({ state: 'staff', profile });
   }
-  async function handle(fn) {
-    if (setupInProgress) return;
-    stop(); profile = null; users = [];
-    if (!currentUser) return fn({ state: 'out' });
+  async function watchAuth(fn) {
+    authFn = fn;
+    if (!token) return enter(null);
     try {
-      const p = must(await sb.from('profiles').select('*').eq('id', currentUser.id).maybeSingle());
-      if (!p) return fn({ state: 'inactive', email: currentUser.email });
-      profile = p;
-      await subscribeStaff();
-      fn({ state: 'staff', profile });
-    } catch (e) { fail(e); fn({ state: 'inactive', email: currentUser.email }); }
+      const me = must(await sb.rpc('app_me'));
+      if (!me) setToken(null);
+      await enter(me);
+    } catch (e) { fail(e); setToken(null); enter(null); }
   }
-  async function signIn(email, password) { must(await sb.auth.signInWithPassword({ email: email.trim(), password })); }
-  async function signOut() { await sb.auth.signOut(); }
-  async function resetPassword(email) { must(await sb.auth.resetPasswordForEmail(email.trim(), { redirectTo: location.href.split('#')[0].split('?')[0] })); }
-  async function updatePassword(password) { must(await sb.auth.updateUser({ password })); }
+  async function signIn(username, password) {
+    const r = must(await sb.rpc('app_login', { p_username: username.trim(), p_password: password }));
+    if (!r) throw Object.assign(new Error('bad_login'), { code: 'bad_login' });
+    setToken(r.token);
+    await enter(r);
+  }
+  async function signOut() {
+    try { await sb.rpc('app_logout'); } catch (e) {}
+    setToken(null);
+    await enter(null);
+  }
+  async function updatePassword(password) { must(await sb.rpc('app_change_password', { p_password: password })); }
   async function settingsExist() { return !!must(await sb.from('settings').select('id').eq('id', 'main').maybeSingle()); }
+  async function needsSetup() { return !!must(await sb.rpc('needs_setup')); }
+  async function loadPublicSettings() { await loadSettings(); changed(); }
 
-  // الإعداد لأول مرة: حساب المدير + إعدادات المدرسة
-  async function setup({ name, email, password, settings, drivers }) {
-    setupInProgress = true;
-    try {
-      let session = must(await sb.auth.getSession()).session;
-      if (!session) {
-        const r = await sb.auth.signUp({ email: email.trim(), password });
-        if (r.error && /already registered|already exists/i.test(r.error.message || '')) session = must(await sb.auth.signInWithPassword({ email: email.trim(), password })).session;
-        else session = must(r).session;
-        if (!session) throw Object.assign(new Error('confirm'), { code: 'confirm_email' });
-      }
-      currentUser = session.user;
-      const uid = session.user.id, mail = session.user.email;
-      const mine = must(await sb.from('profiles').select('id').eq('id', uid).maybeSingle());
-      if (!mine) must(await sb.from('profiles').insert({ id: uid, name, email: mail, role: 'admin' }));
-      const st = clean(settings); delete st.setupDone; delete st.pin;
-      must(await sb.from('settings').insert({ id: 'main', data: st }));
-      profile = { id: uid, name, email: mail, role: 'admin' };
-      await subscribeStaff();
-      (drivers || []).forEach(d => S().db.drivers.push(d));
-      S().log(`إعداد النظام لـ ${st.school}`);
-      save();
-      return profile;
-    } finally { setupInProgress = false; }
+  // الإعداد الأول: حساب المدير + إعدادات المدرسة
+  async function setup({ name, username, password, settings, drivers }) {
+    const r = must(await sb.rpc('app_setup', { p_name: name, p_username: username.trim(), p_password: password }));
+    setToken(r.token);
+    const st = clean(settings); delete st.setupDone; delete st.pin;
+    must(await sb.from('settings').upsert({ id: 'main', data: st }));
+    profile = { id: r.id, name: r.name, username: r.username, role: r.role };
+    await subscribeStaff();
+    (drivers || []).forEach(d => S().db.drivers.push(d));
+    S().log(`إعداد النظام لـ ${st.school}`);
+    save();
+    return profile;
   }
 
-  // المدير يضيف مستخدماً بدون الخروج من حسابه (اتصال مؤقت منفصل)
-  async function addUser({ name, email, password, role }) {
-    const tmp = window.supabase.createClient(URL_, KEY_, { auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false, storageKey: 'tmp-' + Date.now() } });
-    const data = must(await tmp.auth.signUp({ email: email.trim(), password }));
-    const uid = data.user && data.user.id;
-    if (!uid) throw new Error('signup');
-    must(await sb.from('profiles').insert({ id: uid, name, email: email.trim(), role }));
+  async function addUser({ name, username, password, role }) {
+    must(await sb.rpc('app_add_user', { p_name: name, p_username: username.trim(), p_password: password, p_role: role }));
     await loadUsers();
   }
-  async function setRole(uid, role) { must(await sb.from('profiles').update({ role }).eq('id', uid)); await loadUsers(); }
-  async function removeUser(uid) { must(await sb.from('profiles').delete().eq('id', uid)); await loadUsers(); }
+  async function setRole(id, role) { must(await sb.rpc('app_set_role', { p_id: id, p_role: role })); await loadUsers(); }
+  async function removeUser(id) { must(await sb.rpc('app_remove_user', { p_id: id })); await loadUsers(); }
+  async function resetUserPassword(id, password) { must(await sb.rpc('app_set_password', { p_id: id, p_password: password })); }
 
   return {
-    configured, get ready() { return !!sb; }, on, save, watchAuth, signIn, signOut, resetPassword, updatePassword, setup, settingsExist,
-    addUser, setRole, removeUser, subscribePublic, errText,
-    get signedIn() { return !!currentUser; }, get settingsLoaded() { return settingsLoaded; },
+    configured, get ready() { return !!sb; }, on, save, watchAuth, signIn, signOut, updatePassword, setup, settingsExist, needsSetup, loadPublicSettings,
+    addUser, setRole, removeUser, resetUserPassword, subscribePublic, errText,
+    get signedIn() { return !!token; }, get settingsLoaded() { return settingsLoaded; },
     get profile() { return profile; }, get users() { return users; }, isAdmin: () => !!profile && profile.role === 'admin'
   };
 })();
