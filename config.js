@@ -1,4 +1,2 @@
-// ضع هنا بيانات مشروع Supabase الخاص بمدرستك
-// تجدها في: Project Settings ← API (أو Data API)
-window.SUPABASE_URL = "ضع_رابط_المشروع_هنا";      // مثال: https://abcdefgh.supabase.co
-window.SUPABASE_ANON_KEY = "ضع_المفتاح_العام_هنا"; // المفتاح العام anon / publishable
+window.SUPABASE_URL = "https://supabase.com/dashboard/project/kxwodxkisztrslzhfmda";
+window.SUPABASE_ANON_KEY = "sb_secret_nlHiXhLrtQp4OD8KT3bArg_LzUpC2Pz";
