@@ -768,7 +768,26 @@ const I18N = (() => {
 "ابحث بالاسم أو المنطقة أو رقم الحافلة": "Search by name, area or bus number",
 "بحث في السائقين": "Search drivers",
 "نظام إدارة مناوبات الحافلات –": "Bus duty management system –",
-"اليوم|day": "Day"
+"اليوم|day": "Day",
+"خارج هذه القائمة": "not in this list",
+"إرجاعه للقائمة": "Return to list",
+"إخراجه من هذه القائمة": "Remove from this list",
+"غير مستخدمة (0 في اليوم)": "Not used (0 per day)",
+"القائمتين تبدآن بنفس السائق ({name}). نفس السائق ما ياخذ مناوبتين في يوم واحد، فالأفضل تبدأ قائمة المدرسة بسائق مختلف.": "Both lists start with the same driver ({name}). A driver can't take two duties on one day, so it's better to start the school list with a different driver.",
+"الدور القادم في {list}: {name}": "Next in {list}: {name}",
+"تم حفظ طريقة فتح واتساب لهذا الجهاز": "WhatsApp open method saved for this device",
+"قائمة مناوبات الذهاب": "Trip duty list",
+"رتّب بالأسهم، واضغط": "Order with the arrows, and press",
+"لإخراج سائق من هذه القائمة.": "to remove a driver from this list.",
+"قائمة المناوبات في المدرسة": "School duty list",
+"لكل نوع مناوبة قائمة خاصة: الذهاب تمشي على ترتيبها، والمدرسة على ترتيبها.": "Each duty type has its own list: trips follow their order, and school follows its order.",
+"نفس السائق ما ياخذ الذهاب والمدرسة في نفس اليوم. لو صار، دوره في المدرسة يتأجل لأول يوم متاح.": "A driver never gets both a trip and a school duty on the same day. If that would happen, their school turn moves to the first available day.",
+"طريقة فتح واتساب على هذا الجهاز": "How WhatsApp opens on this device",
+"تلقائي (الجوال: التطبيق، الكمبيوتر: واتساب ويب)": "Automatic (phone: app, computer: WhatsApp Web)",
+"واتساب ويب (web.whatsapp.com)": "WhatsApp Web (web.whatsapp.com)",
+"تطبيق واتساب على الكمبيوتر": "WhatsApp desktop app",
+"رابط api.whatsapp.com": "api.whatsapp.com link",
+"رابط wa.me": "wa.me link"
 };
   const fill = (s, v) => v ? String(s).replace(/\{(\w+)\}/g, (m, k) => k in v ? v[k] : m) : s;
   // مفتاح بالشكل 'نص|سياق' يُعرض عربياً بالجزء الأول فقط
@@ -901,8 +920,27 @@ const Store = (() => {
   const dutiesOn = (s, type) => db.duties.filter(x => x.date === s && (!type || x.type === type));
   const typeNameAr = t => t === 'going' ? 'مناوبة الذهاب' : 'المناوبة في المدرسة';
   const typeName = t => T(typeNameAr(t));
-  const intlPhone = p => { const n = String(p || '').replace(/\D/g, ''); return n.length === 8 ? '968' + n : n; };
-  const waLink = (p, msg) => `https://wa.me/${intlPhone(p)}?text=${encodeURIComponent(msg)}`;
+  // تنظيف رقم الهاتف لصيغة دولية بدون + (عُمان 968 للأرقام المحلية)
+  const intlPhone = p => {
+    let n = String(p || '').replace(/[٠-٩]/g, c => '٠١٢٣٤٥٦٧٨٩'.indexOf(c)).replace(/\D/g, '');
+    if (n.startsWith('00')) n = n.slice(2);
+    if (n.length === 9 && n.startsWith('0')) n = n.slice(1);
+    if (n.length === 8) n = '968' + n;
+    return n;
+  };
+  // طريقة فتح واتساب (تُحفظ لكل جهاز): auto | web | app | api | wame
+  const WA_KEY = 'school-bus-wa';
+  const waMode = () => { try { return localStorage.getItem(WA_KEY) || 'auto'; } catch (e) { return 'auto'; } };
+  const setWaMode = m => { try { localStorage.setItem(WA_KEY, m); } catch (e) {} };
+  const isMobile = () => /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
+  function waLink(p, msg) {
+    const n = intlPhone(p), t = encodeURIComponent(msg || ''), q = (n ? `phone=${n}&` : '') + `text=${t}`;
+    let m = waMode(); if (m === 'auto') m = isMobile() ? 'api' : 'web';
+    if (m === 'web') return `https://web.whatsapp.com/send?${q}`;
+    if (m === 'app') return `whatsapp://send?${q}`;
+    if (m === 'wame') return `https://wa.me/${n}?text=${t}`;
+    return `https://api.whatsapp.com/send?${q}`;
+  }
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
 
@@ -1021,7 +1059,7 @@ const Store = (() => {
   return {
     get db() { return db; }, set db(v) { db = v; }, KEY, load, save, log, seed, uid, hash, ROTATION_DEFAULT,
     iso, parse, today, addDays, dayName, dayNameAr, fmt, fmtAr, fmtShort, hijri, weekStart, daysUntil, range,
-    driver, isWeekend, onLeave, subFor, available, who, dutiesOn, typeName, typeNameAr, intlPhone, waLink, esc, reminderText, alerts,
+    driver, isWeekend, onLeave, subFor, available, who, dutiesOn, typeName, typeNameAr, intlPhone, waLink, waMode, setWaMode, esc, reminderText, alerts,
     onChange, toggleTheme, toast, get DAYS() { return en() ? DAYS_EN : DAYS_AR; }, DEFAULT_TEMPLATE, fillTemplate, weekText, groupText, sampleDrivers, logo, schoolName, brand, readLogo
   };
 })();

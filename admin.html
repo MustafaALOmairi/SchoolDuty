@@ -474,12 +474,6 @@ body:has(#app:not([hidden])) .lang-float{display:none}
 
       <!-- التوزيع بالدور -->
       <section data-panel="auto" hidden>
-        <div class="two" style="grid-template-columns:1fr 1.25fr;align-items:start">
-          <div class="card panel">
-            <div class="panel-head"><h2>ترتيب قائمة الدور</h2><span class="chip" id="rCount"></span></div>
-            <p class="muted" style="margin:0">رتّب السائقين بالأسهم. النظام يمشي على القائمة بالترتيب يوماً بعد يوم، والأسبوع التالي يكمل من حيث وقف.</p>
-            <ol class="rot-list" id="rList"></ol>
-          </div>
           <div class="card panel">
             <div class="panel-head"><h2>إعداد التوزيع بالدور</h2></div>
             <div class="grid-form">
@@ -503,14 +497,28 @@ body:has(#app:not([hidden])) .lang-float{display:none}
             <div class="alert-row" id="rStatus" style="flex-wrap:wrap"></div>
             <div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn blue" id="rRun"><i class="fa-solid fa-eye"></i> معاينة التوزيع</button></div>
           </div>
+        <div class="two" style="grid-template-columns:1fr 1fr;align-items:start;margin-top:22px">
+          <div class="card panel" id="rCardGoing">
+            <div class="panel-head"><h2><i class="fa-solid fa-bus"></i> قائمة مناوبات الذهاب</h2><span class="chip" id="rCountGoing"></span></div>
+            <p class="muted" style="margin:0;font-size:13px">رتّب بالأسهم، واضغط <i class="fa-solid fa-eye-slash"></i> لإخراج سائق من هذه القائمة.</p>
+            <ol class="rot-list" data-list="going" id="rListGoing"></ol>
+          </div>
+          <div class="card panel" id="rCardSchool">
+            <div class="panel-head"><h2><i class="fa-solid fa-school"></i> قائمة المناوبات في المدرسة</h2><span class="chip" id="rCountSchool"></span></div>
+            <p class="muted" style="margin:0;font-size:13px">رتّب بالأسهم، واضغط <i class="fa-solid fa-eye-slash"></i> لإخراج سائق من هذه القائمة.</p>
+            <ol class="rot-list" data-list="school" id="rListSchool"></ol>
+          </div>
         </div>
+        <div class="alert-row" id="rClash" hidden style="margin-top:14px;background:var(--amber-soft);color:var(--amber)"></div>
         <div class="card panel" id="rPreviewCard" hidden style="margin-top:22px">
           <div id="rPreview"></div>
         </div>
         <div class="card panel" style="margin-top:22px">
           <div class="panel-head"><h2>كيف يشتغل التوزيع بالدور؟</h2></div>
           <ul class="muted" style="margin:0;padding-inline-start:20px;display:flex;flex-direction:column;gap:4px">
+            <li>لكل نوع مناوبة قائمة خاصة: الذهاب تمشي على ترتيبها، والمدرسة على ترتيبها.</li>
             <li>كل يوم عمل ياخذ السائق التالي في القائمة، وأيام العطلة تُتخطّى.</li>
+            <li>نفس السائق ما ياخذ الذهاب والمدرسة في نفس اليوم. لو صار، دوره في المدرسة يتأجل لأول يوم متاح.</li>
             <li>لو أضفت سائقاً لنفس اليوم يدوياً، يُحسب دوره، واليوم التالي ياخذه اللي بعده.</li>
             <li>لو حذفت سائقاً من يوم، ينتقل دوره لليوم التالي وتتأخر القائمة يوماً.</li>
             <li>السائق في إجازة يُتخطّى ويرجع دوره أول ما يكون متاحاً. لو عنده بديل، البديل ينفّذ دوره.</li>
@@ -530,7 +538,17 @@ body:has(#app:not([hidden])) .lang-float{display:none}
             </div></div>
           <p class="muted" style="margin:0">اضغط "إرسال" ويفتح واتساب برسالة جاهزة للسائق، وبعدها اضغط إرسال داخل واتساب. النظام يسجّل من وصله التذكير.</p>
           <div id="nList" style="display:flex;flex-direction:column;gap:8px"></div>
-          <div><button class="btn green" id="nSendAll"><i class="fa-brands fa-whatsapp"></i> إرسال للجميع بالتتابع</button></div>
+          <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end">
+            <button class="btn green" id="nSendAll"><i class="fa-brands fa-whatsapp"></i> إرسال للجميع بالتتابع</button>
+            <label class="f" style="margin-inline-start:auto">طريقة فتح واتساب على هذا الجهاز
+              <select class="input" id="waMode" style="width:auto">
+                <option value="auto">تلقائي (الجوال: التطبيق، الكمبيوتر: واتساب ويب)</option>
+                <option value="web">واتساب ويب (web.whatsapp.com)</option>
+                <option value="app">تطبيق واتساب على الكمبيوتر</option>
+                <option value="api">رابط api.whatsapp.com</option>
+                <option value="wame">رابط wa.me</option>
+              </select></label>
+          </div>
         </div>
         <div class="two">
           <div class="card panel">
@@ -1140,7 +1158,26 @@ const I18N = (() => {
 "ابحث بالاسم أو المنطقة أو رقم الحافلة": "Search by name, area or bus number",
 "بحث في السائقين": "Search drivers",
 "نظام إدارة مناوبات الحافلات –": "Bus duty management system –",
-"اليوم|day": "Day"
+"اليوم|day": "Day",
+"خارج هذه القائمة": "not in this list",
+"إرجاعه للقائمة": "Return to list",
+"إخراجه من هذه القائمة": "Remove from this list",
+"غير مستخدمة (0 في اليوم)": "Not used (0 per day)",
+"القائمتين تبدآن بنفس السائق ({name}). نفس السائق ما ياخذ مناوبتين في يوم واحد، فالأفضل تبدأ قائمة المدرسة بسائق مختلف.": "Both lists start with the same driver ({name}). A driver can't take two duties on one day, so it's better to start the school list with a different driver.",
+"الدور القادم في {list}: {name}": "Next in {list}: {name}",
+"تم حفظ طريقة فتح واتساب لهذا الجهاز": "WhatsApp open method saved for this device",
+"قائمة مناوبات الذهاب": "Trip duty list",
+"رتّب بالأسهم، واضغط": "Order with the arrows, and press",
+"لإخراج سائق من هذه القائمة.": "to remove a driver from this list.",
+"قائمة المناوبات في المدرسة": "School duty list",
+"لكل نوع مناوبة قائمة خاصة: الذهاب تمشي على ترتيبها، والمدرسة على ترتيبها.": "Each duty type has its own list: trips follow their order, and school follows its order.",
+"نفس السائق ما ياخذ الذهاب والمدرسة في نفس اليوم. لو صار، دوره في المدرسة يتأجل لأول يوم متاح.": "A driver never gets both a trip and a school duty on the same day. If that would happen, their school turn moves to the first available day.",
+"طريقة فتح واتساب على هذا الجهاز": "How WhatsApp opens on this device",
+"تلقائي (الجوال: التطبيق، الكمبيوتر: واتساب ويب)": "Automatic (phone: app, computer: WhatsApp Web)",
+"واتساب ويب (web.whatsapp.com)": "WhatsApp Web (web.whatsapp.com)",
+"تطبيق واتساب على الكمبيوتر": "WhatsApp desktop app",
+"رابط api.whatsapp.com": "api.whatsapp.com link",
+"رابط wa.me": "wa.me link"
 };
   const fill = (s, v) => v ? String(s).replace(/\{(\w+)\}/g, (m, k) => k in v ? v[k] : m) : s;
   // مفتاح بالشكل 'نص|سياق' يُعرض عربياً بالجزء الأول فقط
@@ -1273,8 +1310,27 @@ const Store = (() => {
   const dutiesOn = (s, type) => db.duties.filter(x => x.date === s && (!type || x.type === type));
   const typeNameAr = t => t === 'going' ? 'مناوبة الذهاب' : 'المناوبة في المدرسة';
   const typeName = t => T(typeNameAr(t));
-  const intlPhone = p => { const n = String(p || '').replace(/\D/g, ''); return n.length === 8 ? '968' + n : n; };
-  const waLink = (p, msg) => `https://wa.me/${intlPhone(p)}?text=${encodeURIComponent(msg)}`;
+  // تنظيف رقم الهاتف لصيغة دولية بدون + (عُمان 968 للأرقام المحلية)
+  const intlPhone = p => {
+    let n = String(p || '').replace(/[٠-٩]/g, c => '٠١٢٣٤٥٦٧٨٩'.indexOf(c)).replace(/\D/g, '');
+    if (n.startsWith('00')) n = n.slice(2);
+    if (n.length === 9 && n.startsWith('0')) n = n.slice(1);
+    if (n.length === 8) n = '968' + n;
+    return n;
+  };
+  // طريقة فتح واتساب (تُحفظ لكل جهاز): auto | web | app | api | wame
+  const WA_KEY = 'school-bus-wa';
+  const waMode = () => { try { return localStorage.getItem(WA_KEY) || 'auto'; } catch (e) { return 'auto'; } };
+  const setWaMode = m => { try { localStorage.setItem(WA_KEY, m); } catch (e) {} };
+  const isMobile = () => /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
+  function waLink(p, msg) {
+    const n = intlPhone(p), t = encodeURIComponent(msg || ''), q = (n ? `phone=${n}&` : '') + `text=${t}`;
+    let m = waMode(); if (m === 'auto') m = isMobile() ? 'api' : 'web';
+    if (m === 'web') return `https://web.whatsapp.com/send?${q}`;
+    if (m === 'app') return `whatsapp://send?${q}`;
+    if (m === 'wame') return `https://wa.me/${n}?text=${t}`;
+    return `https://api.whatsapp.com/send?${q}`;
+  }
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
 
@@ -1393,7 +1449,7 @@ const Store = (() => {
   return {
     get db() { return db; }, set db(v) { db = v; }, KEY, load, save, log, seed, uid, hash, ROTATION_DEFAULT,
     iso, parse, today, addDays, dayName, dayNameAr, fmt, fmtAr, fmtShort, hijri, weekStart, daysUntil, range,
-    driver, isWeekend, onLeave, subFor, available, who, dutiesOn, typeName, typeNameAr, intlPhone, waLink, esc, reminderText, alerts,
+    driver, isWeekend, onLeave, subFor, available, who, dutiesOn, typeName, typeNameAr, intlPhone, waLink, waMode, setWaMode, esc, reminderText, alerts,
     onChange, toggleTheme, toast, get DAYS() { return en() ? DAYS_EN : DAYS_AR; }, DEFAULT_TEMPLATE, fillTemplate, weekText, groupText, sampleDrivers, logo, schoolName, brand, readLogo
   };
 })();
@@ -1959,7 +2015,7 @@ const Cloud = (() => {
       const d = S.driver(el.dataset.delDriver), n = db().duties.filter(x => x.driverId === d.id).length;
       if (await ask(T('حذف السائق'), T('حذف {name}{extra}؟ يمكنك بدلاً من ذلك جعله غير نشط.', { name: d.name, extra: n ? T(' وحذف {n} مناوبة مسجلة له', { n }) : '' }), T('حذف'))) {
         db().drivers = db().drivers.filter(x => x !== d); db().duties = db().duties.filter(x => x.driverId !== d.id); db().leaves = db().leaves.filter(x => x.driverId !== d.id); db().subs = db().subs.filter(x => x.driverId !== d.id);
-        rot().order = (rot().order || []).filter(id => id !== d.id);
+        const R = rot(); if (R.lists) TYPES.forEach(t => { if (R.lists[t]) { R.lists[t].order = R.lists[t].order.filter(id => id !== d.id); R.lists[t].off = (R.lists[t].off || []).filter(id => id !== d.id); } });
         commit(`حذف السائق ${d.name}`, S.today()); S.toast(T('تم حذف السائق'));
       }
     }
@@ -1976,40 +2032,47 @@ const Cloud = (() => {
   function toggleDone(id) { const x = db().duties.find(y => y.id === id); if (!x) return; x.done = !x.done; const d = S.driver(x.driverId); commit(`${x.done ? 'تأكيد تنفيذ' : 'إلغاء تنفيذ'} مناوبة ${d ? d.name : ''} يوم ${S.fmtShort(x.date)}`); }
 
   /* ========== التوزيع بالدور ==========
-     القائمة دائرية: كل يوم عمل ياخذ التالي في الترتيب، وكل سائق ياخذ دوراً واحداً في كل لفّة.
-     أي سائق ينفّذ مناوبة (تلقائية أو يدوية) يُحسب دوره، فاللي بعده ياخذ اليوم التالي. */
+     لكل نوع مناوبة قائمة دائرية خاصة: كل يوم عمل ياخذ التالي في ترتيبها، وكل سائق ياخذ دوراً واحداً في كل لفّة.
+     أي سائق ينفّذ مناوبة من نفس النوع (تلقائية أو يدوية) يُحسب دوره، فاللي بعده ياخذ اليوم التالي. */
+  const TYPES = ['going', 'school'];
   const rot = () => db().rotation || (db().rotation = { ...S.ROTATION_DEFAULT, order: [] });
   const rotActive = () => !!(rot().start && rot().until && rot().autoAdjust !== false);
-  function rotOrder(order) {
-    const act = activeDrivers(), ids = new Set(act.map(d => d.id));
-    const ord = (order || rot().order || []).filter((id, i, a) => ids.has(id) && a.indexOf(id) === i);
+  // إعداد قائمة نوع معيّن (للنسخ القديمة: القائمتين تبدأ من الترتيب الموحّد)
+  const listCfg = (cfg, type) => (cfg.lists && cfg.lists[type]) || { order: (cfg.order || []).slice(), off: [] };
+  function rotOrder(type, cfg = rot()) {
+    const L = listCfg(cfg, type), off = new Set(L.off || []);
+    const act = activeDrivers().filter(d => !off.has(d.id)), ids = new Set(act.map(d => d.id));
+    const ord = (L.order || []).filter((id, i, a) => ids.has(id) && a.indexOf(id) === i);
     act.forEach(d => { if (!ord.includes(d.id)) ord.push(d.id); });
     return ord;
   }
+  const perDay = (cfg, type) => Math.max(0, +(type === 'going' ? cfg.goingPerDay : cfg.schoolPerDay) || 0);
+  const rotUsable = cfg => TYPES.some(t => perDay(cfg, t) && rotOrder(t, cfg).length);
   function simulate(cfg) {
-    const { start, until, from, rotateDest, overwrite } = cfg, nG = +cfg.goingPerDay || 0, nS = +cfg.schoolPerDay || 0;
-    const ord = rotOrder(cfg.order), n = ord.length, idx = new Map(ord.map((id, i) => [id, i]));
-    const types = [['going', nG], ['school', nS]].filter(x => x[1] > 0), tset = new Set(types.map(x => x[0]));
+    const { start, until, from, rotateDest, overwrite } = cfg;
+    const types = TYPES.filter(t => perDay(cfg, t)).map(t => [t, perDay(cfg, t)]), tset = new Set(types.map(x => x[0]));
     const dests = db().settings.destinations;
-    let p = 0, served = new Set(), gi = 0;
+    // حالة كل قائمة: p موضع الدور العادي في اللفّة الحالية، served من أخذ دوره في هذه اللفّة
+    const st = {};
+    TYPES.forEach(t => { const ord = rotOrder(t, cfg); st[t] = { ord, n: ord.length, idx: new Map(ord.map((id, i) => [id, i])), p: 0, served: new Set() }; });
+    let gi = 0;
     const add = [], drop = [], short = [], days = [];
-    // p: موضع الدور العادي في اللفّة الحالية. served: من أخذ دوره في هذه اللفّة
-    const mark = id => { if (!idx.has(id)) return; served.add(id); if (ord.every(x => served.has(x))) { served = new Set(); p = 0; } };
+    const mark = (t, id) => { const s = st[t]; if (!s.idx.has(id)) return; s.served.add(id); if (s.ord.every(x => s.served.has(x))) { s.served = new Set(); s.p = 0; } };
     // المناوبة تُعاد كتابتها إذا كانت من القائمة ولم تُنفّذ، ولم يُبلَّغ السائق بها وهو متاح
     const replaceable = x => tset.has(x.type) && !x.done && (x.auto || overwrite) && !(x.remindedAt && S.available(x.driverId, x.date));
-    function pick(day, used) {
-      const ok = id => !served.has(id) && !used.has(id) && S.available(id, day);
+    function pick(t, day, used) {
+      const s = st[t], ok = id => !s.served.has(id) && !used.has(id) && S.available(id, day);
       for (let pass = 0; pass < 2; pass++) {
-        // أولاً: سائق فاته دوره (كان في إجازة) ورجع متاحاً
-        for (let i = 0; i < p && i < n; i++) if (ok(ord[i])) return ord[i];
+        // أولاً: سائق فاته دوره (إجازة أو كان عنده مناوبة ثانية) ورجع متاحاً
+        for (let i = 0; i < s.p && i < s.n; i++) if (ok(s.ord[i])) return s.ord[i];
         // بعدها: الدور العادي حسب الترتيب
-        for (let i = p; i < n; i++) if (ok(ord[i])) { p = i + 1; return ord[i]; }
+        for (let i = s.p; i < s.n; i++) if (ok(s.ord[i])) { s.p = i + 1; return s.ord[i]; }
         // ما بقي أحد متاح في هذه اللفّة: تبدأ لفّة جديدة
-        served = new Set(); p = 0;
+        s.served = new Set(); s.p = 0;
       }
       return null;
     }
-    if (n && types.length && start && until) S.range(start, until).forEach(day => {
+    if (types.length && start && until) S.range(start, until).forEach(day => {
       if (S.isWeekend(day)) return;
       const gen = day >= from, all = S.dutiesOn(day);
       const keep = [];
@@ -2017,11 +2080,12 @@ const Cloud = (() => {
       const used = new Set(all.filter(x => !(gen && replaceable(x))).map(x => x.driverId));
       keep.sort((a, b) => (!!a.auto - !!b.auto) || (a.type === b.type ? 0 : a.type === 'going' ? -1 : 1)).forEach(x => {
         // إعادة تمثيل المناوبات السابقة بنفس منطق الاختيار حتى تبقى النتيجة ثابتة
-        if (x.auto && idx.has(x.driverId)) {
-          if (served.has(x.driverId)) { served = new Set(); p = 0; }
-          const i = idx.get(x.driverId); if (i >= p) p = i + 1;
+        const s = st[x.type];
+        if (x.auto && s.idx.has(x.driverId)) {
+          if (s.served.has(x.driverId)) { s.served = new Set(); s.p = 0; }
+          const i = s.idx.get(x.driverId); if (i >= s.p) s.p = i + 1;
         }
-        mark(x.driverId);
+        mark(x.type, x.driverId);
         if (x.type === 'going') gi++;
       });
       if (!gen) return;
@@ -2029,9 +2093,9 @@ const Cloud = (() => {
       types.forEach(([type, k]) => {
         let need = k - keep.filter(x => x.type === type).length;
         while (need-- > 0) {
-          const id = pick(day, used);
+          const id = pick(type, day, used);
           if (!id) { short.push(`${S.dayName(day)} ${S.fmtShort(day)} – ${S.typeName(type)}`); break; }
-          used.add(id); mark(id);
+          used.add(id); mark(type, id);
           const x = { id: S.uid(), type, date: day, driverId: id, dest: type === 'going' && rotateDest && dests.length ? dests[gi % dests.length] : '', note: '', done: false, auto: true };
           if (type === 'going') gi++;
           add.push(x); row[type].push({ x, keep: false });
@@ -2039,8 +2103,9 @@ const Cloud = (() => {
       });
       days.push(row);
     });
-    // السائق التالي في الدور بعد نهاية الفترة
-    const next = ord.slice(p).find(id => !served.has(id)) || ord.find(id => !served.has(id)) || ord[0] || null;
+    // السائق التالي في كل قائمة بعد نهاية الفترة
+    const next = {};
+    TYPES.forEach(t => { const s = st[t]; next[t] = s.ord.slice(s.p).find(id => !s.served.has(id)) || s.ord.find(id => !s.served.has(id)) || s.ord[0] || null; });
     // نحتفظ بالمناوبات اللي ما تغيّرت (نفس اليوم والنوع والسائق) حتى ما تضيع ملاحظاتها وتذكيراتها
     const reuse = [], fresh = [];
     add.forEach(a => {
@@ -2048,7 +2113,7 @@ const Cloud = (() => {
       if (i >= 0) reuse.push([drop.splice(i, 1)[0], a]); else fresh.push(a);
     });
     const changed = reuse.filter(([x, a]) => !x.auto || (rotateDest && x.type === 'going' && x.dest !== a.dest)).length;
-    return { add: fresh, drop, reuse, short, days, next, ord, changes: fresh.length + drop.length + changed };
+    return { add: fresh, drop, reuse, short, days, next, changes: fresh.length + drop.length + changed };
   }
   function applySim(res, rotateDest) {
     const ids = new Set(res.drop.map(x => x.id));
@@ -2059,7 +2124,7 @@ const Cloud = (() => {
   // تعديل القائمة تلقائياً بعد أي تغيير
   function autoRebuild(from) {
     const r = rot();
-    if (!rotActive() || !rotOrder().length) return 0;
+    if (!rotActive() || !rotUsable(r)) return 0;
     from = maxDate(from, S.today(), r.start);
     if (from > r.until) return 0;
     const res = simulate({ ...r, from, overwrite: false });
@@ -2072,29 +2137,53 @@ const Cloud = (() => {
 
   // مسودة إعدادات الدور (تُعتمد عند النشر)
   let draft = null, draftDirty = false, proposal = null;
-  const freshDraft = () => { const r = rot(); draft = JSON.parse(JSON.stringify({ ...S.ROTATION_DEFAULT, ...r })); draft.order = rotOrder(draft.order); draftDirty = false; };
+  // يرتّب القائمة: المشمولين بترتيبهم، ثم المستبعدين
+  function normLists(c) {
+    const lists = {};
+    TYPES.forEach(t => {
+      const L = listCfg(c, t), off = (L.off || []).filter(id => S.driver(id) && S.driver(id).active);
+      lists[t] = { order: rotOrder(t, c), off };
+    });
+    c.lists = lists; delete c.order;
+  }
+  const freshDraft = () => { draft = JSON.parse(JSON.stringify({ ...S.ROTATION_DEFAULT, ...rot() })); normLists(draft); draftDirty = false; };
+  function renderList(type, nextId, until) {
+    const L = draft.lists[type], on = perDay(draft, type) > 0;
+    const row = (id, i, off) => {
+      const d = S.driver(id); if (!d) return '';
+      const away = S.onLeave(id, S.today()) && !S.subFor(id, S.today()), nx = !off && on && id === nextId;
+      const last = L.order.length - 1, k = `${type}|${i}`;
+      return `<li class="${nx ? 'next' : ''}${off ? ' off' : ''}"><span class="pos">${off ? '–' : i + 1}</span>
+        <span class="nm"><strong>${S.esc(d.name)}</strong><small>${d.busNo ? T('حافلة') + ' ' + S.esc(d.busNo) : ''}${away ? ' · ' + T('في إجازة') : ''}${off ? ' · ' + T('خارج هذه القائمة') : ''}${nx && until ? ' · ' + T('الدور القادم بعد {date}', { date: S.fmtShort(until) }) : ''}</small></span>
+        <span class="mv">${off ? '' : `<button class="btn sm icon" data-mv="${k}|-1" ${i ? '' : 'disabled'} aria-label="${T('لأعلى')}"><i class="fa-solid fa-arrow-up"></i></button>
+        <button class="btn sm icon" data-mv="${k}|1" ${i < last ? '' : 'disabled'} aria-label="${T('لأسفل')}"><i class="fa-solid fa-arrow-down"></i></button>
+        <button class="btn sm icon" data-mv="${k}|top" ${i ? '' : 'disabled'} title="${T('اجعله أول القائمة')}" aria-label="${T('اجعله أول القائمة')}"><i class="fa-solid fa-angles-up"></i></button>`}
+        <button class="btn sm icon" data-tog="${type}|${id}" title="${off ? T('إرجاعه للقائمة') : T('إخراجه من هذه القائمة')}" aria-label="${off ? T('إرجاعه للقائمة') : T('إخراجه من هذه القائمة')}"><i class="fa-solid ${off ? 'fa-eye' : 'fa-eye-slash'}"></i></button></span></li>`;
+    };
+    const el = type === 'going' ? $('#rListGoing') : $('#rListSchool');
+    el.innerHTML = (L.order.map((id, i) => row(id, i, false)).join('') + L.off.map(id => row(id, 0, true)).join(''))
+      || `<li class="empty-state" style="display:block">${T('لا يوجد سائقون نشطون. أضف السائقين أولاً.')}</li>`;
+    (type === 'going' ? $('#rCountGoing') : $('#rCountSchool')).textContent = on ? T('{n} سائق', { n: L.order.length }) : T('غير مستخدمة (0 في اليوم)');
+    (type === 'going' ? $('#rCardGoing') : $('#rCardSchool')).style.opacity = on ? '' : '.6';
+  }
   function initAuto() {
     if (!draft || !draftDirty) freshDraft();
     const r = rot();
     if (!draft.start) { const ws = S.weekStart(S.today()); draft.start = S.today() > S.addDays(ws, 4) ? S.addDays(ws, 7) : ws; }
     if (!draft.until || draft.until < draft.start) draft.until = S.addDays(draft.start, 27);
-    draft.order = rotOrder(draft.order);
+    normLists(draft);
     $('#rStart').value = draft.start; $('#rUntil').value = draft.until;
     $('#rGoing').value = draft.goingPerDay; $('#rSchool').value = draft.schoolPerDay;
     $('#rAdjust').checked = draft.autoAdjust !== false; $('#rDest').checked = draft.rotateDest !== false;
     $('#rStartHint').textContent = draft.start ? T('القائمة تبدأ يوم {day} {date}', { day: S.dayName(draft.start), date: S.fmt(draft.start) }) + (S.isWeekend(draft.start) ? ' – ' + T('هذا اليوم عطلة، التوزيع يبدأ من أول يوم عمل بعده') : '') : '';
     // الدور القادم بعد نهاية الفترة المنشورة
-    const live = r.start && r.until ? simulate({ ...r, from: '9999-12-31' }) : null;
-    const nextId = live && live.next;
-    $('#rCount').textContent = T('{n} سائق', { n: draft.order.length });
-    $('#rList').innerHTML = draft.order.map((id, i) => {
-      const d = S.driver(id), away = S.onLeave(id, S.today()) && !S.subFor(id, S.today());
-      return `<li class="${id === nextId ? 'next' : ''}"><span class="pos">${i + 1}</span>
-        <span class="nm"><strong>${S.esc(d.name)}</strong><small>${d.busNo ? T('حافلة') + ' ' + S.esc(d.busNo) : ''}${away ? ' · ' + T('في إجازة') : ''}${id === nextId ? ' · ' + T('الدور القادم بعد {date}', { date: S.fmtShort(r.until) }) : ''}</small></span>
-        <span class="mv"><button class="btn sm icon" data-mv="${i}|-1" ${i ? '' : 'disabled'} aria-label="${T('لأعلى')}"><i class="fa-solid fa-arrow-up"></i></button>
-        <button class="btn sm icon" data-mv="${i}|1" ${i < draft.order.length - 1 ? '' : 'disabled'} aria-label="${T('لأسفل')}"><i class="fa-solid fa-arrow-down"></i></button>
-        <button class="btn sm icon" data-mv="${i}|top" ${i ? '' : 'disabled'} title="${T('اجعله أول القائمة')}" aria-label="${T('اجعله أول القائمة')}"><i class="fa-solid fa-angles-up"></i></button></span></li>`;
-    }).join('') || `<li class="empty-state" style="display:block">${T('لا يوجد سائقون نشطون. أضف السائقين أولاً.')}</li>`;
+    const live = r.start && r.until && !draftDirty ? simulate({ ...r, from: '9999-12-31' }) : null;
+    TYPES.forEach(t => renderList(t, live && live.next[t], live && r.until));
+    // تنبيه: القائمتين تبدآن بنفس السائق
+    const g = draft.lists.going.order[0], sc = draft.lists.school.order[0];
+    const clash = perDay(draft, 'going') && perDay(draft, 'school') && g && g === sc;
+    $('#rClash').hidden = !clash;
+    if (clash) $('#rClash').innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> ${S.esc(T('القائمتين تبدآن بنفس السائق ({name}). نفس السائق ما ياخذ مناوبتين في يوم واحد، فالأفضل تبدأ قائمة المدرسة بسائق مختلف.', { name: S.driver(g).name }))}`;
     const st = $('#rStatus');
     if (r.start && r.until) {
       const left = S.daysUntil(r.until);
@@ -2108,12 +2197,19 @@ const Cloud = (() => {
     }
   }
   const touch = () => { draftDirty = true; proposal = null; $('#rPreviewCard').hidden = true; initAuto(); };
-  $('#rList').addEventListener('click', e => {
-    const b = e.target.closest('[data-mv]'); if (!b) return;
-    const [i, dir] = b.dataset.mv.split('|'), o = draft.order, k = +i;
-    const [id] = o.splice(k, 1);
-    o.splice(dir === 'top' ? 0 : Math.max(0, Math.min(o.length, k + +dir)), 0, id);
-    touch();
+  $('section[data-panel="auto"]').addEventListener('click', e => {
+    const m = e.target.closest('[data-mv]'), tg = e.target.closest('[data-tog]');
+    if (m) {
+      const [type, i, dir] = m.dataset.mv.split('|'), o = draft.lists[type].order, k = +i;
+      const [id] = o.splice(k, 1);
+      o.splice(dir === 'top' ? 0 : Math.max(0, Math.min(o.length, k + +dir)), 0, id);
+      touch();
+    } else if (tg) {
+      const [type, id] = tg.dataset.tog.split('|'), L = draft.lists[type];
+      if (L.off.includes(id)) { L.off = L.off.filter(x => x !== id); L.order.push(id); }
+      else { L.order = L.order.filter(x => x !== id); L.off.push(id); }
+      touch();
+    }
   });
   $('#rStart').onchange = e => { draft.start = e.target.value; touch(); };
   $('#rUntil').onchange = e => { draft.until = e.target.value; touch(); };
@@ -2128,7 +2224,7 @@ const Cloud = (() => {
     const c = draft;
     if (!c.start || !c.until || c.until < c.start) return S.toast(T('حدد فترة صحيحة'), true);
     if (!(+c.goingPerDay) && !(+c.schoolPerDay)) return S.toast(T('حدد عدد السائقين في اليوم'), true);
-    if (!rotOrder(c.order).length) return S.toast(T('لا يوجد سائقون نشطون'), true);
+    if (!rotUsable(c)) return S.toast(T('لا يوجد سائقون نشطون'), true);
     const r = rot(), fresh = !r.start || r.start !== c.start;
     const from = fresh ? c.start : maxDate(S.today(), c.start);
     const overwrite = $('#rOverwrite').checked;
@@ -2143,7 +2239,7 @@ const Cloud = (() => {
     $('#rPreview').innerHTML = `<div class="panel-head"><h2>${T('معاينة التوزيع')}</h2><span class="muted">${T('من {from} إلى {to}', { from: S.fmt(from), to: S.fmt(c.until) })}</span></div>
       <div class="alert-row" style="background:var(--bus-soft);flex-wrap:wrap"><i class="fa-solid fa-circle-info"></i>
         ${T('مناوبات جديدة: {a} · تُحذف: {d} · بدون تغيير: {k}', { a: res.add.length, d: res.drop.length + outside.length, k: res.reuse.length })}
-        ${res.next ? ` · ${T('الدور القادم بعد هذه الفترة: {name}', { name: S.esc(name(res.next)) })}` : ''}</div>
+        ${TYPES.filter(t => perDay(c, t) && res.next[t]).map(t => ` · ${T('الدور القادم في {list}: {name}', { list: S.typeName(t), name: S.esc(name(res.next[t])) })}`).join('')}</div>
       ${res.short.length ? `<div class="alert-row" style="background:var(--red-soft);color:var(--red)"><i class="fa-solid fa-triangle-exclamation"></i> ${T('لا يوجد سائق متاح في: {list}', { list: res.short.slice(0, 6).join('، ') + (res.short.length > 6 ? '…' : '') })}</div>` : ''}
       <div class="table-wrap" style="border:1px solid var(--line);max-height:460px;overflow:auto"><table class="data"><thead><tr><th>${T('اليوم|day')}</th><th>${T('التاريخ')}</th>${nG ? `<th>${T('مناوبة الذهاب')}</th>` : ''}${nS ? `<th>${T('المناوبة في المدرسة')}</th>` : ''}</tr></thead><tbody>
       ${res.days.map((r, i, a) => `<tr${i && S.weekStart(a[i - 1].day) !== S.weekStart(r.day) ? ' style="border-top:3px solid var(--bus)"' : ''}><td><strong>${S.dayName(r.day)}</strong></td><td class="num">${S.fmtShort(r.day)}</td>${nG ? `<td>${cell(r.going)}</td>` : ''}${nS ? `<td>${cell(r.school)}</td>` : ''}</tr>`).join('') || `<tr><td colspan="4" class="empty-state">${T('لا توجد أيام عمل في هذه الفترة')}</td></tr>`}
@@ -2204,7 +2300,8 @@ const Cloud = (() => {
     const [gf, gt] = $('#gScope').value === 'week' ? [ws, we] : [nDate, nDate];
     const txt = S.groupText(gf, gt);
     $('#gText').value = txt;
-    $('#gOpen').href = 'https://wa.me/?text=' + encodeURIComponent(txt);
+    $('#gOpen').href = S.waLink('', txt);
+    $('#waMode').value = S.waMode();
 
     $('#wRange').textContent = `${S.fmtShort(ws)} – ${S.fmtShort(we)}`;
     const inWeek = x => x.date >= ws && x.date <= we;
@@ -2220,6 +2317,7 @@ const Cloud = (() => {
   $('#nToday').onclick = () => { nDate = S.today(); renderNotify(); };
   $('#nNext').onclick = () => { nDate = nextWorkday(S.today()); renderNotify(); };
   $('#gScope').onchange = renderNotify;
+  $('#waMode').onchange = e => { S.setWaMode(e.target.value); renderAll(); S.toast(T('تم حفظ طريقة فتح واتساب لهذا الجهاز')); };
   $('#nSendAll').onclick = () => {
     const x = pendingFor(nDate).find(y => (S.who(y) || {}).phone); if (!x) return;
     window.open(S.waLink(S.who(x).phone, S.reminderText(x)), '_blank', 'noopener');
@@ -2425,7 +2523,7 @@ const Cloud = (() => {
     db().duties.slice().sort((a, b) => a.date.localeCompare(b.date)).forEach(x => { const d = S.driver(x.driverId) || {}, w = S.who(x) || {}; rows.push([x.date, S.dayName(x.date), S.typeName(x.type), d.name, w.sub ? w.name : '', w.busNo, w.phone, x.dest, x.note, x.done ? T('نعم') : T('لا')]); });
     download(`مناوبات-الحافلات-${S.today()}.csv`, '﻿' + rows.map(r => r.map(q).join(',')).join('\r\n'), 'text/csv;charset=utf-8');
   };
-  $('#clearDuties').onclick = async () => { if (await ask(T('حذف جميع المناوبات'), T('سيتم حذف {n} مناوبة. بيانات السائقين تبقى كما هي.', { n: db().duties.length }), T('حذف الكل'))) { db().duties = []; db().rotation = { ...S.ROTATION_DEFAULT, order: rot().order || [] }; draft = null; commit('حذف جميع المناوبات'); S.toast(T('تم حذف جميع المناوبات')); } };
+  $('#clearDuties').onclick = async () => { if (await ask(T('حذف جميع المناوبات'), T('سيتم حذف {n} مناوبة. بيانات السائقين تبقى كما هي.', { n: db().duties.length }), T('حذف الكل'))) { db().duties = []; db().rotation = { ...S.ROTATION_DEFAULT, order: rot().order || [], lists: rot().lists }; draft = null; commit('حذف جميع المناوبات'); S.toast(T('تم حذف جميع المناوبات')); } };
 
   $('#sLogo').onchange = async e => {
     try { db().settings.logo = await S.readLogo(e.target.files[0]); commit('تغيير شعار المدرسة'); S.toast(T('تم تغيير الشعار')); }
