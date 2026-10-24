@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>مناوبات الحافلات</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<script>try{var L=localStorage.getItem('school-bus-lang');if(L==='en'){document.documentElement.lang='en';document.documentElement.dir='ltr';}}catch(e){}</script>
 <style>
 /* نظام مناوبات الحافلات – مدرسة فدى
    الثيم الأصلي: كحلي متدرج (#2c3e50 ← #4a6491)، أزرار ملونة دائرية، خلفية زرقاء فاتحة. */
@@ -291,6 +292,34 @@ table.data tr.done td{background:var(--green-soft)!important}
 }
 section[data-panel="notify"]{display:flex;flex-direction:column;gap:22px}
 
+
+/* ===== قائمة الدور ===== */
+.rot-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px;max-height:560px;overflow:auto}
+.rot-list li{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:12px;background:var(--surface-2);border:1px solid var(--line)}
+.rot-list li.next{border-color:var(--green);box-shadow:0 0 0 2px color-mix(in srgb,var(--green) 25%,transparent)}
+.rot-list li.off{opacity:.55}
+.rot-list .pos{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;background:var(--band-grad);color:#fff;font-weight:700;font-size:13px;flex:none;font-variant-numeric:tabular-nums}
+.rot-list .nm{flex:1;min-width:0;display:flex;flex-direction:column}
+.rot-list .nm strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rot-list .nm small{color:var(--muted);font-size:12px}
+.rot-list .mv{display:flex;gap:4px}
+.chip.sub{background:var(--amber-soft);color:var(--amber);border-color:transparent}
+
+/* ===== زر اللغة ===== */
+.lang-btn{font-weight:800;min-width:42px;justify-content:center;font-family:var(--f-display)}
+.lang-float{position:fixed;top:14px;inset-inline-end:14px;z-index:60;background:#fff;color:#2c3e50}
+body:has(#app:not([hidden])) .lang-float{display:none}
+
+/* ===== الاتجاه من اليسار لليمين (الإنجليزي) ===== */
+[dir="ltr"] .flip-ltr{transform:scaleX(-1)}
+[dir="ltr"] body{font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif}
+@media (max-width:820px){
+  [dir="ltr"] .side{inset:0 auto 0 0;transform:translateX(-100%)}
+  [dir="ltr"] .side.open{transform:none;box-shadow:10px 0 40px rgba(0,0,0,.4)}
+}
+[dir="ltr"] .toast{right:auto;left:20px}
+@media print{.lang-btn{display:none!important}}
+
 </style>
 </head>
 <body data-title="مناوبات الحافلات">
@@ -302,6 +331,7 @@ section[data-panel="notify"]{display:flex;flex-direction:column;gap:22px}
       <div class="sub" data-school></div>
     </div>
     <div class="tools">
+      <button class="btn icon lang-btn" data-lang-toggle title="English / عربي" aria-label="English / عربي">EN</button>
       <button class="btn icon" id="themeBtn" title="تبديل الوضع الليلي" aria-label="تبديل الوضع الليلي"><i class="fa-solid fa-circle-half-stroke"></i></button>
       <a class="btn primary" href="admin.html"><i class="fa-solid fa-right-to-bracket"></i> دخول الإدارة</a>
     </div>
@@ -328,14 +358,14 @@ section[data-panel="notify"]{display:flex;flex-direction:column;gap:22px}
       <h2>جدول الأسبوع</h2>
       <span class="muted" id="weekLabel"></span>
       <div class="week-nav">
-        <button class="btn sm" id="prevWeek"><i class="fa-solid fa-chevron-right"></i> السابق</button>
+        <button class="btn sm" id="prevWeek"><i class="fa-solid fa-chevron-right flip-ltr"></i> السابق</button>
         <button class="btn sm" id="thisWeek">هذا الأسبوع</button>
-        <button class="btn sm" id="nextWeek">التالي <i class="fa-solid fa-chevron-left"></i></button>
+        <button class="btn sm" id="nextWeek">التالي <i class="fa-solid fa-chevron-left flip-ltr"></i></button>
       </div>
     </div>
     <div class="card table-wrap">
       <table class="data">
-        <thead><tr><th>اليوم</th><th>التاريخ</th><th>مناوبة الذهاب</th><th>الوجهة</th><th>المناوبة في المدرسة</th></tr></thead>
+        <thead><tr><th data-i18n="اليوم|day">اليوم</th><th>التاريخ</th><th>مناوبة الذهاب</th><th>الوجهة</th><th>المناوبة في المدرسة</th></tr></thead>
         <tbody id="weekBody"></tbody>
       </table>
     </div>
@@ -352,14 +382,444 @@ section[data-panel="notify"]{display:flex;flex-direction:column;gap:22px}
 </main>
 <footer class="pub-foot">نظام إدارة مناوبات الحافلات – <span data-school></span> © <span id="year"></span></footer>
 
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <script src="config.js"></script>
 <script>
+/* الترجمة: عربي / English
+   النصوص العربية هي المفاتيح، والقاموس EN يعطي المقابل الإنجليزي.
+   اللغة تُحفظ في متصفح كل مستخدم. */
+const I18N = (() => {
+  const KEY = 'school-bus-lang';
+  let lang = 'ar';
+  try { if (localStorage.getItem(KEY) === 'en') lang = 'en'; } catch (e) {}
+  const EN = {
+"مدير": "Admin",
+"مشرف": "Supervisor",
+"اكتب إيميلك أولاً ثم اضغط \"نسيت كلمة المرور\"": "Type your email first, then press \"Forgot password\"",
+"أرسلنا رابط تغيير كلمة المرور إلى إيميلك": "We sent a password reset link to your email",
+"اكتب كلمة المرور الجديدة": "Enter your new password",
+"كلمتا المرور غير متطابقتين": "Passwords do not match",
+"تم تغيير كلمة المرور": "Password changed",
+"اختر ملف صورة (PNG أو JPG)": "Choose an image file (PNG or JPG)",
+"أهلاً بك. ابدأ بإضافة السائقين": "Welcome! Start by adding drivers",
+"تم إعداد النظام": "System is set up",
+"ذهاب": "Trip",
+"مدرسة": "School",
+"سائق بديل مؤقت": "Temporary substitute driver",
+"بديل عن {name}": "Substitute for {name}",
+"سائق محذوف": "Deleted driver",
+"من قائمة الدور": "From the rotation list",
+"إرسال تذكير واتساب": "Send WhatsApp reminder",
+"تذكير واتساب": "WhatsApp reminder",
+"منتهية": "Expired",
+"انتهت": "Ended",
+"{n} يوم": "{n} days",
+"حتى": "until",
+"تأكيد": "Confirm",
+"السائقون النشطون": "Active drivers",
+"مناوبات هذا الأسبوع": "Duties this week",
+"أيام ينقصها سائق هذا الأسبوع": "Days missing a driver this week",
+"نسبة التنفيذ هذا الأسبوع": "Completion rate this week",
+"وثائق تحتاج تجديد": "Documents to renew",
+"منفذة": "Done",
+"تأكيد التنفيذ": "Mark as done",
+"اليوم عطلة نهاية الأسبوع": "Today is a weekend",
+"لا توجد مناوبة لليوم.": "No duty for today.",
+"التوزيع بالدور": "Rotation",
+"لديه مناوبة يوم {day} {date} وهو في إجازة": "Has a duty on {day} {date} while on leave",
+"انتهت فترة قائمة الدور. مدّدها من صفحة التوزيع بالدور": "The rotation period has ended. Extend it from the Rotation page",
+"قائمة الدور تنتهي بعد {n} يوم. مدّدها من صفحة التوزيع بالدور": "The rotation ends in {n} days. Extend it from the Rotation page",
+"فتح": "Open",
+"لا توجد تنبيهات": "No alerts",
+"لا توجد عمليات بعد": "No activity yet",
+"جدول المناوبات من {from} إلى {to}": "Duty schedule from {from} to {to}",
+"اليوم": "Today",
+"لم يُعيّن سائق": "No driver assigned",
+"تعيين": "Assign",
+"في إجازة": "On leave",
+"تعديل": "Edit",
+"حذف": "Delete",
+"مناوبة الذهاب إلى ({dests})": "Trip duty to ({dests})",
+"المناوبة اليومية في (المدرسة)": "Daily duty at (School)",
+"التاريخ": "Date",
+"السائق": "Driver",
+"الحافلة": "Bus",
+"المنطقة": "Area",
+"الهاتف": "Phone",
+"الوجهة": "Destination",
+"ملاحظات": "Notes",
+"لا توجد أيام عمل في هذه الفترة": "No working days in this period",
+"اختر السائق": "Choose a driver",
+"ينوب عنه {name}": "Covered by {name}",
+"لديه مناوبة في هذا اليوم": "already has a duty this day",
+"حافلة": "Bus",
+"هذا اليوم عطلة نهاية الأسبوع.": "This day is a weekend.",
+"السائق مسجل في إجازة في هذا التاريخ.": "The driver is on leave on this date.",
+"سينفّذها البديل {name} نيابة عن السائق.": "Substitute {name} will cover it for the driver.",
+"السائق لديه مناوبة أخرى في نفس اليوم.": "The driver has another duty on the same day.",
+"قائمة الدور تتعدل تلقائياً بعد الحفظ.": "The rotation list will adjust automatically after saving.",
+"تعديل مناوبة": "Edit duty",
+"مناوبة جديدة": "New duty",
+"تم حفظ التعديل": "Changes saved",
+"تمت إضافة المناوبة": "Duty added",
+"دور السائق ينتقل لليوم التالي وتتأخر القائمة.": "The driver's turn moves to the next day and the list shifts.",
+"حذف المناوبة": "Delete duty",
+"حذف مناوبة {name} يوم {day} {date}؟": "Delete {name}'s duty on {day} {date}?",
+"تم حذف المناوبة": "Duty deleted",
+"حذف السائق": "Delete driver",
+"حذف {name}{extra}؟ يمكنك بدلاً من ذلك جعله غير نشط.": "Delete {name}{extra}? You can make them inactive instead.",
+" وحذف {n} مناوبة مسجلة له": " and their {n} recorded duties",
+"وحذف {n} مناوبة مسجلة له": " and their {n} recorded duties",
+"تم حذف السائق": "Driver deleted",
+"حذف البديل": "Delete substitute",
+"حذف {name} كبديل؟ ترجع المناوبات باسم السائق الأصلي.": "Remove {name} as substitute? Duties go back to the original driver.",
+"تم حذف البديل": "Substitute deleted",
+"القائمة تبدأ يوم {day} {date}": "The list starts on {day} {date}",
+"هذا اليوم عطلة، التوزيع يبدأ من أول يوم عمل بعده": "this is a weekend, distribution starts on the next working day",
+"{n} سائق": "{n} drivers",
+"الدور القادم بعد {date}": "next turn after {date}",
+"لأعلى": "Move up",
+"لأسفل": "Move down",
+"اجعله أول القائمة": "Move to top",
+"لا يوجد سائقون نشطون. أضف السائقين أولاً.": "No active drivers. Add drivers first.",
+"القائمة منشورة من {from} حتى {to}": "List published from {from} to {to}",
+"التعديل التلقائي شغّال": "auto-adjust is on",
+"انتهت الفترة": "period ended",
+"تنتهي بعد {n} يوم": "ends in {n} days",
+"تغييرات غير منشورة": "Unpublished changes",
+"لم تُنشر قائمة بعد. رتّب السائقين واختر تاريخ البداية، ثم اضغط معاينة التوزيع.": "No list published yet. Order the drivers, pick the start date, then press Preview.",
+"حدد فترة صحيحة": "Choose a valid period",
+"حدد عدد السائقين في اليوم": "Set the number of drivers per day",
+"لا يوجد سائقون نشطون": "No active drivers",
+"يدوي": "manual",
+"معاينة التوزيع": "Preview distribution",
+"من {from} إلى {to}": "From {from} to {to}",
+"مناوبات جديدة: {a} · تُحذف: {d} · بدون تغيير: {k}": "New duties: {a} · Removed: {d} · Unchanged: {k}",
+"الدور القادم بعد هذه الفترة: {name}": "Next turn after this period: {name}",
+"لا يوجد سائق متاح في: {list}": "No driver available on: {list}",
+"مناوبة الذهاب": "Trip duty",
+"المناوبة في المدرسة": "School duty",
+"اعتماد ونشر القائمة": "Approve & publish list",
+"إلغاء": "Cancel",
+"تم نشر القائمة": "List published",
+"{n} مناوبة": "{n} duties",
+"لا يوجد رقم هاتف": "No phone number",
+"أُرسل {t}": "Sent {t}",
+"لم يُرسل": "Not sent",
+"إعادة الإرسال": "Resend",
+"إرسال": "Send",
+"إضافة رقم": "Add number",
+"لا توجد مناوبات في هذا اليوم.": "No duties on this day.",
+"إرسال للجميع بالتتابع ({n} متبقي)": "Send to all one by one ({n} left)",
+"تم إرسال كل التذكيرات": "All reminders sent",
+"لا يوجد رقم": "No number",
+"لا توجد مناوبات في هذا الأسبوع": "No duties this week",
+"تم نسخ النص، ألصقه في قروب واتساب": "Text copied, paste it in the WhatsApp group",
+"حدد النص وانسخه يدوياً": "Select the text and copy it manually",
+"نشط": "Active",
+"غير نشط": "Inactive",
+"واتساب": "WhatsApp",
+"لا يوجد سائق مطابق": "No matching driver",
+"تعديل بيانات السائق": "Edit driver",
+"سائق جديد": "New driver",
+"تم حفظ بيانات السائق": "Driver saved",
+"قادمة": "Upcoming",
+"جارية": "Ongoing",
+"لا توجد إجازات مسجلة": "No leaves recorded",
+"تاريخ النهاية قبل تاريخ البداية": "End date is before start date",
+"تم تسجيل الإجازة": "Leave recorded",
+"{name} لديه {n} مناوبة خلال الإجازة.": "{name} has {n} duties during the leave.",
+"إلغاء تعيينها": "Unassign them",
+"إعادة توزيعها تلقائياً": "Reassign automatically",
+"تعيين سائق بديل": "Assign a substitute",
+"تم إلغاء التعيين": "Unassigned",
+"تمت إعادة توزيع {n} مناوبة": "{n} duties reassigned",
+"نفس حافلة السائق ({n})": "Same as driver's bus ({n})",
+"نفس حافلة السائق": "Same as driver's bus",
+"ينوب عن {name} من {from} إلى {to} ({n} يوم عمل). مناوبات {name} في هذه الفترة: {m}": "Covers {name} from {from} to {to} ({n} working days). {name}'s duties in this period: {m}",
+"لا يوجد حالياً": "none yet",
+"لا يوجد سائقون بدلاء": "No substitute drivers",
+"هذا السائق عنده بديل ({name}) في نفس الفترة": "This driver already has a substitute ({name}) in this period",
+"تم حفظ البديل": "Substitute saved",
+"مناوبات نفّذها البديل": "Duties covered by a substitute",
+"تم حفظ الإعدادات": "Settings saved",
+"تم حفظ النسخة الاحتياطية": "Backup saved",
+"استيراد نسخة": "Import backup",
+"ستُستبدل البيانات الحالية بـ {d} سائق و{n} مناوبة من الملف.": "Current data will be replaced with {d} drivers and {n} duties from the file.",
+"استيراد": "Import",
+"تم استيراد البيانات": "Data imported",
+"الملف غير صالح. اختر نسخة احتياطية من هذا النظام": "Invalid file. Choose a backup from this system",
+"النوع": "Type",
+"البديل": "Substitute",
+"نعم": "Yes",
+"لا": "No",
+"حذف جميع المناوبات": "Delete all duties",
+"سيتم حذف {n} مناوبة. بيانات السائقين تبقى كما هي.": "{n} duties will be deleted. Driver data stays as is.",
+"حذف الكل": "Delete all",
+"تم حذف جميع المناوبات": "All duties deleted",
+"تم تغيير الشعار": "Logo changed",
+"تمت إزالة الشعار": "Logo removed",
+"أنت": "You",
+"الصلاحية": "Role",
+"إزالة": "Remove",
+"لا يوجد مستخدمون": "No users",
+"تمت إضافة {name}": "{name} added",
+"تم تغيير الصلاحية": "Role changed",
+"إزالة المستخدم": "Remove user",
+"إزالة {name}؟ لن يقدر يدخل لوحة التحكم بعد الآن.": "Remove {name}? They will no longer be able to sign in.",
+"تمت الإزالة": "Removed",
+"الحساب {email} غير مضاف للنظام. اطلب من مدير النظام إضافتك.": "The account {email} is not added to the system. Ask the system admin to add you.",
+"رقم الحافلة": "Bus number",
+"اتصال": "Call",
+"عطلة نهاية الأسبوع": "Weekend",
+"لا توجد مناوبة مسجلة لهذا اليوم": "No duty recorded for today",
+"إلى ({dests})": "To ({dests})",
+"من {date}": "From {date}",
+"ينوب عنه {name} حتى {date}": "Covered by {name} until {date}",
+"لا يوجد سائق مطابق للبحث": "No driver matches your search",
+"لم يتم ربط النظام بقاعدة البيانات بعد. راجع دليل الإعداد.": "The system is not connected to the database yet. See the setup guide.",
+"مدرستك": "Your school",
+"{label} منتهية منذ {n} يوم": "{label} expired {n} days ago",
+"{label} تنتهي بعد {n} يوم": "{label} expires in {n} days",
+"رقم الحافلة غير مسجل": "Bus number not recorded",
+"لا تملك صلاحية لهذا الإجراء": "You don't have permission for this action",
+"قاعدة البيانات تحتاج تحديث: شغّل ملف supabase.sql مرة ثانية": "The database needs an update: run supabase.sql again",
+"تعذّر الاتصال بقاعدة البيانات": "Could not connect to the database",
+"جارٍ الحفظ…": "Saving…",
+"تم الحفظ": "Saved",
+"أرسلنا رابط تأكيد إلى إيميلك. افتحه، ثم ارجع هنا وادخل بنفس الإيميل وكلمة المرور لإكمال الإعداد": "We sent a confirmation link to your email. Open it, then come back and sign in with the same email and password to finish setup",
+"الإيميل أو كلمة المرور غير صحيحة": "Incorrect email or password",
+"لم يتم تأكيد الإيميل بعد. افتح رابط التأكيد اللي وصلك": "Email not confirmed yet. Open the confirmation link you received",
+"هذا الإيميل مسجل مسبقاً": "This email is already registered",
+"كلمة المرور ضعيفة، استخدم 6 أحرف أو أكثر": "Weak password, use 6 or more characters",
+"صيغة الإيميل غير صحيحة": "Invalid email format",
+"محاولات كثيرة، انتظر قليلاً ثم حاول مرة أخرى": "Too many attempts, wait a moment and try again",
+"لا يوجد اتصال بالإنترنت": "No internet connection",
+"حدث خطأ، حاول مرة أخرى": "Something went wrong, try again",
+"رخصة القيادة": "Driving licence",
+"تأمين الحافلة": "Bus insurance",
+"الرخصة": "Licence",
+"التأمين": "Insurance",
+"لوحة التحكم": "Dashboard",
+"مناوبات الحافلات": "Bus Duties",
+"الرئيسية": "Home",
+"جدول المناوبات": "Duty schedule",
+"السائقون والحافلات": "Drivers & buses",
+"الإجازات والغياب": "Leaves & absence",
+"السائق البديل": "Substitute driver",
+"تنبيهات واتساب": "WhatsApp reminders",
+"التقارير": "Reports",
+"الإعدادات": "Settings",
+"المستخدمون": "Users",
+"English / عربي": "English / عربي",
+"معاينة الشعار": "Logo preview",
+"إعداد نظام المناوبات": "Duty system setup",
+"خطوة واحدة وتبدأ. تقدر تغيّر كل هذا لاحقاً من الإعدادات.": "One step and you're ready. You can change all of this later in Settings.",
+"اسم المدرسة": "School name",
+"مثال: مدرسة النور للتعليم الأساسي": "e.g. Al Noor Basic Education School",
+"شعار المدرسة (اختياري)": "School logo (optional)",
+"وجهات الذهاب (افصل بينها بفاصلة)": "Trip destinations (separate with commas)",
+"مثال: المدينة، السوق، المستشفى": "e.g. City, Market, Hospital",
+"أيام العطلة الأسبوعية": "Weekly days off",
+"اسمك (مدير النظام)": "Your name (system admin)",
+"إيميلك": "Your email",
+"كلمة المرور": "Password",
+"أضف 4 سائقين تجريبيين لأجرّب النظام": "Add 4 sample drivers to try the system",
+"بدء استخدام النظام": "Start using the system",
+"العودة للصفحة الرئيسية": "Back to home page",
+"لم يتم ربط قاعدة البيانات بعد": "Database not connected yet",
+"افتح الملف config.js وضع رابط مشروع Supabase والمفتاح العام كما في دليل الإعداد، ثم ارفع التعديل.": "Open config.js, add your Supabase project URL and public key as in the setup guide, then upload the change.",
+"شعار المدرسة": "School logo",
+"دخول لوحة التحكم": "Dashboard sign in",
+"الإيميل": "Email",
+"دخول": "Sign in",
+"نسيت كلمة المرور؟": "Forgot password?",
+"الصفحة العامة": "Public page",
+"حسابك غير مفعّل": "Your account is not active",
+"تسجيل الخروج": "Sign out",
+"خروج": "Sign out",
+"القائمة": "Menu",
+"تبديل الوضع الليلي": "Toggle dark mode",
+"مناوبة اليوم": "Today's duty",
+"عرض الجدول": "View schedule",
+"تنبيهات": "Alerts",
+"عدالة التوزيع هذا الشهر": "Fairness this month",
+"عدد المناوبات لكل سائق": "Duties per driver",
+"آخر العمليات": "Recent activity",
+"نوع المناوبة": "Duty type",
+"كل المناوبات": "All duties",
+"الفترة": "Period",
+"أسبوع": "Week",
+"شهر": "Month",
+"فترة مخصصة": "Custom period",
+"من": "From",
+"إلى": "To",
+"الحالي": "Current",
+"طباعة": "Print",
+"إضافة": "Add",
+"مشرف النقل المدرسي: ................": "Transport supervisor: ................",
+"مدير المدرسة: ................": "School principal: ................",
+"ترتيب قائمة الدور": "Rotation order",
+"رتّب السائقين بالأسهم. النظام يمشي على القائمة بالترتيب يوماً بعد يوم، والأسبوع التالي يكمل من حيث وقف.": "Order the drivers with the arrows. The system goes through the list in order day by day, and the next week continues where it stopped.",
+"إعداد التوزيع بالدور": "Rotation settings",
+"تاريخ بداية القائمة": "List start date",
+"توزيع حتى تاريخ": "Distribute until",
+"سائقو الذهاب في اليوم": "Trip drivers per day",
+"سائقو المدرسة في اليوم": "School drivers per day",
+"أسبوعين": "2 weeks",
+"4 أسابيع": "4 weeks",
+"8 أسابيع": "8 weeks",
+"تعديل القائمة تلقائياً عند أي تغيير (إضافة سائق ليوم، حذف، إجازة)": "Adjust the list automatically on any change (adding a driver to a day, deleting, leave)",
+"توزيع الوجهات بالتناوب": "Rotate destinations",
+"استبدال المناوبات اليدوية الموجودة في الفترة": "Replace existing manual duties in the period",
+"كيف يشتغل التوزيع بالدور؟": "How does the rotation work?",
+"كل يوم عمل ياخذ السائق التالي في القائمة، وأيام العطلة تُتخطّى.": "Each working day takes the next driver in the list; days off are skipped.",
+"لو أضفت سائقاً لنفس اليوم يدوياً، يُحسب دوره، واليوم التالي ياخذه اللي بعده.": "If you manually add a driver to a day, their turn counts, and the next day goes to the one after.",
+"لو حذفت سائقاً من يوم، ينتقل دوره لليوم التالي وتتأخر القائمة يوماً.": "If you remove a driver from a day, their turn moves to the next day and the list shifts by one day.",
+"السائق في إجازة يُتخطّى ويرجع دوره أول ما يكون متاحاً. لو عنده بديل، البديل ينفّذ دوره.": "A driver on leave is skipped and gets their turn back once available. If they have a substitute, the substitute covers their turn.",
+"كل سائق ياخذ دوراً واحداً في كل لفّة للقائمة، فالتوزيع يبقى عادلاً.": "Every driver gets one turn per round of the list, so it stays fair.",
+"تذكير السائقين بمناوباتهم": "Remind drivers of their duties",
+"يوم العمل التالي": "Next working day",
+"تاريخ المناوبات": "Duty date",
+"اضغط \"إرسال\" ويفتح واتساب برسالة جاهزة للسائق، وبعدها اضغط إرسال داخل واتساب. النظام يسجّل من وصله التذكير.": "Press \"Send\" and WhatsApp opens with a ready message for the driver, then press send in WhatsApp. The system records who was reminded.",
+"إرسال للجميع بالتتابع": "Send to all one by one",
+"رسالة لمجموعة السائقين": "Message for the drivers' group",
+"المدة": "Duration",
+"يوم واحد": "One day",
+"الأسبوع كامل": "Whole week",
+"انسخ الجدول وألصقه في قروب واتساب السائقين، أو افتح واتساب واختر القروب.": "Copy the schedule and paste it in the drivers' WhatsApp group, or open WhatsApp and pick the group.",
+"نص الرسالة": "Message text",
+"نسخ النص": "Copy text",
+"فتح واتساب واختيار القروب": "Open WhatsApp and pick the group",
+"جدول الأسبوع لكل سائق": "Weekly schedule per driver",
+"رسالة واحدة لكل سائق فيها كل مناوباته في الأسبوع.": "One message per driver with all their duties this week.",
+"بحث...": "Search...",
+"بحث": "Search",
+"الاسم": "Name",
+"هاتف آخر": "Other phone",
+"السعة": "Capacity",
+"الوثائق": "Documents",
+"الحالة": "Status",
+"تسجيل إجازة أو غياب": "Record leave or absence",
+"السبب": "Reason",
+"مرضية، اعتيادية، صيانة الحافلة...": "Sick, annual, bus maintenance...",
+"تسجيل": "Record",
+"إضافة سائق بديل (نائب مؤقت)": "Add a substitute driver (temporary cover)",
+"شخص جديد يغطي مناوبات سائق لعدد محدد من الأيام. دور السائق في القائمة يبقى كما هو، والبديل هو اللي يظهر في الجدول وتوصله التذكيرات.": "A new person covers a driver's duties for a set number of days. The driver keeps their place in the rotation, and the substitute appears in the schedule and receives the reminders.",
+"السائق الأصلي": "Original driver",
+"اسم البديل": "Substitute name",
+"هاتف البديل": "Substitute phone",
+"من تاريخ": "From date",
+"عدد أيام النيابة (أيام عمل)": "Number of days (working days)",
+"إلى تاريخ": "To date",
+"حفظ البديل": "Save substitute",
+"ينوب عن": "Covers for",
+"أيام العمل": "Working days",
+"تقرير المناوبات لكل سائق": "Duty report per driver",
+"الذهاب": "Trip",
+"المدرسة": "School",
+"المجموع": "Total",
+"المنفذة": "Done",
+"نسبة التنفيذ": "Completion",
+"أيام الإجازة": "Leave days",
+"إضافة مستخدم": "Add user",
+"كلمة مرور مؤقتة": "Temporary password",
+"المشرف يدير المناوبات والسائقين والإجازات والتنبيهات. المدير يقدر كذلك يغيّر الإعدادات ويضيف المستخدمين. أرسل للمستخدم إيميله وكلمة المرور المؤقتة، ويقدر يغيّرها بعد الدخول بالضغط على اسمه في القائمة.": "Supervisors manage duties, drivers, leaves and reminders. Admins can also change settings and add users. Send the user their email and temporary password; they can change it after signing in by clicking their name in the menu.",
+"إعدادات عامة": "General settings",
+"تغيير الشعار": "Change logo",
+"إزالة الشعار": "Remove logo",
+"وجهات الذهاب (افصل بفاصلة)": "Trip destinations (comma separated)",
+"تنبيه انتهاء الوثائق قبل (يوم)": "Document expiry alert before (days)",
+"نص رسالة التذكير": "Reminder message text",
+"الكلمات اللي يستبدلها النظام: {الاسم} {المدرسة} {النوع} {اليوم} {التاريخ} {الوجهة} {الحافلة}": "Placeholders the system replaces: {الاسم} name · {المدرسة} school · {النوع} type · {اليوم} day · {التاريخ} date · {الوجهة} destination · {الحافلة} bus",
+"معاينة": "Preview",
+"حفظ الإعدادات": "Save settings",
+"النسخ الاحتياطي والبيانات": "Backup & data",
+"البيانات محفوظة في قاعدة بيانات المدرسة على Supabase، وتظهر لكل المستخدمين مباشرة. النسخة الاحتياطية ملف تحتفظ به عندك للطوارئ.": "Data is stored in the school's Supabase database and shows to all users instantly. A backup is a file you keep for emergencies.",
+"حفظ نسخة احتياطية": "Save backup",
+"تصدير المناوبات Excel": "Export duties to Excel",
+"إغلاق": "Close",
+"تم تنفيذ المناوبة": "Duty completed",
+"حفظ": "Save",
+"المنطقة (الحارة)": "Area (neighbourhood)",
+"رقم الهاتف": "Phone number",
+"رقم هاتف آخر": "Other phone number",
+"مثال: 7": "e.g. 7",
+"رقم اللوحة": "Plate number",
+"مثال: 12345 أ ب": "e.g. 12345 AB",
+"سعة الحافلة (طالب)": "Bus capacity (students)",
+"انتهاء رخصة القيادة": "Driving licence expiry",
+"انتهاء تأمين الحافلة": "Bus insurance expiry",
+"سائق نشط (يدخل في التوزيع)": "Active driver (included in rotation)",
+"تغيير كلمة المرور": "Change password",
+"كلمة المرور الجديدة": "New password",
+"تأكيد كلمة المرور": "Confirm password",
+"نظام مناوبات الحافلات المدرسية": "School Bus Duty System",
+"دخول الإدارة": "Staff sign in",
+"أهلاً بك في نظام مناوبات الحافلات": "Welcome to the bus duty system",
+"لم يتم إعداد النظام بعد. ادخل لوحة التحكم واكتب اسم مدرستك وارفع شعارها لتبدأ.": "The system isn't set up yet. Open the dashboard, enter your school's name and upload its logo to begin.",
+"إعداد النظام": "Set up system",
+"جدول الأسبوع": "Weekly schedule",
+"السابق": "Previous",
+"هذا الأسبوع": "This week",
+"التالي": "Next",
+"دليل السائقين": "Driver directory",
+"ابحث بالاسم أو المنطقة أو رقم الحافلة": "Search by name, area or bus number",
+"بحث في السائقين": "Search drivers",
+"نظام إدارة مناوبات الحافلات –": "Bus duty management system –",
+"اليوم|day": "Day"
+};
+  const fill = (s, v) => v ? String(s).replace(/\{(\w+)\}/g, (m, k) => k in v ? v[k] : m) : s;
+  // مفتاح بالشكل 'نص|سياق' يُعرض عربياً بالجزء الأول فقط
+  const t = (s, v) => fill(lang === 'en' && EN[s] != null ? EN[s] : String(s).split('|')[0], v);
+  const ATTRS = ['placeholder', 'title', 'aria-label', 'alt'];
+  let bound = null;
+  const listeners = [];
+
+  // يحفظ النصوص الثابتة في الصفحة مرة واحدة (قبل أي رسم ديناميكي)
+  function scan() {
+    bound = [];
+    const w = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, {
+      acceptNode: n => n.parentElement && !n.parentElement.closest('script,style,[data-no-i18n]') && n.nodeValue.trim() ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT
+    });
+    for (let n; (n = w.nextNode());) {
+      const v = n.nodeValue, key = (n.parentElement.dataset.i18n || v.trim()).replace(/\s+/g, ' ');
+      if (key in EN) bound.push({ n, key, pre: v.match(/^\s*/)[0], post: v.match(/\s*$/)[0] });
+    }
+    document.querySelectorAll('[placeholder],[title],[aria-label],[alt]').forEach(el => ATTRS.forEach(a => {
+      const v = el.getAttribute(a); if (v && v.trim() in EN) bound.push({ el, a, key: v.trim() });
+    }));
+  }
+  function apply() {
+    const h = document.documentElement;
+    h.lang = lang; h.dir = lang === 'en' ? 'ltr' : 'rtl';
+    if (!bound) scan();
+    bound.forEach(b => {
+      if (b.n) b.n.nodeValue = b.pre + t(b.key) + b.post;
+      else b.el.setAttribute(b.a, t(b.key));
+    });
+    document.querySelectorAll('[data-lang-toggle]').forEach(b => b.textContent = lang === 'en' ? 'ع' : 'EN');
+  }
+  function set(l) {
+    lang = l === 'en' ? 'en' : 'ar';
+    try { localStorage.setItem(KEY, lang); } catch (e) {}
+    apply(); listeners.forEach(f => f(lang));
+  }
+  document.addEventListener('click', e => { if (e.target.closest('[data-lang-toggle]')) set(lang === 'en' ? 'ar' : 'en'); });
+  return { t, apply, set, get lang() { return lang; }, onChange: f => listeners.push(f), EN };
+})();
+const T = I18N.t;
+
+</script>
+<script>
 /* طبقة البيانات المشتركة بين الصفحة العامة ولوحة التحكم.
-   البيانات تُحفظ في Supabase عبر cloud.js، وهذا الملف يحمل الأدوات المشتركة. */
+   البيانات تُحفظ في Supabase عبر Cloud، وهذا الجزء يحمل الأدوات المشتركة. */
 const Store = (() => {
   const KEY = 'school-bus-duty-v1';
-  const DAYS = ['الأحد','الإثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'];
+  const DAYS_AR = ['الأحد','الإثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'];
+  const DAYS_EN = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  const en = () => I18N.lang === 'en';
 
   const SAMPLE_DRIVERS = [
     ['سائق مثال 1','الحي الأول','90000001','','1'],
@@ -373,6 +833,9 @@ const Store = (() => {
   const uid = () => Math.random().toString(36).slice(2, 10);
   // تشفير بسيط للرمز السري (حماية أساسية فقط، ليس أماناً حقيقياً)
   const hash = s => { let h = 5381; for (const c of String(s)) h = ((h << 5) + h + c.charCodeAt(0)) | 0; return 'h' + (h >>> 0).toString(36); };
+
+  // إعدادات التوزيع بالدور
+  const ROTATION_DEFAULT = { order: [], start: '', until: '', goingPerDay: 1, schoolPerDay: 1, rotateDest: true, autoAdjust: true };
 
   function seed() {
     return {
@@ -388,9 +851,11 @@ const Store = (() => {
         alertDays: 30,
         pin: ''
       },
+      rotation: { ...ROTATION_DEFAULT, order: [] },
       drivers: [],
-      duties: [],   // {id,type:'going'|'school',date,driverId,dest,note,done}
+      duties: [],   // {id,type:'going'|'school',date,driverId,dest,note,done,auto}
       leaves: [],   // {id,driverId,from,to,reason}
+      subs: [],     // {id,driverId,name,phone,busNo,from,to,note} سائق بديل مؤقت
       log: []       // {t,msg}
     };
   }
@@ -408,10 +873,13 @@ const Store = (() => {
   const parse = s => new Date(s + 'T00:00');
   const today = () => iso(new Date());
   const addDays = (s, n) => { const d = parse(s); d.setDate(d.getDate() + n); return iso(d); };
-  const dayName = s => s ? DAYS[parse(s).getDay()] : '';
-  const fmt = s => s ? parse(s).toLocaleDateString('ar-OM-u-nu-latn', { day: 'numeric', month: 'long', year: 'numeric' }) : '';
+  // نسخ عربية ثابتة لرسائل السائقين، ونسخ تتبع لغة الواجهة
+  const dayNameAr = s => s ? DAYS_AR[parse(s).getDay()] : '';
+  const dayName = s => s ? (en() ? DAYS_EN : DAYS_AR)[parse(s).getDay()] : '';
+  const fmtAr = s => s ? parse(s).toLocaleDateString('ar-OM-u-nu-latn', { day: 'numeric', month: 'long', year: 'numeric' }) : '';
+  const fmt = s => s ? (en() ? parse(s).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }) : fmtAr(s)) : '';
   const fmtShort = s => s ? parse(s).toLocaleDateString('en-GB') : '';
-  const hijri = s => { try { return parse(s).toLocaleDateString('ar-SA-u-ca-islamic-umalqura-nu-latn', { day: 'numeric', month: 'long', year: 'numeric' }); } catch (e) { return ''; } };
+  const hijri = s => { try { return parse(s).toLocaleDateString(en() ? 'en-u-ca-islamic-umalqura-nu-latn' : 'ar-SA-u-ca-islamic-umalqura-nu-latn', { day: 'numeric', month: 'long', year: 'numeric' }); } catch (e) { return ''; } };
   const weekStart = s => { const d = parse(s); d.setDate(d.getDate() - d.getDay()); return iso(d); }; // الأحد
   const daysUntil = s => Math.round((parse(s) - parse(today())) / 864e5);
   const range = (from, to) => { const out = []; for (let d = from; d <= to; d = addDays(d, 1)) out.push(d); return out; };
@@ -420,8 +888,19 @@ const Store = (() => {
   const driver = id => db.drivers.find(d => d.id === id);
   const isWeekend = s => db.settings.weekend.includes(parse(s).getDay());
   const onLeave = (driverId, s) => db.leaves.some(l => l.driverId === driverId && l.from <= s && s <= l.to);
+  // البديل المؤقت لسائق في يوم معيّن
+  const subFor = (driverId, s) => (db.subs || []).find(x => x.driverId === driverId && x.from <= s && s <= x.to);
+  // السائق متاح للدور: نشط، وليس في إجازة أو عنده بديل يغطيه
+  const available = (driverId, s) => { const d = driver(driverId); return !!d && d.active && (!onLeave(driverId, s) || !!subFor(driverId, s)); };
+  // من سينفّذ المناوبة فعلياً (السائق أو البديل)
+  function who(duty) {
+    const d = driver(duty.driverId), sub = duty.date ? subFor(duty.driverId, duty.date) : null;
+    if (sub) return { name: sub.name, phone: sub.phone || '', phone2: '', busNo: sub.busNo || (d ? d.busNo : ''), area: d ? d.area : '', sub, orig: d };
+    return d ? { name: d.name, phone: d.phone || '', phone2: d.phone2 || '', busNo: d.busNo || '', area: d.area || '', sub: null, orig: d } : null;
+  }
   const dutiesOn = (s, type) => db.duties.filter(x => x.date === s && (!type || x.type === type));
-  const typeName = t => t === 'going' ? 'مناوبة الذهاب' : 'المناوبة في المدرسة';
+  const typeNameAr = t => t === 'going' ? 'مناوبة الذهاب' : 'المناوبة في المدرسة';
+  const typeName = t => T(typeNameAr(t));
   const intlPhone = p => { const n = String(p || '').replace(/\D/g, ''); return n.length === 8 ? '968' + n : n; };
   const waLink = (p, msg) => `https://wa.me/${intlPhone(p)}?text=${encodeURIComponent(msg)}`;
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -431,7 +910,7 @@ const Store = (() => {
     id: uid(), name, area, phone, phone2, busNo, plate: '', capacity: '', licenseExp: '', insuranceExp: '', active: true, notes: 'بيانات تجريبية، عدّلها أو احذفها'
   }));
   const logo = () => (db && db.settings.logo) || DEFAULT_LOGO;
-  const schoolName = () => (db && db.settings.school) || 'مدرستك';
+  const schoolName = () => (db && db.settings.school) || T('مدرستك');
   // تطبيق اسم المدرسة وشعارها على الصفحة
   function brand() {
     document.querySelectorAll('img.brand-logo').forEach(i => { if (i.getAttribute('src') !== logo()) i.src = logo(); });
@@ -439,7 +918,7 @@ const Store = (() => {
     let fav = document.getElementById('favicon');
     if (!fav) { fav = document.createElement('link'); fav.id = 'favicon'; fav.rel = 'icon'; document.head.appendChild(fav); }
     fav.href = logo();
-    const base = document.body.dataset.title || 'مناوبات الحافلات';
+    const base = T(document.body.dataset.title || 'مناوبات الحافلات');
     document.title = db.settings.school ? `${base} – ${db.settings.school}` : base;
   }
   // تصغير صورة الشعار قبل حفظها
@@ -463,36 +942,41 @@ const Store = (() => {
     });
   }
 
+  // رسائل واتساب للسائقين تبقى بالعربي دائماً
   const DEFAULT_TEMPLATE = 'السلام عليكم {الاسم}،\nتذكير من {المدرسة}: لديك {النوع} يوم {اليوم} {التاريخ}{الوجهة}.\nشاكرين تعاونكم.';
   function fillTemplate(tpl, duty) {
-    const d = driver(duty.driverId);
+    const w = who(duty) || {};
     const map = {
-      '{الاسم}': d ? d.name : '', '{المدرسة}': db.settings.school || '', '{النوع}': typeName(duty.type),
-      '{اليوم}': dayName(duty.date), '{التاريخ}': fmt(duty.date), '{الحافلة}': d && d.busNo ? d.busNo : '',
+      '{الاسم}': w.name || '', '{المدرسة}': db.settings.school || '',
+      '{النوع}': typeNameAr(duty.type) + (w.sub && w.orig ? ` (نيابة عن ${w.orig.name})` : ''),
+      '{اليوم}': dayNameAr(duty.date), '{التاريخ}': fmtAr(duty.date), '{الحافلة}': w.busNo || '',
       '{الوجهة}': duty.type === 'going' && duty.dest ? ` – الوجهة: ${duty.dest}` : ''
     };
     return tpl.replace(/\{[^}]+\}/g, k => k in map ? map[k] : k);
   }
   const reminderText = duty => fillTemplate(db.settings.template || DEFAULT_TEMPLATE, duty);
-  const dutyLine = x => `${typeName(x.type)}${x.type === 'going' && x.dest ? ' (' + x.dest + ')' : ''}`;
-  // رسالة أسبوعية لسائق واحد
-  function weekText(driverId, from, to) {
+  const dutyLine = x => `${typeNameAr(x.type)}${x.type === 'going' && x.dest ? ' (' + x.dest + ')' : ''}`;
+  // رسالة أسبوعية لسائق واحد، أو لبديل (subId) عن مناوباته في فترة النيابة
+  function weekText(driverId, from, to, subId) {
+    const sub = subId ? (db.subs || []).find(x => x.id === subId) : null;
     const d = driver(driverId);
-    const list = db.duties.filter(x => x.driverId === driverId && x.date >= from && x.date <= to).sort((a, b) => a.date.localeCompare(b.date));
-    return `السلام عليكم ${d ? d.name : ''}،\nمناوباتك من ${fmtShort(from)} إلى ${fmtShort(to)} – ${db.settings.school || ''}:\n` +
-      list.map(x => `- ${dayName(x.date)} ${fmtShort(x.date)}: ${dutyLine(x)}`).join('\n') + '\nشاكرين تعاونكم.';
+    const list = db.duties.filter(x => x.driverId === driverId && x.date >= from && x.date <= to &&
+      (sub ? (x.date >= sub.from && x.date <= sub.to) : !subFor(driverId, x.date))).sort((a, b) => a.date.localeCompare(b.date));
+    const name = sub ? sub.name : d ? d.name : '';
+    return `السلام عليكم ${name}،\nمناوباتك من ${fmtShort(from)} إلى ${fmtShort(to)} – ${db.settings.school || ''}${sub && d ? ` (نيابة عن ${d.name})` : ''}:\n` +
+      list.map(x => `- ${dayNameAr(x.date)} ${fmtShort(x.date)}: ${dutyLine(x)}`).join('\n') + '\nشاكرين تعاونكم.';
   }
   // رسالة جماعية لمجموعة السائقين
   function groupText(from, to) {
     const days = range(from, to).filter(d => !isWeekend(d));
-    const name = id => { const d = driver(id); return d ? d.name + (d.busNo ? ` (حافلة ${d.busNo})` : '') : ''; };
+    const name = x => { const w = who(x); return w ? w.name + (w.busNo ? ` (حافلة ${w.busNo})` : '') + (w.sub && w.orig ? ` – بديل عن ${w.orig.name}` : '') : ''; };
     let out = `جدول مناوبات الحافلات – ${db.settings.school || ''}\n`;
     days.forEach(day => {
       const g = dutiesOn(day, 'going'), s = dutiesOn(day, 'school');
       if (!g.length && !s.length) return;
-      out += `\n*${dayName(day)} ${fmtShort(day)}*\n`;
-      g.forEach(x => out += `- الذهاب: ${name(x.driverId)}${x.dest ? ' – ' + x.dest : ''}\n`);
-      s.forEach(x => out += `- المدرسة: ${name(x.driverId)}\n`);
+      out += `\n*${dayNameAr(day)} ${fmtShort(day)}*\n`;
+      g.forEach(x => out += `- الذهاب: ${name(x)}${x.dest ? ' – ' + x.dest : ''}\n`);
+      s.forEach(x => out += `- المدرسة: ${name(x)}\n`);
     });
     return out.trim();
   }
@@ -504,10 +988,10 @@ const Store = (() => {
       [['licenseExp', 'رخصة القيادة'], ['insuranceExp', 'تأمين الحافلة']].forEach(([k, label]) => {
         if (!d[k]) return;
         const n = daysUntil(d[k]);
-        if (n < 0) out.push({ level: 'bad', driver: d, text: `${label} منتهية منذ ${-n} يوم` });
-        else if (n <= lim) out.push({ level: 'warn', driver: d, text: `${label} تنتهي بعد ${n} يوم` });
+        if (n < 0) out.push({ level: 'bad', driver: d, text: T('{label} منتهية منذ {n} يوم', { label: T(label), n: -n }) });
+        else if (n <= lim) out.push({ level: 'warn', driver: d, text: T('{label} تنتهي بعد {n} يوم', { label: T(label), n }) });
       });
-      if (!d.busNo) out.push({ level: 'info', driver: d, text: 'رقم الحافلة غير مسجل' });
+      if (!d.busNo) out.push({ level: 'info', driver: d, text: T('رقم الحافلة غير مسجل') });
     });
     return out;
   }
@@ -535,10 +1019,10 @@ const Store = (() => {
 
   load();
   return {
-    get db() { return db; }, set db(v) { db = v; }, KEY, load, save, log, seed, uid, hash,
-    iso, parse, today, addDays, dayName, fmt, fmtShort, hijri, weekStart, daysUntil, range,
-    driver, isWeekend, onLeave, dutiesOn, typeName, intlPhone, waLink, esc, reminderText, alerts,
-    onChange, toggleTheme, toast, DAYS, DEFAULT_TEMPLATE, fillTemplate, weekText, groupText, sampleDrivers, logo, schoolName, brand, readLogo
+    get db() { return db; }, set db(v) { db = v; }, KEY, load, save, log, seed, uid, hash, ROTATION_DEFAULT,
+    iso, parse, today, addDays, dayName, dayNameAr, fmt, fmtAr, fmtShort, hijri, weekStart, daysUntil, range,
+    driver, isWeekend, onLeave, subFor, available, who, dutiesOn, typeName, typeNameAr, intlPhone, waLink, esc, reminderText, alerts,
+    onChange, toggleTheme, toast, get DAYS() { return en() ? DAYS_EN : DAYS_AR; }, DEFAULT_TEMPLATE, fillTemplate, weekText, groupText, sampleDrivers, logo, schoolName, brand, readLogo
   };
 })();
 
@@ -551,45 +1035,35 @@ const Cloud = (() => {
   const URL_ = String(window.SUPABASE_URL || '').trim().replace(/\/+$/, '');
   const KEY_ = String(window.SUPABASE_ANON_KEY || '').trim();
   const configured = /^https:\/\/[^/]+\.supabase\.co$/.test(URL_) && KEY_.length > 20 && !/ضع/.test(KEY_);
-  const TOKEN_KEY = 'schoolduty-session';
-  let token = null; try { token = localStorage.getItem(TOKEN_KEY); } catch (e) {}
-  const makeClient = () => window.supabase.createClient(URL_, KEY_, {
-    auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
-    global: { headers: token ? { 'x-session': token } : {} }
-  });
-  let sb = configured && window.supabase ? makeClient() : null;
-  function setToken(t) {
-    token = t || null;
-    try { if (token) localStorage.setItem(TOKEN_KEY, token); else localStorage.removeItem(TOKEN_KEY); } catch (e) {}
-    if (channel) { sb.removeChannel(channel); channel = null; }
-    sb = makeClient();
-  }
+  const sb = configured && window.supabase ? window.supabase.createClient(URL_, KEY_) : null;
   const S = () => Store;
 
   // أسماء الأعمدة في قاعدة البيانات
   const COLS = {
     drivers: ['id', 'name', 'area', 'phone', 'phone2', 'busNo', 'plate', 'capacity', 'licenseExp', 'insuranceExp', 'active', 'notes'],
-    duties: ['id', 'type', 'date', 'driverId', 'dest', 'note', 'done', 'remindedAt'],
+    duties: ['id', 'type', 'date', 'driverId', 'dest', 'note', 'done', 'remindedAt', 'auto'],
     leaves: ['id', 'driverId', 'from', 'to', 'reason'],
+    subs: ['id', 'driverId', 'name', 'phone', 'busNo', 'from', 'to', 'note'],
     log: ['id', 't', 'msg', 'by']
   };
   const MAP = {
     drivers: { busNo: 'bus_no', licenseExp: 'license_exp', insuranceExp: 'insurance_exp' },
     duties: { driverId: 'driver_id', remindedAt: 'reminded_at' },
     leaves: { driverId: 'driver_id', from: 'date_from', to: 'date_to' },
+    subs: { driverId: 'driver_id', busNo: 'bus_no', from: 'date_from', to: 'date_to' },
     log: { by: 'by_name' }
   };
   const toRow = (t, o) => { const r = {}; COLS[t].forEach(k => { const v = o[k]; r[MAP[t][k] || k] = v === undefined || v === '' ? null : v; }); return r; };
-  const fromRow = (t, r) => { const o = {}; COLS[t].forEach(k => { const v = r[MAP[t][k] || k]; o[k] = v === null || v === undefined ? (k === 'active' || k === 'done' ? false : '') : v; }); return o; };
+  const fromRow = (t, r) => { const o = {}; COLS[t].forEach(k => { const v = r[MAP[t][k] || k]; o[k] = v === null || v === undefined ? (k === 'active' || k === 'done' || k === 'auto' ? false : '') : v; }); return o; };
   const stable = v => Array.isArray(v) ? '[' + v.map(stable).join(',') + ']'
     : v && typeof v === 'object' ? '{' + Object.keys(v).sort().map(k => JSON.stringify(k) + ':' + stable(v[k])).join(',') + '}'
     : JSON.stringify(v === undefined ? null : v);
   const clean = o => JSON.parse(JSON.stringify(o));
   const windowStart = () => S().addDays(S().today(), -365);
 
-  let shadow = { settings: null, drivers: {}, duties: {}, leaves: {} };
+  let shadow = { settings: null, rotation: null, drivers: {}, duties: {}, leaves: {}, subs: {} };
   let profile = null, users = [], settingsLoaded = false, setupInProgress = false, channel = null, poll = null, mode = null;
-  const listeners = { change: [], status: [] };
+  const listeners = { change: [], status: [], recovery: [] };
   const emit = (k, v) => listeners[k].forEach(f => f(v));
   const on = (k, f) => listeners[k].push(f);
   let changeTimer = null;
@@ -609,9 +1083,16 @@ const Cloud = (() => {
     if (data) { Object.assign(db.settings, data); db.settings.setupDone = true; shadow.settings = stable(data); }
     else { db.settings.setupDone = false; shadow.settings = null; }
   }
+  function applyRotation(data) {
+    S().db.rotation = Object.assign({}, S().ROTATION_DEFAULT, { order: [] }, data || {});
+    shadow.rotation = data ? stable(data) : null;
+  }
   const fail = e => {
     console.error(e);
-    const msg = e && (e.code === '42501' || /row-level security|permission/i.test(e.message || '')) ? 'لا تملك صلاحية لهذا الإجراء' : 'تعذّر الاتصال بقاعدة البيانات';
+    const m = String((e && e.message) || '');
+    const msg = e && (e.code === '42501' || /row-level security|permission/i.test(m)) ? T('لا تملك صلاحية لهذا الإجراء')
+      : /subs|auto|public_subs|schema cache|does not exist/i.test(m) ? T('قاعدة البيانات تحتاج تحديث: شغّل ملف supabase.sql مرة ثانية')
+      : T('تعذّر الاتصال بقاعدة البيانات');
     emit('status', { level: 'bad', text: msg });
   };
   const must = ({ data, error }) => { if (error) throw error; return data; };
@@ -622,8 +1103,10 @@ const Cloud = (() => {
     for (;;) { const rows = must(await build().range(from, from + 999)); out = out.concat(rows); if (rows.length < 1000) return out; from += 1000; }
   }
   async function loadSettings() {
-    const row = must(await sb.from('settings').select('data').eq('id', 'main').maybeSingle());
-    applySettings(row ? row.data : null);
+    const rows = must(await sb.from('settings').select('id,data').in('id', ['main', 'rotation']));
+    const main = rows.find(r => r.id === 'main'), rot = rows.find(r => r.id === 'rotation');
+    applySettings(main ? main.data : null);
+    applyRotation(rot ? rot.data : null);
   }
   async function loadTable(t) {
     const rows = await fetchAll(() => { let q = sb.from(t).select('*'); if (t === 'duties') q = q.gte('date', mode === 'public' ? S().addDays(S().today(), -60) : windowStart()); return q.order('id'); });
@@ -635,11 +1118,15 @@ const Cloud = (() => {
     const rows = await fetchAll(() => sb.from('public_drivers').select('*').order('id'));
     mergeList(S().db.drivers, rows.map(r => ({ id: r.id, name: r.name || '', area: r.area || '', busNo: r.bus_no || '', active: !!r.active })));
   }
+  async function loadPublicSubs() {
+    const rows = await fetchAll(() => sb.from('public_subs').select('*').order('id'));
+    mergeList(S().db.subs, rows.map(r => ({ id: r.id, driverId: r.driver_id || '', name: r.name || '', busNo: r.bus_no || '', from: r.date_from || '', to: r.date_to || '', phone: '', note: '' })));
+  }
   async function loadLog() {
     const rows = must(await sb.from('log').select('*').order('t', { ascending: false }).limit(60));
     S().db.log = [...S().db.log.filter(l => !l.id), ...rows.map(r => fromRow('log', r))];
   }
-  async function loadUsers() { users = must(await sb.rpc('app_list_users')) || []; changed(); }
+  async function loadUsers() { users = must(await sb.from('profiles').select('*').order('name')); changed(); }
 
   const pending = new Set(); let reloadTimer = null;
   function reload(what) {
@@ -651,7 +1138,9 @@ const Cloud = (() => {
         for (const w of list) {
           if (w === 'settings') await loadSettings();
           else if (w === 'public_drivers') await loadPublicDrivers();
+          else if (w === 'public_subs') await loadPublicSubs().catch(() => {});
           else if (w === 'log') await loadLog();
+          else if (w === 'profiles') { if (profile && profile.role === 'admin') await loadUsers(); }
           else await loadTable(w);
         }
         changed();
@@ -669,31 +1158,35 @@ const Cloud = (() => {
   }
   async function subscribePublic() {
     stop(); mode = 'public';
-    try { await Promise.all([loadSettings(), loadPublicDrivers(), loadTable('duties')]); changed(); } catch (e) { fail(e); }
-    listen(['settings', 'duties'], { duties: ['duties', 'public_drivers'] });
-    poll = setInterval(() => { if (!document.hidden) reload(['settings', 'public_drivers', 'duties']); }, 120000);
+    try { await Promise.all([loadSettings(), loadPublicDrivers(), loadTable('duties'), loadPublicSubs().catch(() => {})]); changed(); } catch (e) { fail(e); }
+    listen(['settings', 'duties', 'subs'], { duties: ['duties', 'public_drivers'], subs: ['public_subs'] });
+    poll = setInterval(() => { if (!document.hidden) reload(['settings', 'public_drivers', 'duties', 'public_subs']); }, 120000);
   }
   async function subscribeStaff() {
     stop(); mode = 'staff';
     try {
-      await Promise.all([loadSettings(), loadTable('drivers'), loadTable('duties'), loadTable('leaves'), loadLog()]);
+      await Promise.all([loadSettings(), loadTable('drivers'), loadTable('duties'), loadTable('leaves'), loadTable('subs'), loadLog()]);
       if (profile.role === 'admin') await loadUsers();
       changed();
     } catch (e) { fail(e); }
-    listen(['settings', 'duties'], {});
-    poll = setInterval(() => { if (!document.hidden) reload(['settings', 'drivers', 'duties', 'leaves', 'log']); }, 30000);
+    listen(['settings', 'drivers', 'duties', 'leaves', 'subs', 'log', 'profiles'], {});
+    poll = setInterval(() => { if (!document.hidden) reload(['settings', 'drivers', 'duties', 'leaves', 'subs', 'log']); }, 120000);
   }
 
   /* ===== الحفظ ===== */
   let saving = Promise.resolve();
-  function save() { if (!profile) return; saving = saving.then(write).catch(e => { fail(e); reload(['settings', 'drivers', 'duties', 'leaves']); }); }
+  function save() { if (!profile) return; saving = saving.then(write).catch(e => { fail(e); reload(['settings', 'drivers', 'duties', 'leaves', 'subs']); }); }
   async function write() {
     const db = S().db, jobs = [];
     if (profile.role === 'admin' && db.settings.setupDone) {
       const st = clean(db.settings); delete st.setupDone; delete st.pin;
       if (stable(st) !== shadow.settings) { shadow.settings = stable(st); jobs.push(() => sb.from('settings').upsert({ id: 'main', data: st })); }
     }
-    ['drivers', 'duties', 'leaves'].forEach(t => {
+    if (db.settings.setupDone && db.rotation) {
+      const rt = clean(db.rotation);
+      if (stable(rt) !== shadow.rotation) { shadow.rotation = stable(rt); jobs.push(() => sb.from('settings').upsert({ id: 'rotation', data: rt })); }
+    }
+    ['drivers', 'duties', 'leaves', 'subs'].forEach(t => {
       const up = [], seen = new Set();
       db[t].forEach(x => {
         if (!x.id) x.id = S().uid();
@@ -709,91 +1202,102 @@ const Cloud = (() => {
     const logs = db.log.filter(l => !l.id).map(l => { l.id = S().uid(); return toRow('log', { id: l.id, t: l.t, msg: l.msg, by: profile.name || '' }); });
     if (logs.length) jobs.push(() => sb.from('log').insert(logs));
     if (!jobs.length) return;
-    emit('status', { level: 'warn', text: 'جارٍ الحفظ…' });
+    emit('status', { level: 'warn', text: T('جارٍ الحفظ…') });
     for (const j of jobs) must(await j());
-    emit('status', { level: 'ok', text: 'تم الحفظ' });
+    emit('status', { level: 'ok', text: T('تم الحفظ') });
   }
 
-  /* ===== الدخول والحسابات (اسم مستخدم وكلمة مرور) ===== */
-  const ERR = {
-    bad_login: 'اسم المستخدم أو كلمة المرور غير صحيحة',
-    username_taken: 'اسم المستخدم مستخدم مسبقاً، اختر اسماً آخر',
-    short_username: 'اسم المستخدم لازم يكون 3 أحرف أو أكثر',
-    weak_password: 'كلمة المرور لازم تكون 6 أحرف أو أكثر',
-    already_setup: 'تم إعداد النظام مسبقاً. ادخل باسم المستخدم وكلمة المرور',
-    not_allowed: 'لا تملك صلاحية لهذا الإجراء'
-  };
+  /* ===== الدخول والحسابات ===== */
   function errText(e) {
     const m = String((e && (e.message || e.code)) || '');
-    for (const k of Object.keys(ERR)) if (m.includes(k) || (e && e.code === k)) return ERR[k];
-    if (/Failed to fetch|NetworkError|network/i.test(m)) return 'لا يوجد اتصال بالإنترنت';
-    if ((e && e.code === '42501') || /row-level security|permission/i.test(m)) return ERR.not_allowed;
-    if (/Could not find the function|PGRST202/i.test(m)) return 'قاعدة البيانات تحتاج تحديث: شغّل ملف SQL الجديد في Supabase';
-    return 'حدث خطأ، حاول مرة أخرى';
+    if (e && e.code === 'confirm_email') return T('أرسلنا رابط تأكيد إلى إيميلك. افتحه، ثم ارجع هنا وادخل بنفس الإيميل وكلمة المرور لإكمال الإعداد');
+    if (/Invalid login credentials/i.test(m)) return T('الإيميل أو كلمة المرور غير صحيحة');
+    if (/Email not confirmed/i.test(m)) return T('لم يتم تأكيد الإيميل بعد. افتح رابط التأكيد اللي وصلك');
+    if (/already registered|already exists/i.test(m)) return T('هذا الإيميل مسجل مسبقاً');
+    if (/at least 6|Password should/i.test(m)) return T('كلمة المرور ضعيفة، استخدم 6 أحرف أو أكثر');
+    if (/invalid.*email|email.*invalid/i.test(m)) return T('صيغة الإيميل غير صحيحة');
+    if (/rate limit|too many/i.test(m)) return T('محاولات كثيرة، انتظر قليلاً ثم حاول مرة أخرى');
+    if (/Failed to fetch|NetworkError|network/i.test(m)) return T('لا يوجد اتصال بالإنترنت');
+    if ((e && e.code === '42501') || /row-level security/i.test(m)) return T('لا تملك صلاحية لهذا الإجراء');
+    return T('حدث خطأ، حاول مرة أخرى');
   }
 
-  let authFn = () => {};
-  async function enter(info) {
-    stop(); users = [];
-    profile = info ? { id: info.id, name: info.name, username: info.username, role: info.role } : null;
-    if (!profile) return authFn({ state: 'out' });
-    await subscribeStaff();
-    authFn({ state: 'staff', profile });
+  let currentUser = null;
+  function watchAuth(fn) {
+    let lastUid;
+    sb.auth.onAuthStateChange((event, session) => {
+      currentUser = session ? session.user : null;
+      if (event === 'PASSWORD_RECOVERY') setTimeout(() => emit('recovery'), 0);
+      const uid = currentUser ? currentUser.id : null;
+      if (uid === lastUid) return;
+      lastUid = uid;
+      setTimeout(() => handle(fn), 0); // لا نستدعي Supabase داخل هذا الحدث مباشرة
+    });
   }
-  async function watchAuth(fn) {
-    authFn = fn;
-    if (!token) return enter(null);
+  async function handle(fn) {
+    if (setupInProgress) return;
+    stop(); profile = null; users = [];
+    if (!currentUser) return fn({ state: 'out' });
     try {
-      const me = must(await sb.rpc('app_me'));
-      if (!me) setToken(null);
-      await enter(me);
-    } catch (e) { fail(e); setToken(null); enter(null); }
+      const p = must(await sb.from('profiles').select('*').eq('id', currentUser.id).maybeSingle());
+      if (!p) return fn({ state: 'inactive', email: currentUser.email });
+      profile = p;
+      await subscribeStaff();
+      fn({ state: 'staff', profile });
+    } catch (e) { fail(e); fn({ state: 'inactive', email: currentUser.email }); }
   }
-  async function signIn(username, password) {
-    const r = must(await sb.rpc('app_login', { p_username: username.trim(), p_password: password }));
-    if (!r) throw Object.assign(new Error('bad_login'), { code: 'bad_login' });
-    setToken(r.token);
-    await enter(r);
-  }
-  async function signOut() {
-    try { await sb.rpc('app_logout'); } catch (e) {}
-    setToken(null);
-    await enter(null);
-  }
-  async function updatePassword(password) { must(await sb.rpc('app_change_password', { p_password: password })); }
+  async function signIn(email, password) { must(await sb.auth.signInWithPassword({ email: email.trim(), password })); }
+  async function signOut() { await sb.auth.signOut(); }
+  async function resetPassword(email) { must(await sb.auth.resetPasswordForEmail(email.trim(), { redirectTo: location.href.split('#')[0].split('?')[0] })); }
+  async function updatePassword(password) { must(await sb.auth.updateUser({ password })); }
   async function settingsExist() { return !!must(await sb.from('settings').select('id').eq('id', 'main').maybeSingle()); }
-  async function needsSetup() { return !!must(await sb.rpc('needs_setup')); }
-  async function loadPublicSettings() { await loadSettings(); changed(); }
 
-  // الإعداد الأول: حساب المدير + إعدادات المدرسة
-  async function setup({ name, username, password, settings, drivers }) {
-    const r = must(await sb.rpc('app_setup', { p_name: name, p_username: username.trim(), p_password: password }));
-    setToken(r.token);
-    const st = clean(settings); delete st.setupDone; delete st.pin;
-    must(await sb.from('settings').upsert({ id: 'main', data: st }));
-    profile = { id: r.id, name: r.name, username: r.username, role: r.role };
-    await subscribeStaff();
-    (drivers || []).forEach(d => S().db.drivers.push(d));
-    S().log(`إعداد النظام لـ ${st.school}`);
-    save();
-    return profile;
+  // الإعداد لأول مرة: حساب المدير + إعدادات المدرسة
+  async function setup({ name, email, password, settings, drivers }) {
+    setupInProgress = true;
+    try {
+      let session = must(await sb.auth.getSession()).session;
+      if (!session) {
+        const r = await sb.auth.signUp({ email: email.trim(), password });
+        if (r.error && /already registered|already exists/i.test(r.error.message || '')) session = must(await sb.auth.signInWithPassword({ email: email.trim(), password })).session;
+        else session = must(r).session;
+        if (!session) throw Object.assign(new Error('confirm'), { code: 'confirm_email' });
+      }
+      currentUser = session.user;
+      const uid = session.user.id, mail = session.user.email;
+      const mine = must(await sb.from('profiles').select('id').eq('id', uid).maybeSingle());
+      if (!mine) must(await sb.from('profiles').insert({ id: uid, name, email: mail, role: 'admin' }));
+      const st = clean(settings); delete st.setupDone; delete st.pin;
+      must(await sb.from('settings').insert({ id: 'main', data: st }));
+      profile = { id: uid, name, email: mail, role: 'admin' };
+      await subscribeStaff();
+      (drivers || []).forEach(d => S().db.drivers.push(d));
+      S().log(`إعداد النظام لـ ${st.school}`);
+      save();
+      return profile;
+    } finally { setupInProgress = false; }
   }
 
-  async function addUser({ name, username, password, role }) {
-    must(await sb.rpc('app_add_user', { p_name: name, p_username: username.trim(), p_password: password, p_role: role }));
+  // المدير يضيف مستخدماً بدون الخروج من حسابه (اتصال مؤقت منفصل)
+  async function addUser({ name, email, password, role }) {
+    const tmp = window.supabase.createClient(URL_, KEY_, { auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false, storageKey: 'tmp-' + Date.now() } });
+    const data = must(await tmp.auth.signUp({ email: email.trim(), password }));
+    const uid = data.user && data.user.id;
+    if (!uid) throw new Error('signup');
+    must(await sb.from('profiles').insert({ id: uid, name, email: email.trim(), role }));
     await loadUsers();
   }
-  async function setRole(id, role) { must(await sb.rpc('app_set_role', { p_id: id, p_role: role })); await loadUsers(); }
-  async function removeUser(id) { must(await sb.rpc('app_remove_user', { p_id: id })); await loadUsers(); }
-  async function resetUserPassword(id, password) { must(await sb.rpc('app_set_password', { p_id: id, p_password: password })); }
+  async function setRole(uid, role) { must(await sb.from('profiles').update({ role }).eq('id', uid)); await loadUsers(); }
+  async function removeUser(uid) { must(await sb.from('profiles').delete().eq('id', uid)); await loadUsers(); }
 
   return {
-    configured, get ready() { return !!sb; }, on, save, watchAuth, signIn, signOut, updatePassword, setup, settingsExist, needsSetup, loadPublicSettings,
-    addUser, setRole, removeUser, resetUserPassword, subscribePublic, errText,
-    get signedIn() { return !!token; }, get settingsLoaded() { return settingsLoaded; },
+    configured, get ready() { return !!sb; }, on, save, watchAuth, signIn, signOut, resetPassword, updatePassword, setup, settingsExist,
+    addUser, setRole, removeUser, subscribePublic, errText,
+    get signedIn() { return !!currentUser; }, get settingsLoaded() { return settingsLoaded; },
     get profile() { return profile; }, get users() { return users; }, isAdmin: () => !!profile && profile.role === 'admin'
   };
 })();
+
 
 </script>
 <script>
@@ -802,19 +1306,20 @@ const Cloud = (() => {
   let week = S.weekStart(S.today());
 
   const plate = d => d && d.busNo
-    ? `<span class="plate" title="رقم الحافلة"><b>BUS</b><span>${S.esc(d.busNo)}</span></span>`
+    ? `<span class="plate" title="${T('رقم الحافلة')}"><b>BUS</b><span>${S.esc(d.busNo)}</span></span>`
     : `<span class="plate empty"><span>—</span></span>`;
+  const subChip = w => w && w.sub ? ` <span class="chip sub"><i class="fa-solid fa-user-clock"></i> ${S.esc(T('بديل عن {name}', { name: w.orig ? w.orig.name : '' }))}</span>` : '';
 
   function driverLine(duty) {
-    const d = S.driver(duty.driverId);
-    if (!d) return '';
-    const phone = d.phone ? `<a class="btn sm" href="tel:${S.esc(d.phone)}" title="اتصال"><i class="fa-solid fa-phone"></i> <span class="num">${S.esc(d.phone)}</span></a>` : '';
-    const wa = d.phone ? `<a class="btn sm green" href="${S.waLink(d.phone, '')}" target="_blank" rel="noopener" title="واتساب" aria-label="واتساب"><i class="fa-brands fa-whatsapp"></i></a>` : '';
+    const w = S.who(duty);
+    if (!w) return '';
+    const phone = w.phone ? `<a class="btn sm" href="tel:${S.esc(w.phone)}" title="${T('اتصال')}"><i class="fa-solid fa-phone"></i> <span class="num">${S.esc(w.phone)}</span></a>` : '';
+    const wa = w.phone ? `<a class="btn sm green" href="${S.waLink(w.phone, '')}" target="_blank" rel="noopener" title="${T('واتساب')}" aria-label="${T('واتساب')}"><i class="fa-brands fa-whatsapp"></i></a>` : '';
     return `<div class="driver-line">
-      <div class="who"><strong>${S.esc(d.name)}</strong><span class="muted">${S.esc(d.area)}</span></div>
-      ${plate(d)}
+      <div class="who"><strong>${S.esc(w.name)}</strong><span class="muted">${S.esc(w.area)}</span>${subChip(w)}</div>
+      ${plate(w)}
       ${duty.type === 'going' && duty.dest ? `<span class="chip going"><i class="fa-solid fa-location-dot"></i> ${S.esc(duty.dest)}</span>` : ''}
-      ${duty.done ? '<span class="chip ok"><i class="fa-solid fa-check"></i> منفذة</span>' : ''}
+      ${duty.done ? `<span class="chip ok"><i class="fa-solid fa-check"></i> ${T('منفذة')}</span>` : ''}
       <div class="act">${phone}${wa}</div>
     </div>`;
   }
@@ -825,12 +1330,12 @@ const Cloud = (() => {
     const box = (type, icon) => {
       const list = S.dutiesOn(t, type);
       let body;
-      if (S.isWeekend(t) && !list.length) body = '<div class="empty-state"><i class="fa-solid fa-mug-hot"></i> عطلة نهاية الأسبوع</div>';
-      else if (!list.length) body = '<div class="empty-state">لا توجد مناوبة مسجلة لهذا اليوم</div>';
+      if (S.isWeekend(t) && !list.length) body = `<div class="empty-state"><i class="fa-solid fa-mug-hot"></i> ${T('عطلة نهاية الأسبوع')}</div>`;
+      else if (!list.length) body = `<div class="empty-state">${T('لا توجد مناوبة مسجلة لهذا اليوم')}</div>`;
       else body = list.map(driverLine).join('');
       return `<article class="card duty-card ${type}">
         <div class="top"><i class="fa-solid ${icon}"></i><h3>${S.typeName(type)}</h3>
-        ${type === 'going' ? `<span class="muted" style="margin-inline-start:auto;font-size:13px">إلى (${S.esc(S.db.settings.destinations.join(' - '))})</span>` : ''}</div>
+        ${type === 'going' ? `<span class="muted" style="margin-inline-start:auto;font-size:13px">${T('إلى ({dests})', { dests: S.esc(S.db.settings.destinations.join(' - ')) })}</span>` : ''}</div>
         ${body}</article>`;
     };
     $('#todayGrid').innerHTML = box('going', 'fa-bus') + box('school', 'fa-school');
@@ -838,18 +1343,18 @@ const Cloud = (() => {
 
   function names(list) {
     if (!list.length) return '<span class="muted">—</span>';
-    return list.map(x => { const d = S.driver(x.driverId); return d ? S.esc(d.name) : ''; }).join('<br>');
+    return list.map(x => { const w = S.who(x); return w ? S.esc(w.name) + (w.sub ? ` <small class="muted">(${S.esc(T('بديل عن {name}', { name: w.orig ? w.orig.name : '' }))})</small>` : '') : ''; }).join('<br>');
   }
 
   function renderWeek() {
     const days = S.range(week, S.addDays(week, 6)).filter(d => !S.isWeekend(d));
-    $('#weekLabel').textContent = `من ${S.fmt(week)}`;
+    $('#weekLabel').textContent = T('من {date}', { date: S.fmt(week) });
     const t = S.today();
     $('#weekBody').innerHTML = days.map(d => {
       const g = S.dutiesOn(d, 'going'), s = S.dutiesOn(d, 'school');
       const dests = [...new Set(g.map(x => x.dest).filter(Boolean))].map(x => `<span class="chip going">${S.esc(x)}</span>`).join(' ');
       return `<tr${d === t ? ' style="outline:2px solid var(--bus);outline-offset:-2px"' : ''}>
-        <td><strong>${S.dayName(d)}</strong>${d === t ? ' <span class="chip going">اليوم</span>' : ''}</td>
+        <td><strong>${S.dayName(d)}</strong>${d === t ? ` <span class="chip going">${T('اليوم')}</span>` : ''}</td>
         <td class="num">${S.fmtShort(d)}</td>
         <td>${names(g)}</td><td>${dests || '<span class="muted">—</span>'}</td><td>${names(s)}</td></tr>`;
     }).join('');
@@ -858,14 +1363,18 @@ const Cloud = (() => {
   function renderDir() {
     const q = $('#dirSearch').value.trim();
     const list = S.db.drivers.filter(d => d.active && (!q || [d.name, d.area, d.busNo, d.phone].join(' ').includes(q)));
-    $('#dirCount').textContent = `${list.length} سائق`;
-    $('#dirGrid').innerHTML = list.length ? list.map(d => `<article class="card dir-card">
+    $('#dirCount').textContent = T('{n} سائق', { n: list.length });
+    $('#dirGrid').innerHTML = list.length ? list.map(d => {
+      const sub = S.subFor(d.id, S.today());
+      return `<article class="card dir-card">
       <div class="row"><strong style="font-family:var(--f-display)">${S.esc(d.name)}</strong>${plate(d)}</div>
       <div class="muted"><i class="fa-solid fa-map-pin"></i> ${S.esc(d.area || '—')}</div>
+      ${sub ? `<div><span class="chip sub"><i class="fa-solid fa-user-clock"></i> ${S.esc(T('ينوب عنه {name} حتى {date}', { name: sub.name, date: S.fmtShort(sub.to) }))}</span></div>` : ''}
       <div class="row" style="justify-content:flex-start;flex-wrap:wrap">
         ${d.phone ? `<a class="btn sm" href="tel:${S.esc(d.phone)}"><i class="fa-solid fa-phone"></i> <span class="num">${S.esc(d.phone)}</span></a>` : ''}
         ${d.phone2 ? `<a class="btn sm" href="tel:${S.esc(d.phone2)}"><i class="fa-solid fa-phone"></i> <span class="num">${S.esc(d.phone2)}</span></a>` : ''}
-      </div></article>`).join('') : '<div class="empty-state card">لا يوجد سائق مطابق للبحث</div>';
+      </div></article>`;
+    }).join('') : `<div class="empty-state card">${T('لا يوجد سائق مطابق للبحث')}</div>`;
   }
 
   function all() {
@@ -880,9 +1389,11 @@ const Cloud = (() => {
   $('#nextWeek').onclick = () => { week = S.addDays(week, 7); renderWeek(); };
   $('#thisWeek').onclick = () => { week = S.weekStart(S.today()); renderWeek(); };
   $('#dirSearch').oninput = renderDir;
+  I18N.apply();
+  I18N.onChange(all);
   Cloud.on('change', all);
   if (Cloud.ready) Cloud.subscribePublic();
-  else { $('#setupNotice').hidden = false; $('#setupNotice p').textContent = 'لم يتم ربط النظام بقاعدة البيانات بعد. راجع دليل الإعداد.'; }
+  else { $('#setupNotice').hidden = false; $('#setupNotice p').textContent = T('لم يتم ربط النظام بقاعدة البيانات بعد. راجع دليل الإعداد.'); }
   all();
 })();
 

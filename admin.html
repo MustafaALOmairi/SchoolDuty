@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>لوحة التحكم</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<script>try{var L=localStorage.getItem('school-bus-lang');if(L==='en'){document.documentElement.lang='en';document.documentElement.dir='ltr';}}catch(e){}</script>
 <style>
 /* نظام مناوبات الحافلات – مدرسة فدى
    الثيم الأصلي: كحلي متدرج (#2c3e50 ← #4a6491)، أزرار ملونة دائرية، خلفية زرقاء فاتحة. */
@@ -291,9 +292,38 @@ table.data tr.done td{background:var(--green-soft)!important}
 }
 section[data-panel="notify"]{display:flex;flex-direction:column;gap:22px}
 
+
+/* ===== قائمة الدور ===== */
+.rot-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px;max-height:560px;overflow:auto}
+.rot-list li{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:12px;background:var(--surface-2);border:1px solid var(--line)}
+.rot-list li.next{border-color:var(--green);box-shadow:0 0 0 2px color-mix(in srgb,var(--green) 25%,transparent)}
+.rot-list li.off{opacity:.55}
+.rot-list .pos{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;background:var(--band-grad);color:#fff;font-weight:700;font-size:13px;flex:none;font-variant-numeric:tabular-nums}
+.rot-list .nm{flex:1;min-width:0;display:flex;flex-direction:column}
+.rot-list .nm strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rot-list .nm small{color:var(--muted);font-size:12px}
+.rot-list .mv{display:flex;gap:4px}
+.chip.sub{background:var(--amber-soft);color:var(--amber);border-color:transparent}
+
+/* ===== زر اللغة ===== */
+.lang-btn{font-weight:800;min-width:42px;justify-content:center;font-family:var(--f-display)}
+.lang-float{position:fixed;top:14px;inset-inline-end:14px;z-index:60;background:#fff;color:#2c3e50}
+body:has(#app:not([hidden])) .lang-float{display:none}
+
+/* ===== الاتجاه من اليسار لليمين (الإنجليزي) ===== */
+[dir="ltr"] .flip-ltr{transform:scaleX(-1)}
+[dir="ltr"] body{font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif}
+@media (max-width:820px){
+  [dir="ltr"] .side{inset:0 auto 0 0;transform:translateX(-100%)}
+  [dir="ltr"] .side.open{transform:none;box-shadow:10px 0 40px rgba(0,0,0,.4)}
+}
+[dir="ltr"] .toast{right:auto;left:20px}
+@media print{.lang-btn{display:none!important}}
+
 </style>
 </head>
 <body data-title="لوحة التحكم">
+<button class="btn icon lang-btn lang-float" data-lang-toggle title="English / عربي" aria-label="English / عربي">EN</button>
 
 <!-- الإعداد لأول مرة -->
 <div class="login" id="setup" hidden style="overflow:auto">
@@ -308,7 +338,7 @@ section[data-panel="notify"]{display:flex;flex-direction:column;gap:22px}
     <div class="f"><span>أيام العطلة الأسبوعية</span><div id="suWeekend" style="display:flex;gap:14px;flex-wrap:wrap"></div></div>
     <div class="grid-form" id="suAccount">
       <label class="f">اسمك (مدير النظام)<input class="input" id="suName" required></label>
-      <label class="f">اسم المستخدم<input class="input" id="suUser" required minlength="3" autocomplete="username" autocapitalize="off"></label>
+      <label class="f">إيميلك<input type="email" class="input num" id="suEmail" required autocomplete="username"></label>
       <label class="f">كلمة المرور<input type="password" class="input" id="suPass" required minlength="6" autocomplete="new-password"></label>
     </div>
     <label class="check"><input type="checkbox" id="suSample"> أضف 4 سائقين تجريبيين لأجرّب النظام</label>
@@ -324,7 +354,7 @@ section[data-panel="notify"]{display:flex;flex-direction:column;gap:22px}
   <div class="box">
     <div class="logo-disc"><img class="brand-logo" alt=""></div>
     <h2>لم يتم ربط قاعدة البيانات بعد</h2>
-    <p class="muted" style="margin:0">افتح الملف <span class="num">config.js</span> وضع رابط مشروع Supabase والمفتاح العام كما في دليل الإعداد، ثم ارفع التعديل.</p>
+    <p class="muted" style="margin:0">افتح الملف config.js وضع رابط مشروع Supabase والمفتاح العام كما في دليل الإعداد، ثم ارفع التعديل.</p>
   </div>
 </div>
 
@@ -335,11 +365,11 @@ section[data-panel="notify"]{display:flex;flex-direction:column;gap:22px}
       <div class="logo-disc" style="width:70px;height:70px;border:3px solid var(--line)"><img class="brand-logo" alt="شعار المدرسة"></div>
       <div><h2>دخول لوحة التحكم</h2><span class="muted" data-school></span></div>
     </div>
-    <label class="f">اسم المستخدم<input class="input" id="lgUser" required autocomplete="username" autocapitalize="off"></label>
+    <label class="f">الإيميل<input type="email" class="input num" id="lgEmail" required autocomplete="username"></label>
     <label class="f">كلمة المرور<input type="password" class="input" id="lgPass" required autocomplete="current-password"></label>
     <button class="btn primary" style="justify-content:center"><i class="fa-solid fa-right-to-bracket"></i> دخول</button>
     <div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;align-items:center">
-      <span class="muted" style="font-size:13px">نسيت كلمة المرور؟ اطلبها من مدير النظام</span>
+      <button type="button" class="btn sm ghost" id="lgForgot">نسيت كلمة المرور؟</button>
       <a href="index.html" class="muted" style="font-size:13px">الصفحة العامة</a>
     </div>
   </form>
@@ -362,10 +392,11 @@ section[data-panel="notify"]{display:flex;flex-direction:column;gap:22px}
     </div>
     <button class="nav-btn on" data-view="dash"><i class="fa-solid fa-gauge-high"></i> الرئيسية</button>
     <button class="nav-btn" data-view="schedule"><i class="fa-solid fa-calendar-days"></i> جدول المناوبات</button>
-    <button class="nav-btn" data-view="auto"><i class="fa-solid fa-wand-magic-sparkles"></i> التوزيع التلقائي</button>
+    <button class="nav-btn" data-view="auto"><i class="fa-solid fa-arrows-rotate"></i> التوزيع بالدور</button>
     <button class="nav-btn" data-view="notify"><i class="fa-brands fa-whatsapp"></i> تنبيهات واتساب <span class="badge" id="notifyBadge" hidden></span></button>
     <button class="nav-btn" data-view="drivers"><i class="fa-solid fa-id-card"></i> السائقون والحافلات <span class="badge" id="alertBadge" hidden></span></button>
     <button class="nav-btn" data-view="leaves"><i class="fa-solid fa-plane-departure"></i> الإجازات والغياب</button>
+    <button class="nav-btn" data-view="subs"><i class="fa-solid fa-user-clock"></i> السائق البديل <span class="badge" id="subBadge" hidden style="background:var(--amber)"></span></button>
     <button class="nav-btn" data-view="reports"><i class="fa-solid fa-chart-column"></i> التقارير</button>
     <button class="nav-btn admin-only" data-view="users"><i class="fa-solid fa-user-shield"></i> المستخدمون</button>
     <button class="nav-btn admin-only" data-view="settings"><i class="fa-solid fa-gear"></i> الإعدادات</button>
@@ -382,6 +413,7 @@ section[data-panel="notify"]{display:flex;flex-direction:column;gap:22px}
       <span class="muted" id="todayTop"></span>
       <div class="tools">
         <span class="chip" id="saveState" hidden></span>
+        <button class="btn icon lang-btn" data-lang-toggle title="English / عربي" aria-label="English / عربي">EN</button>
         <button class="btn icon" id="themeBtn" title="تبديل الوضع الليلي" aria-label="تبديل الوضع الليلي"><i class="fa-solid fa-circle-half-stroke"></i></button>
         <button class="btn primary" id="quickAdd"><i class="fa-solid fa-plus"></i> مناوبة جديدة</button>
       </div>
@@ -426,9 +458,9 @@ section[data-panel="notify"]{display:flex;flex-direction:column;gap:22px}
             </select>
             <input type="date" class="input" id="fFrom" style="width:auto" aria-label="من">
             <input type="date" class="input" id="fTo" style="width:auto" aria-label="إلى">
-            <button class="btn sm" id="fPrev"><i class="fa-solid fa-chevron-right"></i></button>
+            <button class="btn sm" id="fPrev"><i class="fa-solid fa-chevron-right flip-ltr"></i></button>
             <button class="btn sm" id="fNow">الحالي</button>
-            <button class="btn sm" id="fNext"><i class="fa-solid fa-chevron-left"></i></button>
+            <button class="btn sm" id="fNext"><i class="fa-solid fa-chevron-left flip-ltr"></i></button>
             <div class="tools">
               <button class="btn green" id="printBtn"><i class="fa-solid fa-print"></i> طباعة</button>
               <button class="btn primary" id="addDuty"><i class="fa-solid fa-plus"></i> إضافة</button>
@@ -440,23 +472,50 @@ section[data-panel="notify"]{display:flex;flex-direction:column;gap:22px}
         <div class="sign"><span>مشرف النقل المدرسي: ................</span><span>مدير المدرسة: ................</span></div>
       </section>
 
-      <!-- التوزيع التلقائي -->
+      <!-- التوزيع بالدور -->
       <section data-panel="auto" hidden>
-        <div class="card panel">
-          <div class="panel-head"><h2>توزيع المناوبات تلقائياً</h2></div>
-          <p class="muted" style="margin:0">يوزّع النظام المناوبات على السائقين النشطين بالتناوب، ويعطي الأولوية للأقل مناوبات، ويتخطى أيام العطلة والسائقين في إجازة، ولا يكرر نفس السائق في نوعين باليوم نفسه.</p>
-          <div class="grid-form">
-            <label class="f">من تاريخ<input type="date" class="input" id="aFrom"></label>
-            <label class="f">إلى تاريخ<input type="date" class="input" id="aTo"></label>
-            <label class="f">سائقو الذهاب في اليوم<input type="number" min="0" max="10" class="input" id="aGoing"></label>
-            <label class="f">سائقو المدرسة في اليوم<input type="number" min="0" max="10" class="input" id="aSchool"></label>
+        <div class="two" style="grid-template-columns:1fr 1.25fr;align-items:start">
+          <div class="card panel">
+            <div class="panel-head"><h2>ترتيب قائمة الدور</h2><span class="chip" id="rCount"></span></div>
+            <p class="muted" style="margin:0">رتّب السائقين بالأسهم. النظام يمشي على القائمة بالترتيب يوماً بعد يوم، والأسبوع التالي يكمل من حيث وقف.</p>
+            <ol class="rot-list" id="rList"></ol>
           </div>
-          <div style="display:flex;gap:20px;flex-wrap:wrap">
-            <label class="check"><input type="checkbox" id="aRotate" checked> توزيع الوجهات بالتناوب</label>
-            <label class="check"><input type="checkbox" id="aOverwrite"> استبدال المناوبات الموجودة في الفترة</label>
+          <div class="card panel">
+            <div class="panel-head"><h2>إعداد التوزيع بالدور</h2></div>
+            <div class="grid-form">
+              <label class="f">تاريخ بداية القائمة<input type="date" class="input" id="rStart"></label>
+              <label class="f">توزيع حتى تاريخ<input type="date" class="input" id="rUntil"></label>
+              <label class="f">سائقو الذهاب في اليوم<input type="number" min="0" max="10" class="input" id="rGoing"></label>
+              <label class="f">سائقو المدرسة في اليوم<input type="number" min="0" max="10" class="input" id="rSchool"></label>
+            </div>
+            <div class="muted" id="rStartHint" style="font-size:13px"></div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <button class="btn sm" type="button" data-until="7">أسبوع</button>
+              <button class="btn sm" type="button" data-until="14">أسبوعين</button>
+              <button class="btn sm" type="button" data-until="28">4 أسابيع</button>
+              <button class="btn sm" type="button" data-until="56">8 أسابيع</button>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:10px">
+              <label class="check"><input type="checkbox" id="rAdjust" checked> تعديل القائمة تلقائياً عند أي تغيير (إضافة سائق ليوم، حذف، إجازة)</label>
+              <label class="check"><input type="checkbox" id="rDest" checked> توزيع الوجهات بالتناوب</label>
+              <label class="check"><input type="checkbox" id="rOverwrite"> استبدال المناوبات اليدوية الموجودة في الفترة</label>
+            </div>
+            <div class="alert-row" id="rStatus" style="flex-wrap:wrap"></div>
+            <div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn blue" id="rRun"><i class="fa-solid fa-eye"></i> معاينة التوزيع</button></div>
           </div>
-          <div><button class="btn blue" id="aRun"><i class="fa-solid fa-wand-magic-sparkles"></i> معاينة التوزيع</button></div>
-          <div id="aPreview"></div>
+        </div>
+        <div class="card panel" id="rPreviewCard" hidden style="margin-top:22px">
+          <div id="rPreview"></div>
+        </div>
+        <div class="card panel" style="margin-top:22px">
+          <div class="panel-head"><h2>كيف يشتغل التوزيع بالدور؟</h2></div>
+          <ul class="muted" style="margin:0;padding-inline-start:20px;display:flex;flex-direction:column;gap:4px">
+            <li>كل يوم عمل ياخذ السائق التالي في القائمة، وأيام العطلة تُتخطّى.</li>
+            <li>لو أضفت سائقاً لنفس اليوم يدوياً، يُحسب دوره، واليوم التالي ياخذه اللي بعده.</li>
+            <li>لو حذفت سائقاً من يوم، ينتقل دوره لليوم التالي وتتأخر القائمة يوماً.</li>
+            <li>السائق في إجازة يُتخطّى ويرجع دوره أول ما يكون متاحاً. لو عنده بديل، البديل ينفّذ دوره.</li>
+            <li>كل سائق ياخذ دوراً واحداً في كل لفّة للقائمة، فالتوزيع يبقى عادلاً.</li>
+          </ul>
         </div>
       </section>
 
@@ -532,6 +591,32 @@ section[data-panel="notify"]{display:flex;flex-direction:column;gap:22px}
         </div>
       </section>
 
+      <!-- السائق البديل -->
+      <section data-panel="subs" hidden>
+        <div class="card panel">
+          <div class="panel-head"><h2>إضافة سائق بديل (نائب مؤقت)</h2></div>
+          <p class="muted" style="margin:0">شخص جديد يغطي مناوبات سائق لعدد محدد من الأيام. دور السائق في القائمة يبقى كما هو، والبديل هو اللي يظهر في الجدول وتوصله التذكيرات.</p>
+          <form class="grid-form" id="subForm">
+            <label class="f">السائق الأصلي<select class="input" id="bDriver" required></select></label>
+            <label class="f">اسم البديل<input class="input" id="bName" required></label>
+            <label class="f">هاتف البديل<input class="input num" id="bPhone" inputmode="tel"></label>
+            <label class="f">رقم الحافلة<input class="input num" id="bBus" placeholder="نفس حافلة السائق"></label>
+            <label class="f">من تاريخ<input type="date" class="input" id="bFrom" required></label>
+            <label class="f">عدد أيام النيابة (أيام عمل)<input type="number" min="1" max="365" class="input" id="bDays" value="1" required></label>
+            <label class="f">إلى تاريخ<input type="date" class="input" id="bTo" required></label>
+            <label class="f">ملاحظات<input class="input" id="bNote"></label>
+            <div style="display:flex;align-items:flex-end"><button class="btn primary"><i class="fa-solid fa-user-clock"></i> حفظ البديل</button></div>
+          </form>
+          <div class="muted" id="bInfo" style="font-size:13px"></div>
+        </div>
+        <div class="card table-wrap">
+          <table class="data">
+            <thead><tr><th>البديل</th><th>ينوب عن</th><th>الهاتف</th><th>الحافلة</th><th>من</th><th>إلى</th><th>أيام العمل</th><th>الحالة</th><th></th></tr></thead>
+            <tbody id="subBody"></tbody>
+          </table>
+        </div>
+      </section>
+
       <!-- التقارير -->
       <section data-panel="reports" hidden>
         <div class="card panel">
@@ -554,16 +639,16 @@ section[data-panel="notify"]{display:flex;flex-direction:column;gap:22px}
           <div class="panel-head"><h2>إضافة مستخدم</h2></div>
           <form class="grid-form" id="userForm">
             <label class="f">الاسم<input class="input" id="uName" required></label>
-            <label class="f">اسم المستخدم<input class="input" id="uUser" required minlength="3" autocomplete="off" autocapitalize="off"></label>
+            <label class="f">الإيميل<input type="email" class="input num" id="uEmail" required autocomplete="off"></label>
             <label class="f">كلمة مرور مؤقتة<input type="text" class="input" id="uPass" required minlength="6" autocomplete="off"></label>
             <label class="f">الصلاحية<select class="input" id="uRole"><option value="supervisor">مشرف</option><option value="admin">مدير</option></select></label>
             <div style="display:flex;align-items:flex-end"><button class="btn primary"><i class="fa-solid fa-user-plus"></i> إضافة</button></div>
           </form>
-          <p class="muted" style="margin:0">المشرف يدير المناوبات والسائقين والإجازات والتنبيهات. المدير يقدر كذلك يغيّر الإعدادات ويضيف المستخدمين. أعطِ المستخدم اسم المستخدم وكلمة المرور، ويقدر يغيّرها بعد الدخول بالضغط على اسمه في القائمة. وإذا نسيها، عيّن له كلمة جديدة من زر المفتاح.</p>
+          <p class="muted" style="margin:0">المشرف يدير المناوبات والسائقين والإجازات والتنبيهات. المدير يقدر كذلك يغيّر الإعدادات ويضيف المستخدمين. أرسل للمستخدم إيميله وكلمة المرور المؤقتة، ويقدر يغيّرها بعد الدخول بالضغط على اسمه في القائمة.</p>
         </div>
         <div class="card table-wrap">
           <table class="data">
-            <thead><tr><th>الاسم</th><th>اسم المستخدم</th><th>الصلاحية</th><th></th></tr></thead>
+            <thead><tr><th>الاسم</th><th>الإيميل</th><th>الصلاحية</th><th></th></tr></thead>
             <tbody id="userBody"></tbody>
           </table>
         </div>
@@ -652,7 +737,7 @@ section[data-panel="notify"]{display:flex;flex-direction:column;gap:22px}
 <!-- نافذة كلمة المرور -->
 <dialog id="pwDlg" style="width:min(420px,calc(100vw - 32px))">
   <form method="dialog" id="pwForm">
-    <div class="dlg-head"><h3 id="pwTitle">تغيير كلمة المرور</h3><button class="btn icon ghost" value="cancel" formnovalidate aria-label="إغلاق"><i class="fa-solid fa-xmark"></i></button></div>
+    <div class="dlg-head"><h3>تغيير كلمة المرور</h3><button class="btn icon ghost" value="cancel" formnovalidate aria-label="إغلاق"><i class="fa-solid fa-xmark"></i></button></div>
     <div class="dlg-body">
       <label class="f">كلمة المرور الجديدة<input type="password" class="input" id="pwNew" required minlength="6" autocomplete="new-password"></label>
       <label class="f">تأكيد كلمة المرور<input type="password" class="input" id="pwNew2" required minlength="6" autocomplete="new-password"></label>
@@ -669,14 +754,444 @@ section[data-panel="notify"]{display:flex;flex-direction:column;gap:22px}
   </form>
 </dialog>
 
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <script src="config.js"></script>
 <script>
+/* الترجمة: عربي / English
+   النصوص العربية هي المفاتيح، والقاموس EN يعطي المقابل الإنجليزي.
+   اللغة تُحفظ في متصفح كل مستخدم. */
+const I18N = (() => {
+  const KEY = 'school-bus-lang';
+  let lang = 'ar';
+  try { if (localStorage.getItem(KEY) === 'en') lang = 'en'; } catch (e) {}
+  const EN = {
+"مدير": "Admin",
+"مشرف": "Supervisor",
+"اكتب إيميلك أولاً ثم اضغط \"نسيت كلمة المرور\"": "Type your email first, then press \"Forgot password\"",
+"أرسلنا رابط تغيير كلمة المرور إلى إيميلك": "We sent a password reset link to your email",
+"اكتب كلمة المرور الجديدة": "Enter your new password",
+"كلمتا المرور غير متطابقتين": "Passwords do not match",
+"تم تغيير كلمة المرور": "Password changed",
+"اختر ملف صورة (PNG أو JPG)": "Choose an image file (PNG or JPG)",
+"أهلاً بك. ابدأ بإضافة السائقين": "Welcome! Start by adding drivers",
+"تم إعداد النظام": "System is set up",
+"ذهاب": "Trip",
+"مدرسة": "School",
+"سائق بديل مؤقت": "Temporary substitute driver",
+"بديل عن {name}": "Substitute for {name}",
+"سائق محذوف": "Deleted driver",
+"من قائمة الدور": "From the rotation list",
+"إرسال تذكير واتساب": "Send WhatsApp reminder",
+"تذكير واتساب": "WhatsApp reminder",
+"منتهية": "Expired",
+"انتهت": "Ended",
+"{n} يوم": "{n} days",
+"حتى": "until",
+"تأكيد": "Confirm",
+"السائقون النشطون": "Active drivers",
+"مناوبات هذا الأسبوع": "Duties this week",
+"أيام ينقصها سائق هذا الأسبوع": "Days missing a driver this week",
+"نسبة التنفيذ هذا الأسبوع": "Completion rate this week",
+"وثائق تحتاج تجديد": "Documents to renew",
+"منفذة": "Done",
+"تأكيد التنفيذ": "Mark as done",
+"اليوم عطلة نهاية الأسبوع": "Today is a weekend",
+"لا توجد مناوبة لليوم.": "No duty for today.",
+"التوزيع بالدور": "Rotation",
+"لديه مناوبة يوم {day} {date} وهو في إجازة": "Has a duty on {day} {date} while on leave",
+"انتهت فترة قائمة الدور. مدّدها من صفحة التوزيع بالدور": "The rotation period has ended. Extend it from the Rotation page",
+"قائمة الدور تنتهي بعد {n} يوم. مدّدها من صفحة التوزيع بالدور": "The rotation ends in {n} days. Extend it from the Rotation page",
+"فتح": "Open",
+"لا توجد تنبيهات": "No alerts",
+"لا توجد عمليات بعد": "No activity yet",
+"جدول المناوبات من {from} إلى {to}": "Duty schedule from {from} to {to}",
+"اليوم": "Today",
+"لم يُعيّن سائق": "No driver assigned",
+"تعيين": "Assign",
+"في إجازة": "On leave",
+"تعديل": "Edit",
+"حذف": "Delete",
+"مناوبة الذهاب إلى ({dests})": "Trip duty to ({dests})",
+"المناوبة اليومية في (المدرسة)": "Daily duty at (School)",
+"التاريخ": "Date",
+"السائق": "Driver",
+"الحافلة": "Bus",
+"المنطقة": "Area",
+"الهاتف": "Phone",
+"الوجهة": "Destination",
+"ملاحظات": "Notes",
+"لا توجد أيام عمل في هذه الفترة": "No working days in this period",
+"اختر السائق": "Choose a driver",
+"ينوب عنه {name}": "Covered by {name}",
+"لديه مناوبة في هذا اليوم": "already has a duty this day",
+"حافلة": "Bus",
+"هذا اليوم عطلة نهاية الأسبوع.": "This day is a weekend.",
+"السائق مسجل في إجازة في هذا التاريخ.": "The driver is on leave on this date.",
+"سينفّذها البديل {name} نيابة عن السائق.": "Substitute {name} will cover it for the driver.",
+"السائق لديه مناوبة أخرى في نفس اليوم.": "The driver has another duty on the same day.",
+"قائمة الدور تتعدل تلقائياً بعد الحفظ.": "The rotation list will adjust automatically after saving.",
+"تعديل مناوبة": "Edit duty",
+"مناوبة جديدة": "New duty",
+"تم حفظ التعديل": "Changes saved",
+"تمت إضافة المناوبة": "Duty added",
+"دور السائق ينتقل لليوم التالي وتتأخر القائمة.": "The driver's turn moves to the next day and the list shifts.",
+"حذف المناوبة": "Delete duty",
+"حذف مناوبة {name} يوم {day} {date}؟": "Delete {name}'s duty on {day} {date}?",
+"تم حذف المناوبة": "Duty deleted",
+"حذف السائق": "Delete driver",
+"حذف {name}{extra}؟ يمكنك بدلاً من ذلك جعله غير نشط.": "Delete {name}{extra}? You can make them inactive instead.",
+" وحذف {n} مناوبة مسجلة له": " and their {n} recorded duties",
+"وحذف {n} مناوبة مسجلة له": " and their {n} recorded duties",
+"تم حذف السائق": "Driver deleted",
+"حذف البديل": "Delete substitute",
+"حذف {name} كبديل؟ ترجع المناوبات باسم السائق الأصلي.": "Remove {name} as substitute? Duties go back to the original driver.",
+"تم حذف البديل": "Substitute deleted",
+"القائمة تبدأ يوم {day} {date}": "The list starts on {day} {date}",
+"هذا اليوم عطلة، التوزيع يبدأ من أول يوم عمل بعده": "this is a weekend, distribution starts on the next working day",
+"{n} سائق": "{n} drivers",
+"الدور القادم بعد {date}": "next turn after {date}",
+"لأعلى": "Move up",
+"لأسفل": "Move down",
+"اجعله أول القائمة": "Move to top",
+"لا يوجد سائقون نشطون. أضف السائقين أولاً.": "No active drivers. Add drivers first.",
+"القائمة منشورة من {from} حتى {to}": "List published from {from} to {to}",
+"التعديل التلقائي شغّال": "auto-adjust is on",
+"انتهت الفترة": "period ended",
+"تنتهي بعد {n} يوم": "ends in {n} days",
+"تغييرات غير منشورة": "Unpublished changes",
+"لم تُنشر قائمة بعد. رتّب السائقين واختر تاريخ البداية، ثم اضغط معاينة التوزيع.": "No list published yet. Order the drivers, pick the start date, then press Preview.",
+"حدد فترة صحيحة": "Choose a valid period",
+"حدد عدد السائقين في اليوم": "Set the number of drivers per day",
+"لا يوجد سائقون نشطون": "No active drivers",
+"يدوي": "manual",
+"معاينة التوزيع": "Preview distribution",
+"من {from} إلى {to}": "From {from} to {to}",
+"مناوبات جديدة: {a} · تُحذف: {d} · بدون تغيير: {k}": "New duties: {a} · Removed: {d} · Unchanged: {k}",
+"الدور القادم بعد هذه الفترة: {name}": "Next turn after this period: {name}",
+"لا يوجد سائق متاح في: {list}": "No driver available on: {list}",
+"مناوبة الذهاب": "Trip duty",
+"المناوبة في المدرسة": "School duty",
+"اعتماد ونشر القائمة": "Approve & publish list",
+"إلغاء": "Cancel",
+"تم نشر القائمة": "List published",
+"{n} مناوبة": "{n} duties",
+"لا يوجد رقم هاتف": "No phone number",
+"أُرسل {t}": "Sent {t}",
+"لم يُرسل": "Not sent",
+"إعادة الإرسال": "Resend",
+"إرسال": "Send",
+"إضافة رقم": "Add number",
+"لا توجد مناوبات في هذا اليوم.": "No duties on this day.",
+"إرسال للجميع بالتتابع ({n} متبقي)": "Send to all one by one ({n} left)",
+"تم إرسال كل التذكيرات": "All reminders sent",
+"لا يوجد رقم": "No number",
+"لا توجد مناوبات في هذا الأسبوع": "No duties this week",
+"تم نسخ النص، ألصقه في قروب واتساب": "Text copied, paste it in the WhatsApp group",
+"حدد النص وانسخه يدوياً": "Select the text and copy it manually",
+"نشط": "Active",
+"غير نشط": "Inactive",
+"واتساب": "WhatsApp",
+"لا يوجد سائق مطابق": "No matching driver",
+"تعديل بيانات السائق": "Edit driver",
+"سائق جديد": "New driver",
+"تم حفظ بيانات السائق": "Driver saved",
+"قادمة": "Upcoming",
+"جارية": "Ongoing",
+"لا توجد إجازات مسجلة": "No leaves recorded",
+"تاريخ النهاية قبل تاريخ البداية": "End date is before start date",
+"تم تسجيل الإجازة": "Leave recorded",
+"{name} لديه {n} مناوبة خلال الإجازة.": "{name} has {n} duties during the leave.",
+"إلغاء تعيينها": "Unassign them",
+"إعادة توزيعها تلقائياً": "Reassign automatically",
+"تعيين سائق بديل": "Assign a substitute",
+"تم إلغاء التعيين": "Unassigned",
+"تمت إعادة توزيع {n} مناوبة": "{n} duties reassigned",
+"نفس حافلة السائق ({n})": "Same as driver's bus ({n})",
+"نفس حافلة السائق": "Same as driver's bus",
+"ينوب عن {name} من {from} إلى {to} ({n} يوم عمل). مناوبات {name} في هذه الفترة: {m}": "Covers {name} from {from} to {to} ({n} working days). {name}'s duties in this period: {m}",
+"لا يوجد حالياً": "none yet",
+"لا يوجد سائقون بدلاء": "No substitute drivers",
+"هذا السائق عنده بديل ({name}) في نفس الفترة": "This driver already has a substitute ({name}) in this period",
+"تم حفظ البديل": "Substitute saved",
+"مناوبات نفّذها البديل": "Duties covered by a substitute",
+"تم حفظ الإعدادات": "Settings saved",
+"تم حفظ النسخة الاحتياطية": "Backup saved",
+"استيراد نسخة": "Import backup",
+"ستُستبدل البيانات الحالية بـ {d} سائق و{n} مناوبة من الملف.": "Current data will be replaced with {d} drivers and {n} duties from the file.",
+"استيراد": "Import",
+"تم استيراد البيانات": "Data imported",
+"الملف غير صالح. اختر نسخة احتياطية من هذا النظام": "Invalid file. Choose a backup from this system",
+"النوع": "Type",
+"البديل": "Substitute",
+"نعم": "Yes",
+"لا": "No",
+"حذف جميع المناوبات": "Delete all duties",
+"سيتم حذف {n} مناوبة. بيانات السائقين تبقى كما هي.": "{n} duties will be deleted. Driver data stays as is.",
+"حذف الكل": "Delete all",
+"تم حذف جميع المناوبات": "All duties deleted",
+"تم تغيير الشعار": "Logo changed",
+"تمت إزالة الشعار": "Logo removed",
+"أنت": "You",
+"الصلاحية": "Role",
+"إزالة": "Remove",
+"لا يوجد مستخدمون": "No users",
+"تمت إضافة {name}": "{name} added",
+"تم تغيير الصلاحية": "Role changed",
+"إزالة المستخدم": "Remove user",
+"إزالة {name}؟ لن يقدر يدخل لوحة التحكم بعد الآن.": "Remove {name}? They will no longer be able to sign in.",
+"تمت الإزالة": "Removed",
+"الحساب {email} غير مضاف للنظام. اطلب من مدير النظام إضافتك.": "The account {email} is not added to the system. Ask the system admin to add you.",
+"رقم الحافلة": "Bus number",
+"اتصال": "Call",
+"عطلة نهاية الأسبوع": "Weekend",
+"لا توجد مناوبة مسجلة لهذا اليوم": "No duty recorded for today",
+"إلى ({dests})": "To ({dests})",
+"من {date}": "From {date}",
+"ينوب عنه {name} حتى {date}": "Covered by {name} until {date}",
+"لا يوجد سائق مطابق للبحث": "No driver matches your search",
+"لم يتم ربط النظام بقاعدة البيانات بعد. راجع دليل الإعداد.": "The system is not connected to the database yet. See the setup guide.",
+"مدرستك": "Your school",
+"{label} منتهية منذ {n} يوم": "{label} expired {n} days ago",
+"{label} تنتهي بعد {n} يوم": "{label} expires in {n} days",
+"رقم الحافلة غير مسجل": "Bus number not recorded",
+"لا تملك صلاحية لهذا الإجراء": "You don't have permission for this action",
+"قاعدة البيانات تحتاج تحديث: شغّل ملف supabase.sql مرة ثانية": "The database needs an update: run supabase.sql again",
+"تعذّر الاتصال بقاعدة البيانات": "Could not connect to the database",
+"جارٍ الحفظ…": "Saving…",
+"تم الحفظ": "Saved",
+"أرسلنا رابط تأكيد إلى إيميلك. افتحه، ثم ارجع هنا وادخل بنفس الإيميل وكلمة المرور لإكمال الإعداد": "We sent a confirmation link to your email. Open it, then come back and sign in with the same email and password to finish setup",
+"الإيميل أو كلمة المرور غير صحيحة": "Incorrect email or password",
+"لم يتم تأكيد الإيميل بعد. افتح رابط التأكيد اللي وصلك": "Email not confirmed yet. Open the confirmation link you received",
+"هذا الإيميل مسجل مسبقاً": "This email is already registered",
+"كلمة المرور ضعيفة، استخدم 6 أحرف أو أكثر": "Weak password, use 6 or more characters",
+"صيغة الإيميل غير صحيحة": "Invalid email format",
+"محاولات كثيرة، انتظر قليلاً ثم حاول مرة أخرى": "Too many attempts, wait a moment and try again",
+"لا يوجد اتصال بالإنترنت": "No internet connection",
+"حدث خطأ، حاول مرة أخرى": "Something went wrong, try again",
+"رخصة القيادة": "Driving licence",
+"تأمين الحافلة": "Bus insurance",
+"الرخصة": "Licence",
+"التأمين": "Insurance",
+"لوحة التحكم": "Dashboard",
+"مناوبات الحافلات": "Bus Duties",
+"الرئيسية": "Home",
+"جدول المناوبات": "Duty schedule",
+"السائقون والحافلات": "Drivers & buses",
+"الإجازات والغياب": "Leaves & absence",
+"السائق البديل": "Substitute driver",
+"تنبيهات واتساب": "WhatsApp reminders",
+"التقارير": "Reports",
+"الإعدادات": "Settings",
+"المستخدمون": "Users",
+"English / عربي": "English / عربي",
+"معاينة الشعار": "Logo preview",
+"إعداد نظام المناوبات": "Duty system setup",
+"خطوة واحدة وتبدأ. تقدر تغيّر كل هذا لاحقاً من الإعدادات.": "One step and you're ready. You can change all of this later in Settings.",
+"اسم المدرسة": "School name",
+"مثال: مدرسة النور للتعليم الأساسي": "e.g. Al Noor Basic Education School",
+"شعار المدرسة (اختياري)": "School logo (optional)",
+"وجهات الذهاب (افصل بينها بفاصلة)": "Trip destinations (separate with commas)",
+"مثال: المدينة، السوق، المستشفى": "e.g. City, Market, Hospital",
+"أيام العطلة الأسبوعية": "Weekly days off",
+"اسمك (مدير النظام)": "Your name (system admin)",
+"إيميلك": "Your email",
+"كلمة المرور": "Password",
+"أضف 4 سائقين تجريبيين لأجرّب النظام": "Add 4 sample drivers to try the system",
+"بدء استخدام النظام": "Start using the system",
+"العودة للصفحة الرئيسية": "Back to home page",
+"لم يتم ربط قاعدة البيانات بعد": "Database not connected yet",
+"افتح الملف config.js وضع رابط مشروع Supabase والمفتاح العام كما في دليل الإعداد، ثم ارفع التعديل.": "Open config.js, add your Supabase project URL and public key as in the setup guide, then upload the change.",
+"شعار المدرسة": "School logo",
+"دخول لوحة التحكم": "Dashboard sign in",
+"الإيميل": "Email",
+"دخول": "Sign in",
+"نسيت كلمة المرور؟": "Forgot password?",
+"الصفحة العامة": "Public page",
+"حسابك غير مفعّل": "Your account is not active",
+"تسجيل الخروج": "Sign out",
+"خروج": "Sign out",
+"القائمة": "Menu",
+"تبديل الوضع الليلي": "Toggle dark mode",
+"مناوبة اليوم": "Today's duty",
+"عرض الجدول": "View schedule",
+"تنبيهات": "Alerts",
+"عدالة التوزيع هذا الشهر": "Fairness this month",
+"عدد المناوبات لكل سائق": "Duties per driver",
+"آخر العمليات": "Recent activity",
+"نوع المناوبة": "Duty type",
+"كل المناوبات": "All duties",
+"الفترة": "Period",
+"أسبوع": "Week",
+"شهر": "Month",
+"فترة مخصصة": "Custom period",
+"من": "From",
+"إلى": "To",
+"الحالي": "Current",
+"طباعة": "Print",
+"إضافة": "Add",
+"مشرف النقل المدرسي: ................": "Transport supervisor: ................",
+"مدير المدرسة: ................": "School principal: ................",
+"ترتيب قائمة الدور": "Rotation order",
+"رتّب السائقين بالأسهم. النظام يمشي على القائمة بالترتيب يوماً بعد يوم، والأسبوع التالي يكمل من حيث وقف.": "Order the drivers with the arrows. The system goes through the list in order day by day, and the next week continues where it stopped.",
+"إعداد التوزيع بالدور": "Rotation settings",
+"تاريخ بداية القائمة": "List start date",
+"توزيع حتى تاريخ": "Distribute until",
+"سائقو الذهاب في اليوم": "Trip drivers per day",
+"سائقو المدرسة في اليوم": "School drivers per day",
+"أسبوعين": "2 weeks",
+"4 أسابيع": "4 weeks",
+"8 أسابيع": "8 weeks",
+"تعديل القائمة تلقائياً عند أي تغيير (إضافة سائق ليوم، حذف، إجازة)": "Adjust the list automatically on any change (adding a driver to a day, deleting, leave)",
+"توزيع الوجهات بالتناوب": "Rotate destinations",
+"استبدال المناوبات اليدوية الموجودة في الفترة": "Replace existing manual duties in the period",
+"كيف يشتغل التوزيع بالدور؟": "How does the rotation work?",
+"كل يوم عمل ياخذ السائق التالي في القائمة، وأيام العطلة تُتخطّى.": "Each working day takes the next driver in the list; days off are skipped.",
+"لو أضفت سائقاً لنفس اليوم يدوياً، يُحسب دوره، واليوم التالي ياخذه اللي بعده.": "If you manually add a driver to a day, their turn counts, and the next day goes to the one after.",
+"لو حذفت سائقاً من يوم، ينتقل دوره لليوم التالي وتتأخر القائمة يوماً.": "If you remove a driver from a day, their turn moves to the next day and the list shifts by one day.",
+"السائق في إجازة يُتخطّى ويرجع دوره أول ما يكون متاحاً. لو عنده بديل، البديل ينفّذ دوره.": "A driver on leave is skipped and gets their turn back once available. If they have a substitute, the substitute covers their turn.",
+"كل سائق ياخذ دوراً واحداً في كل لفّة للقائمة، فالتوزيع يبقى عادلاً.": "Every driver gets one turn per round of the list, so it stays fair.",
+"تذكير السائقين بمناوباتهم": "Remind drivers of their duties",
+"يوم العمل التالي": "Next working day",
+"تاريخ المناوبات": "Duty date",
+"اضغط \"إرسال\" ويفتح واتساب برسالة جاهزة للسائق، وبعدها اضغط إرسال داخل واتساب. النظام يسجّل من وصله التذكير.": "Press \"Send\" and WhatsApp opens with a ready message for the driver, then press send in WhatsApp. The system records who was reminded.",
+"إرسال للجميع بالتتابع": "Send to all one by one",
+"رسالة لمجموعة السائقين": "Message for the drivers' group",
+"المدة": "Duration",
+"يوم واحد": "One day",
+"الأسبوع كامل": "Whole week",
+"انسخ الجدول وألصقه في قروب واتساب السائقين، أو افتح واتساب واختر القروب.": "Copy the schedule and paste it in the drivers' WhatsApp group, or open WhatsApp and pick the group.",
+"نص الرسالة": "Message text",
+"نسخ النص": "Copy text",
+"فتح واتساب واختيار القروب": "Open WhatsApp and pick the group",
+"جدول الأسبوع لكل سائق": "Weekly schedule per driver",
+"رسالة واحدة لكل سائق فيها كل مناوباته في الأسبوع.": "One message per driver with all their duties this week.",
+"بحث...": "Search...",
+"بحث": "Search",
+"الاسم": "Name",
+"هاتف آخر": "Other phone",
+"السعة": "Capacity",
+"الوثائق": "Documents",
+"الحالة": "Status",
+"تسجيل إجازة أو غياب": "Record leave or absence",
+"السبب": "Reason",
+"مرضية، اعتيادية، صيانة الحافلة...": "Sick, annual, bus maintenance...",
+"تسجيل": "Record",
+"إضافة سائق بديل (نائب مؤقت)": "Add a substitute driver (temporary cover)",
+"شخص جديد يغطي مناوبات سائق لعدد محدد من الأيام. دور السائق في القائمة يبقى كما هو، والبديل هو اللي يظهر في الجدول وتوصله التذكيرات.": "A new person covers a driver's duties for a set number of days. The driver keeps their place in the rotation, and the substitute appears in the schedule and receives the reminders.",
+"السائق الأصلي": "Original driver",
+"اسم البديل": "Substitute name",
+"هاتف البديل": "Substitute phone",
+"من تاريخ": "From date",
+"عدد أيام النيابة (أيام عمل)": "Number of days (working days)",
+"إلى تاريخ": "To date",
+"حفظ البديل": "Save substitute",
+"ينوب عن": "Covers for",
+"أيام العمل": "Working days",
+"تقرير المناوبات لكل سائق": "Duty report per driver",
+"الذهاب": "Trip",
+"المدرسة": "School",
+"المجموع": "Total",
+"المنفذة": "Done",
+"نسبة التنفيذ": "Completion",
+"أيام الإجازة": "Leave days",
+"إضافة مستخدم": "Add user",
+"كلمة مرور مؤقتة": "Temporary password",
+"المشرف يدير المناوبات والسائقين والإجازات والتنبيهات. المدير يقدر كذلك يغيّر الإعدادات ويضيف المستخدمين. أرسل للمستخدم إيميله وكلمة المرور المؤقتة، ويقدر يغيّرها بعد الدخول بالضغط على اسمه في القائمة.": "Supervisors manage duties, drivers, leaves and reminders. Admins can also change settings and add users. Send the user their email and temporary password; they can change it after signing in by clicking their name in the menu.",
+"إعدادات عامة": "General settings",
+"تغيير الشعار": "Change logo",
+"إزالة الشعار": "Remove logo",
+"وجهات الذهاب (افصل بفاصلة)": "Trip destinations (comma separated)",
+"تنبيه انتهاء الوثائق قبل (يوم)": "Document expiry alert before (days)",
+"نص رسالة التذكير": "Reminder message text",
+"الكلمات اللي يستبدلها النظام: {الاسم} {المدرسة} {النوع} {اليوم} {التاريخ} {الوجهة} {الحافلة}": "Placeholders the system replaces: {الاسم} name · {المدرسة} school · {النوع} type · {اليوم} day · {التاريخ} date · {الوجهة} destination · {الحافلة} bus",
+"معاينة": "Preview",
+"حفظ الإعدادات": "Save settings",
+"النسخ الاحتياطي والبيانات": "Backup & data",
+"البيانات محفوظة في قاعدة بيانات المدرسة على Supabase، وتظهر لكل المستخدمين مباشرة. النسخة الاحتياطية ملف تحتفظ به عندك للطوارئ.": "Data is stored in the school's Supabase database and shows to all users instantly. A backup is a file you keep for emergencies.",
+"حفظ نسخة احتياطية": "Save backup",
+"تصدير المناوبات Excel": "Export duties to Excel",
+"إغلاق": "Close",
+"تم تنفيذ المناوبة": "Duty completed",
+"حفظ": "Save",
+"المنطقة (الحارة)": "Area (neighbourhood)",
+"رقم الهاتف": "Phone number",
+"رقم هاتف آخر": "Other phone number",
+"مثال: 7": "e.g. 7",
+"رقم اللوحة": "Plate number",
+"مثال: 12345 أ ب": "e.g. 12345 AB",
+"سعة الحافلة (طالب)": "Bus capacity (students)",
+"انتهاء رخصة القيادة": "Driving licence expiry",
+"انتهاء تأمين الحافلة": "Bus insurance expiry",
+"سائق نشط (يدخل في التوزيع)": "Active driver (included in rotation)",
+"تغيير كلمة المرور": "Change password",
+"كلمة المرور الجديدة": "New password",
+"تأكيد كلمة المرور": "Confirm password",
+"نظام مناوبات الحافلات المدرسية": "School Bus Duty System",
+"دخول الإدارة": "Staff sign in",
+"أهلاً بك في نظام مناوبات الحافلات": "Welcome to the bus duty system",
+"لم يتم إعداد النظام بعد. ادخل لوحة التحكم واكتب اسم مدرستك وارفع شعارها لتبدأ.": "The system isn't set up yet. Open the dashboard, enter your school's name and upload its logo to begin.",
+"إعداد النظام": "Set up system",
+"جدول الأسبوع": "Weekly schedule",
+"السابق": "Previous",
+"هذا الأسبوع": "This week",
+"التالي": "Next",
+"دليل السائقين": "Driver directory",
+"ابحث بالاسم أو المنطقة أو رقم الحافلة": "Search by name, area or bus number",
+"بحث في السائقين": "Search drivers",
+"نظام إدارة مناوبات الحافلات –": "Bus duty management system –",
+"اليوم|day": "Day"
+};
+  const fill = (s, v) => v ? String(s).replace(/\{(\w+)\}/g, (m, k) => k in v ? v[k] : m) : s;
+  // مفتاح بالشكل 'نص|سياق' يُعرض عربياً بالجزء الأول فقط
+  const t = (s, v) => fill(lang === 'en' && EN[s] != null ? EN[s] : String(s).split('|')[0], v);
+  const ATTRS = ['placeholder', 'title', 'aria-label', 'alt'];
+  let bound = null;
+  const listeners = [];
+
+  // يحفظ النصوص الثابتة في الصفحة مرة واحدة (قبل أي رسم ديناميكي)
+  function scan() {
+    bound = [];
+    const w = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, {
+      acceptNode: n => n.parentElement && !n.parentElement.closest('script,style,[data-no-i18n]') && n.nodeValue.trim() ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT
+    });
+    for (let n; (n = w.nextNode());) {
+      const v = n.nodeValue, key = (n.parentElement.dataset.i18n || v.trim()).replace(/\s+/g, ' ');
+      if (key in EN) bound.push({ n, key, pre: v.match(/^\s*/)[0], post: v.match(/\s*$/)[0] });
+    }
+    document.querySelectorAll('[placeholder],[title],[aria-label],[alt]').forEach(el => ATTRS.forEach(a => {
+      const v = el.getAttribute(a); if (v && v.trim() in EN) bound.push({ el, a, key: v.trim() });
+    }));
+  }
+  function apply() {
+    const h = document.documentElement;
+    h.lang = lang; h.dir = lang === 'en' ? 'ltr' : 'rtl';
+    if (!bound) scan();
+    bound.forEach(b => {
+      if (b.n) b.n.nodeValue = b.pre + t(b.key) + b.post;
+      else b.el.setAttribute(b.a, t(b.key));
+    });
+    document.querySelectorAll('[data-lang-toggle]').forEach(b => b.textContent = lang === 'en' ? 'ع' : 'EN');
+  }
+  function set(l) {
+    lang = l === 'en' ? 'en' : 'ar';
+    try { localStorage.setItem(KEY, lang); } catch (e) {}
+    apply(); listeners.forEach(f => f(lang));
+  }
+  document.addEventListener('click', e => { if (e.target.closest('[data-lang-toggle]')) set(lang === 'en' ? 'ar' : 'en'); });
+  return { t, apply, set, get lang() { return lang; }, onChange: f => listeners.push(f), EN };
+})();
+const T = I18N.t;
+
+</script>
+<script>
 /* طبقة البيانات المشتركة بين الصفحة العامة ولوحة التحكم.
-   البيانات تُحفظ في Supabase عبر cloud.js، وهذا الملف يحمل الأدوات المشتركة. */
+   البيانات تُحفظ في Supabase عبر Cloud، وهذا الجزء يحمل الأدوات المشتركة. */
 const Store = (() => {
   const KEY = 'school-bus-duty-v1';
-  const DAYS = ['الأحد','الإثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'];
+  const DAYS_AR = ['الأحد','الإثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'];
+  const DAYS_EN = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  const en = () => I18N.lang === 'en';
 
   const SAMPLE_DRIVERS = [
     ['سائق مثال 1','الحي الأول','90000001','','1'],
@@ -690,6 +1205,9 @@ const Store = (() => {
   const uid = () => Math.random().toString(36).slice(2, 10);
   // تشفير بسيط للرمز السري (حماية أساسية فقط، ليس أماناً حقيقياً)
   const hash = s => { let h = 5381; for (const c of String(s)) h = ((h << 5) + h + c.charCodeAt(0)) | 0; return 'h' + (h >>> 0).toString(36); };
+
+  // إعدادات التوزيع بالدور
+  const ROTATION_DEFAULT = { order: [], start: '', until: '', goingPerDay: 1, schoolPerDay: 1, rotateDest: true, autoAdjust: true };
 
   function seed() {
     return {
@@ -705,9 +1223,11 @@ const Store = (() => {
         alertDays: 30,
         pin: ''
       },
+      rotation: { ...ROTATION_DEFAULT, order: [] },
       drivers: [],
-      duties: [],   // {id,type:'going'|'school',date,driverId,dest,note,done}
+      duties: [],   // {id,type:'going'|'school',date,driverId,dest,note,done,auto}
       leaves: [],   // {id,driverId,from,to,reason}
+      subs: [],     // {id,driverId,name,phone,busNo,from,to,note} سائق بديل مؤقت
       log: []       // {t,msg}
     };
   }
@@ -725,10 +1245,13 @@ const Store = (() => {
   const parse = s => new Date(s + 'T00:00');
   const today = () => iso(new Date());
   const addDays = (s, n) => { const d = parse(s); d.setDate(d.getDate() + n); return iso(d); };
-  const dayName = s => s ? DAYS[parse(s).getDay()] : '';
-  const fmt = s => s ? parse(s).toLocaleDateString('ar-OM-u-nu-latn', { day: 'numeric', month: 'long', year: 'numeric' }) : '';
+  // نسخ عربية ثابتة لرسائل السائقين، ونسخ تتبع لغة الواجهة
+  const dayNameAr = s => s ? DAYS_AR[parse(s).getDay()] : '';
+  const dayName = s => s ? (en() ? DAYS_EN : DAYS_AR)[parse(s).getDay()] : '';
+  const fmtAr = s => s ? parse(s).toLocaleDateString('ar-OM-u-nu-latn', { day: 'numeric', month: 'long', year: 'numeric' }) : '';
+  const fmt = s => s ? (en() ? parse(s).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }) : fmtAr(s)) : '';
   const fmtShort = s => s ? parse(s).toLocaleDateString('en-GB') : '';
-  const hijri = s => { try { return parse(s).toLocaleDateString('ar-SA-u-ca-islamic-umalqura-nu-latn', { day: 'numeric', month: 'long', year: 'numeric' }); } catch (e) { return ''; } };
+  const hijri = s => { try { return parse(s).toLocaleDateString(en() ? 'en-u-ca-islamic-umalqura-nu-latn' : 'ar-SA-u-ca-islamic-umalqura-nu-latn', { day: 'numeric', month: 'long', year: 'numeric' }); } catch (e) { return ''; } };
   const weekStart = s => { const d = parse(s); d.setDate(d.getDate() - d.getDay()); return iso(d); }; // الأحد
   const daysUntil = s => Math.round((parse(s) - parse(today())) / 864e5);
   const range = (from, to) => { const out = []; for (let d = from; d <= to; d = addDays(d, 1)) out.push(d); return out; };
@@ -737,8 +1260,19 @@ const Store = (() => {
   const driver = id => db.drivers.find(d => d.id === id);
   const isWeekend = s => db.settings.weekend.includes(parse(s).getDay());
   const onLeave = (driverId, s) => db.leaves.some(l => l.driverId === driverId && l.from <= s && s <= l.to);
+  // البديل المؤقت لسائق في يوم معيّن
+  const subFor = (driverId, s) => (db.subs || []).find(x => x.driverId === driverId && x.from <= s && s <= x.to);
+  // السائق متاح للدور: نشط، وليس في إجازة أو عنده بديل يغطيه
+  const available = (driverId, s) => { const d = driver(driverId); return !!d && d.active && (!onLeave(driverId, s) || !!subFor(driverId, s)); };
+  // من سينفّذ المناوبة فعلياً (السائق أو البديل)
+  function who(duty) {
+    const d = driver(duty.driverId), sub = duty.date ? subFor(duty.driverId, duty.date) : null;
+    if (sub) return { name: sub.name, phone: sub.phone || '', phone2: '', busNo: sub.busNo || (d ? d.busNo : ''), area: d ? d.area : '', sub, orig: d };
+    return d ? { name: d.name, phone: d.phone || '', phone2: d.phone2 || '', busNo: d.busNo || '', area: d.area || '', sub: null, orig: d } : null;
+  }
   const dutiesOn = (s, type) => db.duties.filter(x => x.date === s && (!type || x.type === type));
-  const typeName = t => t === 'going' ? 'مناوبة الذهاب' : 'المناوبة في المدرسة';
+  const typeNameAr = t => t === 'going' ? 'مناوبة الذهاب' : 'المناوبة في المدرسة';
+  const typeName = t => T(typeNameAr(t));
   const intlPhone = p => { const n = String(p || '').replace(/\D/g, ''); return n.length === 8 ? '968' + n : n; };
   const waLink = (p, msg) => `https://wa.me/${intlPhone(p)}?text=${encodeURIComponent(msg)}`;
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -748,7 +1282,7 @@ const Store = (() => {
     id: uid(), name, area, phone, phone2, busNo, plate: '', capacity: '', licenseExp: '', insuranceExp: '', active: true, notes: 'بيانات تجريبية، عدّلها أو احذفها'
   }));
   const logo = () => (db && db.settings.logo) || DEFAULT_LOGO;
-  const schoolName = () => (db && db.settings.school) || 'مدرستك';
+  const schoolName = () => (db && db.settings.school) || T('مدرستك');
   // تطبيق اسم المدرسة وشعارها على الصفحة
   function brand() {
     document.querySelectorAll('img.brand-logo').forEach(i => { if (i.getAttribute('src') !== logo()) i.src = logo(); });
@@ -756,7 +1290,7 @@ const Store = (() => {
     let fav = document.getElementById('favicon');
     if (!fav) { fav = document.createElement('link'); fav.id = 'favicon'; fav.rel = 'icon'; document.head.appendChild(fav); }
     fav.href = logo();
-    const base = document.body.dataset.title || 'مناوبات الحافلات';
+    const base = T(document.body.dataset.title || 'مناوبات الحافلات');
     document.title = db.settings.school ? `${base} – ${db.settings.school}` : base;
   }
   // تصغير صورة الشعار قبل حفظها
@@ -780,36 +1314,41 @@ const Store = (() => {
     });
   }
 
+  // رسائل واتساب للسائقين تبقى بالعربي دائماً
   const DEFAULT_TEMPLATE = 'السلام عليكم {الاسم}،\nتذكير من {المدرسة}: لديك {النوع} يوم {اليوم} {التاريخ}{الوجهة}.\nشاكرين تعاونكم.';
   function fillTemplate(tpl, duty) {
-    const d = driver(duty.driverId);
+    const w = who(duty) || {};
     const map = {
-      '{الاسم}': d ? d.name : '', '{المدرسة}': db.settings.school || '', '{النوع}': typeName(duty.type),
-      '{اليوم}': dayName(duty.date), '{التاريخ}': fmt(duty.date), '{الحافلة}': d && d.busNo ? d.busNo : '',
+      '{الاسم}': w.name || '', '{المدرسة}': db.settings.school || '',
+      '{النوع}': typeNameAr(duty.type) + (w.sub && w.orig ? ` (نيابة عن ${w.orig.name})` : ''),
+      '{اليوم}': dayNameAr(duty.date), '{التاريخ}': fmtAr(duty.date), '{الحافلة}': w.busNo || '',
       '{الوجهة}': duty.type === 'going' && duty.dest ? ` – الوجهة: ${duty.dest}` : ''
     };
     return tpl.replace(/\{[^}]+\}/g, k => k in map ? map[k] : k);
   }
   const reminderText = duty => fillTemplate(db.settings.template || DEFAULT_TEMPLATE, duty);
-  const dutyLine = x => `${typeName(x.type)}${x.type === 'going' && x.dest ? ' (' + x.dest + ')' : ''}`;
-  // رسالة أسبوعية لسائق واحد
-  function weekText(driverId, from, to) {
+  const dutyLine = x => `${typeNameAr(x.type)}${x.type === 'going' && x.dest ? ' (' + x.dest + ')' : ''}`;
+  // رسالة أسبوعية لسائق واحد، أو لبديل (subId) عن مناوباته في فترة النيابة
+  function weekText(driverId, from, to, subId) {
+    const sub = subId ? (db.subs || []).find(x => x.id === subId) : null;
     const d = driver(driverId);
-    const list = db.duties.filter(x => x.driverId === driverId && x.date >= from && x.date <= to).sort((a, b) => a.date.localeCompare(b.date));
-    return `السلام عليكم ${d ? d.name : ''}،\nمناوباتك من ${fmtShort(from)} إلى ${fmtShort(to)} – ${db.settings.school || ''}:\n` +
-      list.map(x => `- ${dayName(x.date)} ${fmtShort(x.date)}: ${dutyLine(x)}`).join('\n') + '\nشاكرين تعاونكم.';
+    const list = db.duties.filter(x => x.driverId === driverId && x.date >= from && x.date <= to &&
+      (sub ? (x.date >= sub.from && x.date <= sub.to) : !subFor(driverId, x.date))).sort((a, b) => a.date.localeCompare(b.date));
+    const name = sub ? sub.name : d ? d.name : '';
+    return `السلام عليكم ${name}،\nمناوباتك من ${fmtShort(from)} إلى ${fmtShort(to)} – ${db.settings.school || ''}${sub && d ? ` (نيابة عن ${d.name})` : ''}:\n` +
+      list.map(x => `- ${dayNameAr(x.date)} ${fmtShort(x.date)}: ${dutyLine(x)}`).join('\n') + '\nشاكرين تعاونكم.';
   }
   // رسالة جماعية لمجموعة السائقين
   function groupText(from, to) {
     const days = range(from, to).filter(d => !isWeekend(d));
-    const name = id => { const d = driver(id); return d ? d.name + (d.busNo ? ` (حافلة ${d.busNo})` : '') : ''; };
+    const name = x => { const w = who(x); return w ? w.name + (w.busNo ? ` (حافلة ${w.busNo})` : '') + (w.sub && w.orig ? ` – بديل عن ${w.orig.name}` : '') : ''; };
     let out = `جدول مناوبات الحافلات – ${db.settings.school || ''}\n`;
     days.forEach(day => {
       const g = dutiesOn(day, 'going'), s = dutiesOn(day, 'school');
       if (!g.length && !s.length) return;
-      out += `\n*${dayName(day)} ${fmtShort(day)}*\n`;
-      g.forEach(x => out += `- الذهاب: ${name(x.driverId)}${x.dest ? ' – ' + x.dest : ''}\n`);
-      s.forEach(x => out += `- المدرسة: ${name(x.driverId)}\n`);
+      out += `\n*${dayNameAr(day)} ${fmtShort(day)}*\n`;
+      g.forEach(x => out += `- الذهاب: ${name(x)}${x.dest ? ' – ' + x.dest : ''}\n`);
+      s.forEach(x => out += `- المدرسة: ${name(x)}\n`);
     });
     return out.trim();
   }
@@ -821,10 +1360,10 @@ const Store = (() => {
       [['licenseExp', 'رخصة القيادة'], ['insuranceExp', 'تأمين الحافلة']].forEach(([k, label]) => {
         if (!d[k]) return;
         const n = daysUntil(d[k]);
-        if (n < 0) out.push({ level: 'bad', driver: d, text: `${label} منتهية منذ ${-n} يوم` });
-        else if (n <= lim) out.push({ level: 'warn', driver: d, text: `${label} تنتهي بعد ${n} يوم` });
+        if (n < 0) out.push({ level: 'bad', driver: d, text: T('{label} منتهية منذ {n} يوم', { label: T(label), n: -n }) });
+        else if (n <= lim) out.push({ level: 'warn', driver: d, text: T('{label} تنتهي بعد {n} يوم', { label: T(label), n }) });
       });
-      if (!d.busNo) out.push({ level: 'info', driver: d, text: 'رقم الحافلة غير مسجل' });
+      if (!d.busNo) out.push({ level: 'info', driver: d, text: T('رقم الحافلة غير مسجل') });
     });
     return out;
   }
@@ -852,10 +1391,10 @@ const Store = (() => {
 
   load();
   return {
-    get db() { return db; }, set db(v) { db = v; }, KEY, load, save, log, seed, uid, hash,
-    iso, parse, today, addDays, dayName, fmt, fmtShort, hijri, weekStart, daysUntil, range,
-    driver, isWeekend, onLeave, dutiesOn, typeName, intlPhone, waLink, esc, reminderText, alerts,
-    onChange, toggleTheme, toast, DAYS, DEFAULT_TEMPLATE, fillTemplate, weekText, groupText, sampleDrivers, logo, schoolName, brand, readLogo
+    get db() { return db; }, set db(v) { db = v; }, KEY, load, save, log, seed, uid, hash, ROTATION_DEFAULT,
+    iso, parse, today, addDays, dayName, dayNameAr, fmt, fmtAr, fmtShort, hijri, weekStart, daysUntil, range,
+    driver, isWeekend, onLeave, subFor, available, who, dutiesOn, typeName, typeNameAr, intlPhone, waLink, esc, reminderText, alerts,
+    onChange, toggleTheme, toast, get DAYS() { return en() ? DAYS_EN : DAYS_AR; }, DEFAULT_TEMPLATE, fillTemplate, weekText, groupText, sampleDrivers, logo, schoolName, brand, readLogo
   };
 })();
 
@@ -868,45 +1407,35 @@ const Cloud = (() => {
   const URL_ = String(window.SUPABASE_URL || '').trim().replace(/\/+$/, '');
   const KEY_ = String(window.SUPABASE_ANON_KEY || '').trim();
   const configured = /^https:\/\/[^/]+\.supabase\.co$/.test(URL_) && KEY_.length > 20 && !/ضع/.test(KEY_);
-  const TOKEN_KEY = 'schoolduty-session';
-  let token = null; try { token = localStorage.getItem(TOKEN_KEY); } catch (e) {}
-  const makeClient = () => window.supabase.createClient(URL_, KEY_, {
-    auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
-    global: { headers: token ? { 'x-session': token } : {} }
-  });
-  let sb = configured && window.supabase ? makeClient() : null;
-  function setToken(t) {
-    token = t || null;
-    try { if (token) localStorage.setItem(TOKEN_KEY, token); else localStorage.removeItem(TOKEN_KEY); } catch (e) {}
-    if (channel) { sb.removeChannel(channel); channel = null; }
-    sb = makeClient();
-  }
+  const sb = configured && window.supabase ? window.supabase.createClient(URL_, KEY_) : null;
   const S = () => Store;
 
   // أسماء الأعمدة في قاعدة البيانات
   const COLS = {
     drivers: ['id', 'name', 'area', 'phone', 'phone2', 'busNo', 'plate', 'capacity', 'licenseExp', 'insuranceExp', 'active', 'notes'],
-    duties: ['id', 'type', 'date', 'driverId', 'dest', 'note', 'done', 'remindedAt'],
+    duties: ['id', 'type', 'date', 'driverId', 'dest', 'note', 'done', 'remindedAt', 'auto'],
     leaves: ['id', 'driverId', 'from', 'to', 'reason'],
+    subs: ['id', 'driverId', 'name', 'phone', 'busNo', 'from', 'to', 'note'],
     log: ['id', 't', 'msg', 'by']
   };
   const MAP = {
     drivers: { busNo: 'bus_no', licenseExp: 'license_exp', insuranceExp: 'insurance_exp' },
     duties: { driverId: 'driver_id', remindedAt: 'reminded_at' },
     leaves: { driverId: 'driver_id', from: 'date_from', to: 'date_to' },
+    subs: { driverId: 'driver_id', busNo: 'bus_no', from: 'date_from', to: 'date_to' },
     log: { by: 'by_name' }
   };
   const toRow = (t, o) => { const r = {}; COLS[t].forEach(k => { const v = o[k]; r[MAP[t][k] || k] = v === undefined || v === '' ? null : v; }); return r; };
-  const fromRow = (t, r) => { const o = {}; COLS[t].forEach(k => { const v = r[MAP[t][k] || k]; o[k] = v === null || v === undefined ? (k === 'active' || k === 'done' ? false : '') : v; }); return o; };
+  const fromRow = (t, r) => { const o = {}; COLS[t].forEach(k => { const v = r[MAP[t][k] || k]; o[k] = v === null || v === undefined ? (k === 'active' || k === 'done' || k === 'auto' ? false : '') : v; }); return o; };
   const stable = v => Array.isArray(v) ? '[' + v.map(stable).join(',') + ']'
     : v && typeof v === 'object' ? '{' + Object.keys(v).sort().map(k => JSON.stringify(k) + ':' + stable(v[k])).join(',') + '}'
     : JSON.stringify(v === undefined ? null : v);
   const clean = o => JSON.parse(JSON.stringify(o));
   const windowStart = () => S().addDays(S().today(), -365);
 
-  let shadow = { settings: null, drivers: {}, duties: {}, leaves: {} };
+  let shadow = { settings: null, rotation: null, drivers: {}, duties: {}, leaves: {}, subs: {} };
   let profile = null, users = [], settingsLoaded = false, setupInProgress = false, channel = null, poll = null, mode = null;
-  const listeners = { change: [], status: [] };
+  const listeners = { change: [], status: [], recovery: [] };
   const emit = (k, v) => listeners[k].forEach(f => f(v));
   const on = (k, f) => listeners[k].push(f);
   let changeTimer = null;
@@ -926,9 +1455,16 @@ const Cloud = (() => {
     if (data) { Object.assign(db.settings, data); db.settings.setupDone = true; shadow.settings = stable(data); }
     else { db.settings.setupDone = false; shadow.settings = null; }
   }
+  function applyRotation(data) {
+    S().db.rotation = Object.assign({}, S().ROTATION_DEFAULT, { order: [] }, data || {});
+    shadow.rotation = data ? stable(data) : null;
+  }
   const fail = e => {
     console.error(e);
-    const msg = e && (e.code === '42501' || /row-level security|permission/i.test(e.message || '')) ? 'لا تملك صلاحية لهذا الإجراء' : 'تعذّر الاتصال بقاعدة البيانات';
+    const m = String((e && e.message) || '');
+    const msg = e && (e.code === '42501' || /row-level security|permission/i.test(m)) ? T('لا تملك صلاحية لهذا الإجراء')
+      : /subs|auto|public_subs|schema cache|does not exist/i.test(m) ? T('قاعدة البيانات تحتاج تحديث: شغّل ملف supabase.sql مرة ثانية')
+      : T('تعذّر الاتصال بقاعدة البيانات');
     emit('status', { level: 'bad', text: msg });
   };
   const must = ({ data, error }) => { if (error) throw error; return data; };
@@ -939,8 +1475,10 @@ const Cloud = (() => {
     for (;;) { const rows = must(await build().range(from, from + 999)); out = out.concat(rows); if (rows.length < 1000) return out; from += 1000; }
   }
   async function loadSettings() {
-    const row = must(await sb.from('settings').select('data').eq('id', 'main').maybeSingle());
-    applySettings(row ? row.data : null);
+    const rows = must(await sb.from('settings').select('id,data').in('id', ['main', 'rotation']));
+    const main = rows.find(r => r.id === 'main'), rot = rows.find(r => r.id === 'rotation');
+    applySettings(main ? main.data : null);
+    applyRotation(rot ? rot.data : null);
   }
   async function loadTable(t) {
     const rows = await fetchAll(() => { let q = sb.from(t).select('*'); if (t === 'duties') q = q.gte('date', mode === 'public' ? S().addDays(S().today(), -60) : windowStart()); return q.order('id'); });
@@ -952,11 +1490,15 @@ const Cloud = (() => {
     const rows = await fetchAll(() => sb.from('public_drivers').select('*').order('id'));
     mergeList(S().db.drivers, rows.map(r => ({ id: r.id, name: r.name || '', area: r.area || '', busNo: r.bus_no || '', active: !!r.active })));
   }
+  async function loadPublicSubs() {
+    const rows = await fetchAll(() => sb.from('public_subs').select('*').order('id'));
+    mergeList(S().db.subs, rows.map(r => ({ id: r.id, driverId: r.driver_id || '', name: r.name || '', busNo: r.bus_no || '', from: r.date_from || '', to: r.date_to || '', phone: '', note: '' })));
+  }
   async function loadLog() {
     const rows = must(await sb.from('log').select('*').order('t', { ascending: false }).limit(60));
     S().db.log = [...S().db.log.filter(l => !l.id), ...rows.map(r => fromRow('log', r))];
   }
-  async function loadUsers() { users = must(await sb.rpc('app_list_users')) || []; changed(); }
+  async function loadUsers() { users = must(await sb.from('profiles').select('*').order('name')); changed(); }
 
   const pending = new Set(); let reloadTimer = null;
   function reload(what) {
@@ -968,7 +1510,9 @@ const Cloud = (() => {
         for (const w of list) {
           if (w === 'settings') await loadSettings();
           else if (w === 'public_drivers') await loadPublicDrivers();
+          else if (w === 'public_subs') await loadPublicSubs().catch(() => {});
           else if (w === 'log') await loadLog();
+          else if (w === 'profiles') { if (profile && profile.role === 'admin') await loadUsers(); }
           else await loadTable(w);
         }
         changed();
@@ -986,31 +1530,35 @@ const Cloud = (() => {
   }
   async function subscribePublic() {
     stop(); mode = 'public';
-    try { await Promise.all([loadSettings(), loadPublicDrivers(), loadTable('duties')]); changed(); } catch (e) { fail(e); }
-    listen(['settings', 'duties'], { duties: ['duties', 'public_drivers'] });
-    poll = setInterval(() => { if (!document.hidden) reload(['settings', 'public_drivers', 'duties']); }, 120000);
+    try { await Promise.all([loadSettings(), loadPublicDrivers(), loadTable('duties'), loadPublicSubs().catch(() => {})]); changed(); } catch (e) { fail(e); }
+    listen(['settings', 'duties', 'subs'], { duties: ['duties', 'public_drivers'], subs: ['public_subs'] });
+    poll = setInterval(() => { if (!document.hidden) reload(['settings', 'public_drivers', 'duties', 'public_subs']); }, 120000);
   }
   async function subscribeStaff() {
     stop(); mode = 'staff';
     try {
-      await Promise.all([loadSettings(), loadTable('drivers'), loadTable('duties'), loadTable('leaves'), loadLog()]);
+      await Promise.all([loadSettings(), loadTable('drivers'), loadTable('duties'), loadTable('leaves'), loadTable('subs'), loadLog()]);
       if (profile.role === 'admin') await loadUsers();
       changed();
     } catch (e) { fail(e); }
-    listen(['settings', 'duties'], {});
-    poll = setInterval(() => { if (!document.hidden) reload(['settings', 'drivers', 'duties', 'leaves', 'log']); }, 30000);
+    listen(['settings', 'drivers', 'duties', 'leaves', 'subs', 'log', 'profiles'], {});
+    poll = setInterval(() => { if (!document.hidden) reload(['settings', 'drivers', 'duties', 'leaves', 'subs', 'log']); }, 120000);
   }
 
   /* ===== الحفظ ===== */
   let saving = Promise.resolve();
-  function save() { if (!profile) return; saving = saving.then(write).catch(e => { fail(e); reload(['settings', 'drivers', 'duties', 'leaves']); }); }
+  function save() { if (!profile) return; saving = saving.then(write).catch(e => { fail(e); reload(['settings', 'drivers', 'duties', 'leaves', 'subs']); }); }
   async function write() {
     const db = S().db, jobs = [];
     if (profile.role === 'admin' && db.settings.setupDone) {
       const st = clean(db.settings); delete st.setupDone; delete st.pin;
       if (stable(st) !== shadow.settings) { shadow.settings = stable(st); jobs.push(() => sb.from('settings').upsert({ id: 'main', data: st })); }
     }
-    ['drivers', 'duties', 'leaves'].forEach(t => {
+    if (db.settings.setupDone && db.rotation) {
+      const rt = clean(db.rotation);
+      if (stable(rt) !== shadow.rotation) { shadow.rotation = stable(rt); jobs.push(() => sb.from('settings').upsert({ id: 'rotation', data: rt })); }
+    }
+    ['drivers', 'duties', 'leaves', 'subs'].forEach(t => {
       const up = [], seen = new Set();
       db[t].forEach(x => {
         if (!x.id) x.id = S().uid();
@@ -1026,99 +1574,111 @@ const Cloud = (() => {
     const logs = db.log.filter(l => !l.id).map(l => { l.id = S().uid(); return toRow('log', { id: l.id, t: l.t, msg: l.msg, by: profile.name || '' }); });
     if (logs.length) jobs.push(() => sb.from('log').insert(logs));
     if (!jobs.length) return;
-    emit('status', { level: 'warn', text: 'جارٍ الحفظ…' });
+    emit('status', { level: 'warn', text: T('جارٍ الحفظ…') });
     for (const j of jobs) must(await j());
-    emit('status', { level: 'ok', text: 'تم الحفظ' });
+    emit('status', { level: 'ok', text: T('تم الحفظ') });
   }
 
-  /* ===== الدخول والحسابات (اسم مستخدم وكلمة مرور) ===== */
-  const ERR = {
-    bad_login: 'اسم المستخدم أو كلمة المرور غير صحيحة',
-    username_taken: 'اسم المستخدم مستخدم مسبقاً، اختر اسماً آخر',
-    short_username: 'اسم المستخدم لازم يكون 3 أحرف أو أكثر',
-    weak_password: 'كلمة المرور لازم تكون 6 أحرف أو أكثر',
-    already_setup: 'تم إعداد النظام مسبقاً. ادخل باسم المستخدم وكلمة المرور',
-    not_allowed: 'لا تملك صلاحية لهذا الإجراء'
-  };
+  /* ===== الدخول والحسابات ===== */
   function errText(e) {
     const m = String((e && (e.message || e.code)) || '');
-    for (const k of Object.keys(ERR)) if (m.includes(k) || (e && e.code === k)) return ERR[k];
-    if (/Failed to fetch|NetworkError|network/i.test(m)) return 'لا يوجد اتصال بالإنترنت';
-    if ((e && e.code === '42501') || /row-level security|permission/i.test(m)) return ERR.not_allowed;
-    if (/Could not find the function|PGRST202/i.test(m)) return 'قاعدة البيانات تحتاج تحديث: شغّل ملف SQL الجديد في Supabase';
-    return 'حدث خطأ، حاول مرة أخرى';
+    if (e && e.code === 'confirm_email') return T('أرسلنا رابط تأكيد إلى إيميلك. افتحه، ثم ارجع هنا وادخل بنفس الإيميل وكلمة المرور لإكمال الإعداد');
+    if (/Invalid login credentials/i.test(m)) return T('الإيميل أو كلمة المرور غير صحيحة');
+    if (/Email not confirmed/i.test(m)) return T('لم يتم تأكيد الإيميل بعد. افتح رابط التأكيد اللي وصلك');
+    if (/already registered|already exists/i.test(m)) return T('هذا الإيميل مسجل مسبقاً');
+    if (/at least 6|Password should/i.test(m)) return T('كلمة المرور ضعيفة، استخدم 6 أحرف أو أكثر');
+    if (/invalid.*email|email.*invalid/i.test(m)) return T('صيغة الإيميل غير صحيحة');
+    if (/rate limit|too many/i.test(m)) return T('محاولات كثيرة، انتظر قليلاً ثم حاول مرة أخرى');
+    if (/Failed to fetch|NetworkError|network/i.test(m)) return T('لا يوجد اتصال بالإنترنت');
+    if ((e && e.code === '42501') || /row-level security/i.test(m)) return T('لا تملك صلاحية لهذا الإجراء');
+    return T('حدث خطأ، حاول مرة أخرى');
   }
 
-  let authFn = () => {};
-  async function enter(info) {
-    stop(); users = [];
-    profile = info ? { id: info.id, name: info.name, username: info.username, role: info.role } : null;
-    if (!profile) return authFn({ state: 'out' });
-    await subscribeStaff();
-    authFn({ state: 'staff', profile });
+  let currentUser = null;
+  function watchAuth(fn) {
+    let lastUid;
+    sb.auth.onAuthStateChange((event, session) => {
+      currentUser = session ? session.user : null;
+      if (event === 'PASSWORD_RECOVERY') setTimeout(() => emit('recovery'), 0);
+      const uid = currentUser ? currentUser.id : null;
+      if (uid === lastUid) return;
+      lastUid = uid;
+      setTimeout(() => handle(fn), 0); // لا نستدعي Supabase داخل هذا الحدث مباشرة
+    });
   }
-  async function watchAuth(fn) {
-    authFn = fn;
-    if (!token) return enter(null);
+  async function handle(fn) {
+    if (setupInProgress) return;
+    stop(); profile = null; users = [];
+    if (!currentUser) return fn({ state: 'out' });
     try {
-      const me = must(await sb.rpc('app_me'));
-      if (!me) setToken(null);
-      await enter(me);
-    } catch (e) { fail(e); setToken(null); enter(null); }
+      const p = must(await sb.from('profiles').select('*').eq('id', currentUser.id).maybeSingle());
+      if (!p) return fn({ state: 'inactive', email: currentUser.email });
+      profile = p;
+      await subscribeStaff();
+      fn({ state: 'staff', profile });
+    } catch (e) { fail(e); fn({ state: 'inactive', email: currentUser.email }); }
   }
-  async function signIn(username, password) {
-    const r = must(await sb.rpc('app_login', { p_username: username.trim(), p_password: password }));
-    if (!r) throw Object.assign(new Error('bad_login'), { code: 'bad_login' });
-    setToken(r.token);
-    await enter(r);
-  }
-  async function signOut() {
-    try { await sb.rpc('app_logout'); } catch (e) {}
-    setToken(null);
-    await enter(null);
-  }
-  async function updatePassword(password) { must(await sb.rpc('app_change_password', { p_password: password })); }
+  async function signIn(email, password) { must(await sb.auth.signInWithPassword({ email: email.trim(), password })); }
+  async function signOut() { await sb.auth.signOut(); }
+  async function resetPassword(email) { must(await sb.auth.resetPasswordForEmail(email.trim(), { redirectTo: location.href.split('#')[0].split('?')[0] })); }
+  async function updatePassword(password) { must(await sb.auth.updateUser({ password })); }
   async function settingsExist() { return !!must(await sb.from('settings').select('id').eq('id', 'main').maybeSingle()); }
-  async function needsSetup() { return !!must(await sb.rpc('needs_setup')); }
-  async function loadPublicSettings() { await loadSettings(); changed(); }
 
-  // الإعداد الأول: حساب المدير + إعدادات المدرسة
-  async function setup({ name, username, password, settings, drivers }) {
-    const r = must(await sb.rpc('app_setup', { p_name: name, p_username: username.trim(), p_password: password }));
-    setToken(r.token);
-    const st = clean(settings); delete st.setupDone; delete st.pin;
-    must(await sb.from('settings').upsert({ id: 'main', data: st }));
-    profile = { id: r.id, name: r.name, username: r.username, role: r.role };
-    await subscribeStaff();
-    (drivers || []).forEach(d => S().db.drivers.push(d));
-    S().log(`إعداد النظام لـ ${st.school}`);
-    save();
-    return profile;
+  // الإعداد لأول مرة: حساب المدير + إعدادات المدرسة
+  async function setup({ name, email, password, settings, drivers }) {
+    setupInProgress = true;
+    try {
+      let session = must(await sb.auth.getSession()).session;
+      if (!session) {
+        const r = await sb.auth.signUp({ email: email.trim(), password });
+        if (r.error && /already registered|already exists/i.test(r.error.message || '')) session = must(await sb.auth.signInWithPassword({ email: email.trim(), password })).session;
+        else session = must(r).session;
+        if (!session) throw Object.assign(new Error('confirm'), { code: 'confirm_email' });
+      }
+      currentUser = session.user;
+      const uid = session.user.id, mail = session.user.email;
+      const mine = must(await sb.from('profiles').select('id').eq('id', uid).maybeSingle());
+      if (!mine) must(await sb.from('profiles').insert({ id: uid, name, email: mail, role: 'admin' }));
+      const st = clean(settings); delete st.setupDone; delete st.pin;
+      must(await sb.from('settings').insert({ id: 'main', data: st }));
+      profile = { id: uid, name, email: mail, role: 'admin' };
+      await subscribeStaff();
+      (drivers || []).forEach(d => S().db.drivers.push(d));
+      S().log(`إعداد النظام لـ ${st.school}`);
+      save();
+      return profile;
+    } finally { setupInProgress = false; }
   }
 
-  async function addUser({ name, username, password, role }) {
-    must(await sb.rpc('app_add_user', { p_name: name, p_username: username.trim(), p_password: password, p_role: role }));
+  // المدير يضيف مستخدماً بدون الخروج من حسابه (اتصال مؤقت منفصل)
+  async function addUser({ name, email, password, role }) {
+    const tmp = window.supabase.createClient(URL_, KEY_, { auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false, storageKey: 'tmp-' + Date.now() } });
+    const data = must(await tmp.auth.signUp({ email: email.trim(), password }));
+    const uid = data.user && data.user.id;
+    if (!uid) throw new Error('signup');
+    must(await sb.from('profiles').insert({ id: uid, name, email: email.trim(), role }));
     await loadUsers();
   }
-  async function setRole(id, role) { must(await sb.rpc('app_set_role', { p_id: id, p_role: role })); await loadUsers(); }
-  async function removeUser(id) { must(await sb.rpc('app_remove_user', { p_id: id })); await loadUsers(); }
-  async function resetUserPassword(id, password) { must(await sb.rpc('app_set_password', { p_id: id, p_password: password })); }
+  async function setRole(uid, role) { must(await sb.from('profiles').update({ role }).eq('id', uid)); await loadUsers(); }
+  async function removeUser(uid) { must(await sb.from('profiles').delete().eq('id', uid)); await loadUsers(); }
 
   return {
-    configured, get ready() { return !!sb; }, on, save, watchAuth, signIn, signOut, updatePassword, setup, settingsExist, needsSetup, loadPublicSettings,
-    addUser, setRole, removeUser, resetUserPassword, subscribePublic, errText,
-    get signedIn() { return !!token; }, get settingsLoaded() { return settingsLoaded; },
+    configured, get ready() { return !!sb; }, on, save, watchAuth, signIn, signOut, resetPassword, updatePassword, setup, settingsExist,
+    addUser, setRole, removeUser, subscribePublic, errText,
+    get signedIn() { return !!currentUser; }, get settingsLoaded() { return settingsLoaded; },
     get profile() { return profile; }, get users() { return users; }, isAdmin: () => !!profile && profile.role === 'admin'
   };
 })();
+
 
 </script>
 <script>
 (() => {
   const S = Store, $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
   const db = () => S.db;
-  const commit = msg => { if (msg) S.log(msg); S.save(); renderAll(); };
-  const TITLES = { dash: 'الرئيسية', schedule: 'جدول المناوبات', auto: 'التوزيع التلقائي', drivers: 'السائقون والحافلات', leaves: 'الإجازات والغياب', notify: 'تنبيهات واتساب', reports: 'التقارير', settings: 'الإعدادات', users: 'المستخدمون' };
+  // حفظ التغيير. rebuildFrom: إعادة ترتيب قائمة الدور ابتداءً من هذا التاريخ
+  const commit = (msg, rebuildFrom) => { if (rebuildFrom) autoRebuild(rebuildFrom); if (msg) S.log(msg); S.save(); renderAll(); };
+  const TITLES = { dash: 'الرئيسية', schedule: 'جدول المناوبات', auto: 'التوزيع بالدور', drivers: 'السائقون والحافلات', leaves: 'الإجازات والغياب', subs: 'السائق البديل', notify: 'تنبيهات واتساب', reports: 'التقارير', settings: 'الإعدادات', users: 'المستخدمون' };
   let view = 'dash';
 
   /* ========== الدخول ========== */
@@ -1127,44 +1687,44 @@ const Cloud = (() => {
   function applyRole() {
     const admin = Cloud.isAdmin(), p = Cloud.profile;
     $$('.admin-only').forEach(el => el.hidden = !admin);
-    $('#whoami').textContent = p ? `${p.name || p.username} · ${admin ? 'مدير' : 'مشرف'}` : '';
+    $('#whoami').textContent = p ? `${p.name || p.email} · ${admin ? T('مدير') : T('مشرف')}` : '';
   }
   function showApp() { show('app'); applyRole(); if (!Cloud.isAdmin() && ['settings', 'users'].includes(view)) view = 'dash'; renderAll(); }
   $('#loginForm').onsubmit = async e => {
     e.preventDefault();
     const b = e.submitter; if (b) b.disabled = true;
-    try { await Cloud.signIn($('#lgUser').value, $('#lgPass').value); $('#lgPass').value = ''; }
+    try { await Cloud.signIn($('#lgEmail').value, $('#lgPass').value); $('#lgPass').value = ''; }
     catch (err) { S.toast(Cloud.errText(err), true); }
     if (b) b.disabled = false;
+  };
+  $('#lgForgot').onclick = async () => {
+    const em = $('#lgEmail').value.trim();
+    if (!em) return S.toast(T('اكتب إيميلك أولاً ثم اضغط "نسيت كلمة المرور"'), true);
+    try { await Cloud.resetPassword(em); S.toast(T('أرسلنا رابط تغيير كلمة المرور إلى إيميلك')); }
+    catch (err) { S.toast(Cloud.errText(err), true); }
   };
   $('#logout').onclick = () => Cloud.signOut();
   $('#inactiveOut').onclick = () => Cloud.signOut();
 
   /* ========== كلمة المرور ========== */
-  let pwTarget = null;
-  const openPw = (target) => {
-    pwTarget = target || null;
-    $('#pwTitle').textContent = pwTarget ? `كلمة مرور جديدة لـ ${pwTarget.name || pwTarget.username}` : 'تغيير كلمة المرور';
-    $('#pwForm').reset(); $('#pwDlg').returnValue = ''; $('#pwDlg').showModal();
-  };
-  $('#pwBtn').onclick = () => openPw();
+  const openPw = () => { $('#pwForm').reset(); $('#pwDlg').returnValue = ''; $('#pwDlg').showModal(); };
+  $('#pwBtn').onclick = openPw;
+  Cloud.on('recovery', () => { S.toast(T('اكتب كلمة المرور الجديدة')); openPw(); });
   $('#pwDlg').addEventListener('close', async () => {
     if ($('#pwDlg').returnValue !== 'save') return;
-    if ($('#pwNew').value !== $('#pwNew2').value) { S.toast('كلمتا المرور غير متطابقتين', true); return openPw(); }
-    try {
-      if (pwTarget) { await Cloud.resetUserPassword(pwTarget.id, $('#pwNew').value); S.toast(`تم تعيين كلمة مرور جديدة لـ ${pwTarget.name || pwTarget.username}`); }
-      else { await Cloud.updatePassword($('#pwNew').value); S.toast('تم تغيير كلمة المرور'); }
-    }
+    if ($('#pwNew').value !== $('#pwNew2').value) { S.toast(T('كلمتا المرور غير متطابقتين'), true); return openPw(); }
+    try { await Cloud.updatePassword($('#pwNew').value); S.toast(T('تم تغيير كلمة المرور')); }
     catch (err) { S.toast(Cloud.errText(err), true); }
   });
 
 
   let setupLogo = '';
-  $('#suWeekend').innerHTML = S.DAYS.map((d, i) => `<label class="check"><input type="checkbox" value="${i}" ${[5, 6].includes(i) ? 'checked' : ''}> ${d}</label>`).join('');
+  const weekendBoxes = (el, sel) => { el.innerHTML = S.DAYS.map((d, i) => `<label class="check"><input type="checkbox" value="${i}" ${sel.includes(i) ? 'checked' : ''}> ${d}</label>`).join(''); };
+  weekendBoxes($('#suWeekend'), [5, 6]);
   $('#suDest').value = db().settings.destinations.join('، ');
   $('#suLogo').onchange = async e => {
     try { setupLogo = await S.readLogo(e.target.files[0]); $('#setupLogoPrev').src = setupLogo; }
-    catch (_) { setupLogo = ''; e.target.value = ''; S.toast('اختر ملف صورة (PNG أو JPG)', true); }
+    catch (_) { setupLogo = ''; e.target.value = ''; S.toast(T('اختر ملف صورة (PNG أو JPG)'), true); }
   };
   $('#setupForm').onsubmit = async e => {
     e.preventDefault();
@@ -1175,10 +1735,10 @@ const Cloud = (() => {
     st.weekend = $$('#suWeekend input:checked').map(i => +i.value);
     const b = e.submitter; if (b) b.disabled = true;
     try {
-      await Cloud.setup({ name: $('#suName').value.trim(), username: $('#suUser').value, password: $('#suPass').value, settings: st, drivers: $('#suSample').checked ? S.sampleDrivers() : [] });
+      await Cloud.setup({ name: $('#suName').value.trim(), email: $('#suEmail').value, password: $('#suPass').value, settings: st, drivers: $('#suSample').checked ? S.sampleDrivers() : [] });
       st.setupDone = true;
       showApp();
-      if (!db().drivers.length) { go('drivers'); S.toast('أهلاً بك. ابدأ بإضافة السائقين'); } else S.toast('تم إعداد النظام');
+      if (!db().drivers.length) { go('drivers'); S.toast(T('أهلاً بك. ابدأ بإضافة السائقين')); } else S.toast(T('تم إعداد النظام'));
     } catch (err) { S.toast(Cloud.errText(err), true); }
     if (b) b.disabled = false;
   };
@@ -1189,7 +1749,6 @@ const Cloud = (() => {
     view = v;
     $$('.nav-btn[data-view]').forEach(b => b.classList.toggle('on', b.dataset.view === v));
     $$('[data-panel]').forEach(p => p.hidden = p.dataset.panel !== v);
-    $('#viewTitle').textContent = TITLES[v];
     $('#side').classList.remove('open');
     renderAll();
     window.scrollTo(0, 0);
@@ -1201,17 +1760,21 @@ const Cloud = (() => {
 
   /* ========== أدوات العرض ========== */
   const plate = d => d && d.busNo ? `<span class="plate"><b>BUS</b><span>${S.esc(d.busNo)}</span></span>` : '<span class="plate empty"><span>—</span></span>';
-  const typeChip = t => `<span class="chip ${t}"><i class="fa-solid ${t === 'going' ? 'fa-bus' : 'fa-school'}"></i> ${t === 'going' ? 'ذهاب' : 'مدرسة'}</span>`;
-  const waBtn = duty => { const d = S.driver(duty.driverId); return d && d.phone ? `<a class="btn sm green" data-remind="${duty.id}" href="${S.waLink(d.phone, S.reminderText(duty))}" target="_blank" rel="noopener" title="إرسال تذكير واتساب" aria-label="تذكير واتساب"><i class="fa-brands fa-whatsapp"></i></a>` : ''; };
+  const typeChip = t => `<span class="chip ${t}"><i class="fa-solid ${t === 'going' ? 'fa-bus' : 'fa-school'}"></i> ${t === 'going' ? T('ذهاب') : T('مدرسة')}</span>`;
+  const subChip = w => w && w.sub ? ` <span class="chip sub" title="${S.esc(T('سائق بديل مؤقت'))}"><i class="fa-solid fa-user-clock"></i> ${S.esc(T('بديل عن {name}', { name: w.orig ? w.orig.name : '' }))}</span>` : '';
+  const whoName = x => { const w = S.who(x); return w ? `<strong>${S.esc(w.name)}</strong>${subChip(w)}` : `<strong>${T('سائق محذوف')}</strong>`; };
+  const autoChip = x => x.auto ? ` <span class="chip" title="${S.esc(T('من قائمة الدور'))}"><i class="fa-solid fa-arrows-rotate"></i></span>` : '';
+  const waBtn = duty => { const w = S.who(duty); return w && w.phone ? `<a class="btn sm green" data-remind="${duty.id}" href="${S.waLink(w.phone, S.reminderText(duty))}" target="_blank" rel="noopener" title="${S.esc(T('إرسال تذكير واتساب'))}" aria-label="${S.esc(T('تذكير واتساب'))}"><i class="fa-brands fa-whatsapp"></i></a>` : ''; };
   const activeDrivers = () => db().drivers.filter(d => d.active);
+  const leaveNoSub = (id, day) => S.onLeave(id, day) && !S.subFor(id, day);
   function docChip(date, label) {
     if (!date) return '';
-    const n = S.daysUntil(date);
-    if (n < 0) return `<span class="chip bad" title="${label}">${label}: منتهية</span>`;
-    if (n <= db().settings.alertDays) return `<span class="chip warn" title="${label}">${label}: ${n} يوم</span>`;
-    return `<span class="chip ok" title="${label} حتى ${S.fmtShort(date)}">${label}</span>`;
+    const n = S.daysUntil(date), L = T(label);
+    if (n < 0) return `<span class="chip bad" title="${L}">${L}: ${T('منتهية')}</span>`;
+    if (n <= db().settings.alertDays) return `<span class="chip warn" title="${L}">${L}: ${T('{n} يوم', { n })}</span>`;
+    return `<span class="chip ok" title="${L} ${T('حتى')} ${S.fmtShort(date)}">${L}</span>`;
   }
-  function ask(title, text, yes = 'تأكيد') {
+  function ask(title, text, yes = T('تأكيد')) {
     const d = $('#confirmDlg'); $('#cTitle').textContent = title; $('#cText').textContent = text; $('#cYes').textContent = yes;
     d.returnValue = ''; d.showModal();
     return new Promise(r => d.addEventListener('close', () => r(d.returnValue === 'yes'), { once: true }));
@@ -1222,48 +1785,51 @@ const Cloud = (() => {
     setTimeout(() => URL.revokeObjectURL(a.href), 1500);
   }
   const monthRange = s => { const d = S.parse(s); const f = new Date(d.getFullYear(), d.getMonth(), 1), l = new Date(d.getFullYear(), d.getMonth() + 1, 0); return [S.iso(f), S.iso(l)]; };
+  const maxDate = (...a) => a.filter(Boolean).sort().pop();
 
   /* ========== الرئيسية ========== */
   function renderDash() {
-    const t = S.today(), ws = S.weekStart(t), we = S.addDays(ws, 6), st = db().settings;
+    const t = S.today(), ws = S.weekStart(t), we = S.addDays(ws, 6), r = rot();
+    const nG = r.start ? +r.goingPerDay || 0 : db().settings.goingPerDay, nS = r.start ? +r.schoolPerDay || 0 : db().settings.schoolPerDay;
     const weekDuties = db().duties.filter(x => x.date >= ws && x.date <= we);
     const workdays = S.range(ws, we).filter(d => !S.isWeekend(d));
-    const gaps = workdays.filter(d => S.dutiesOn(d, 'going').length < st.goingPerDay || S.dutiesOn(d, 'school').length < st.schoolPerDay).length;
+    const gaps = workdays.filter(d => S.dutiesOn(d, 'going').length < nG || S.dutiesOn(d, 'school').length < nS).length;
     const past = weekDuties.filter(x => x.date <= t);
     const rate = past.length ? Math.round(past.filter(x => x.done).length / past.length * 100) : 0;
     const al = S.alerts().filter(a => a.level !== 'info');
     const tile = (icon, k, v, cls = '') => `<div class="card stat ${cls}"><span class="k"><i class="fa-solid ${icon}"></i> ${k}</span><span class="v">${v}</span></div>`;
     $('#stats').innerHTML =
-      tile('fa-id-card', 'السائقون النشطون', `${activeDrivers().length}<small class="muted" style="font-size:15px"> / ${db().drivers.length}</small>`) +
-      tile('fa-calendar-week', 'مناوبات هذا الأسبوع', weekDuties.length) +
-      tile('fa-calendar-xmark', 'أيام ينقصها سائق هذا الأسبوع', gaps, gaps ? 'alert' : '') +
-      tile('fa-circle-check', 'نسبة التنفيذ هذا الأسبوع', rate + '%') +
-      tile('fa-triangle-exclamation', 'وثائق تحتاج تجديد', al.length, al.length ? 'alert' : '');
+      tile('fa-id-card', T('السائقون النشطون'), `${activeDrivers().length}<small class="muted" style="font-size:15px"> / ${db().drivers.length}</small>`) +
+      tile('fa-calendar-week', T('مناوبات هذا الأسبوع'), weekDuties.length) +
+      tile('fa-calendar-xmark', T('أيام ينقصها سائق هذا الأسبوع'), gaps, gaps ? 'alert' : '') +
+      tile('fa-circle-check', T('نسبة التنفيذ هذا الأسبوع'), rate + '%') +
+      tile('fa-triangle-exclamation', T('وثائق تحتاج تجديد'), al.length, al.length ? 'alert' : '');
 
     $('#dashToday').textContent = `${S.dayName(t)} ${S.fmt(t)}`;
     const td = S.dutiesOn(t);
     $('#dashTodayList').innerHTML = td.length ? td.map(x => {
-      const d = S.driver(x.driverId);
-      return `<div class="alert-row" style="flex-wrap:wrap">${typeChip(x.type)}<strong>${S.esc(d ? d.name : 'سائق محذوف')}</strong>${plate(d)}
+      const w = S.who(x);
+      return `<div class="alert-row" style="flex-wrap:wrap">${typeChip(x.type)}${whoName(x)}${plate(w)}
         ${x.dest ? `<span class="chip going">${S.esc(x.dest)}</span>` : ''}
         <span style="margin-inline-start:auto;display:flex;gap:6px">${waBtn(x)}
-        <button class="btn sm ${x.done ? 'green' : ''}" data-done="${x.id}"><i class="fa-solid fa-check"></i> ${x.done ? 'منفذة' : 'تأكيد التنفيذ'}</button></span></div>`;
-    }).join('') : `<div class="empty-state">${S.isWeekend(t) ? 'اليوم عطلة نهاية الأسبوع' : 'لا توجد مناوبة لليوم.'} <br><button class="btn sm primary" style="margin-top:8px" data-goto="auto">توزيع تلقائي</button></div>`;
+        <button class="btn sm ${x.done ? 'green' : ''}" data-done="${x.id}"><i class="fa-solid fa-check"></i> ${x.done ? T('منفذة') : T('تأكيد التنفيذ')}</button></span></div>`;
+    }).join('') : `<div class="empty-state">${S.isWeekend(t) ? T('اليوم عطلة نهاية الأسبوع') : T('لا توجد مناوبة لليوم.')} <br><button class="btn sm primary" style="margin-top:8px" data-goto="auto">${T('التوزيع بالدور')}</button></div>`;
 
-    // تنبيهات: الوثائق + تعارض الإجازات
-    const conflicts = db().duties.filter(x => x.date >= t && S.onLeave(x.driverId, x.date)).map(x => ({ level: 'bad', driver: S.driver(x.driverId), text: `لديه مناوبة يوم ${S.dayName(x.date)} ${S.fmtShort(x.date)} وهو في إجازة` }));
-    const all = [...conflicts, ...S.alerts()];
+    // تنبيهات: الوثائق + تعارض الإجازات + نهاية القائمة
+    const conflicts = db().duties.filter(x => x.date >= t && leaveNoSub(x.driverId, x.date)).map(x => ({ level: 'bad', driver: S.driver(x.driverId), text: T('لديه مناوبة يوم {day} {date} وهو في إجازة', { day: S.dayName(x.date), date: S.fmtShort(x.date) }) }));
+    const rotAlert = r.start && r.until && S.daysUntil(r.until) <= 7 ? [{ level: 'warn', text: S.daysUntil(r.until) < 0 ? T('انتهت فترة قائمة الدور. مدّدها من صفحة التوزيع بالدور') : T('قائمة الدور تنتهي بعد {n} يوم. مدّدها من صفحة التوزيع بالدور', { n: S.daysUntil(r.until) }), goto: 'auto' }] : [];
+    const all = [...rotAlert, ...conflicts, ...S.alerts()];
     const ic = { bad: 'fa-circle-exclamation" style="color:var(--red)', warn: 'fa-clock" style="color:var(--amber)', info: 'fa-circle-info" style="color:var(--blue)' };
     $('#alertCount').textContent = all.length;
-    $('#alertsList').innerHTML = all.length ? all.map(a => `<div class="alert-row"><i class="fa-solid ${ic[a.level]}"></i><span><strong>${S.esc(a.driver ? a.driver.name : '')}</strong> – ${S.esc(a.text)}</span>
-      ${a.driver ? `<button class="btn sm" style="margin-inline-start:auto" data-edit-driver="${a.driver.id}">فتح</button>` : ''}</div>`).join('') : '<div class="empty-state"><i class="fa-solid fa-circle-check" style="color:var(--green)"></i> لا توجد تنبيهات</div>';
+    $('#alertsList').innerHTML = all.length ? all.map(a => `<div class="alert-row"><i class="fa-solid ${ic[a.level]}"></i><span>${a.driver ? `<strong>${S.esc(a.driver.name)}</strong> – ` : ''}${S.esc(a.text)}</span>
+      ${a.driver ? `<button class="btn sm" style="margin-inline-start:auto" data-edit-driver="${a.driver.id}">${T('فتح')}</button>` : a.goto ? `<button class="btn sm" style="margin-inline-start:auto" data-goto="${a.goto}">${T('فتح')}</button>` : ''}</div>`).join('') : `<div class="empty-state"><i class="fa-solid fa-circle-check" style="color:var(--green)"></i> ${T('لا توجد تنبيهات')}</div>`;
 
     const [mf, ml] = monthRange(t);
     const counts = activeDrivers().map(d => ({ d, n: db().duties.filter(x => x.driverId === d.id && x.date >= mf && x.date <= ml).length })).sort((a, b) => b.n - a.n);
     const max = Math.max(1, ...counts.map(c => c.n));
     $('#dashBars').innerHTML = counts.map(c => `<div class="bar"><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${S.esc(c.d.name)}">${S.esc(c.d.name)}</span><div class="track"><div class="fill" style="width:${c.n / max * 100}%"></div></div><span class="n">${c.n}</span></div>`).join('');
 
-    $('#logList').innerHTML = db().log.length ? db().log.slice(0, 40).map(l => `<div><time>${new Date(l.t).toLocaleString('en-GB', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}</time><span>${S.esc(l.msg)}</span></div>`).join('') : '<div class="muted">لا توجد عمليات بعد</div>';
+    $('#logList').innerHTML = db().log.length ? db().log.slice(0, 40).map(l => `<div><time>${new Date(l.t).toLocaleString('en-GB', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}</time><span>${S.esc(l.msg)}</span></div>`).join('') : `<div class="muted">${T('لا توجد عمليات بعد')}</div>`;
   }
 
   /* ========== جدول المناوبات ========== */
@@ -1288,7 +1854,7 @@ const Cloud = (() => {
 
   function renderSchedule() {
     $('#fFrom').value = sch.from; $('#fTo').value = sch.to;
-    $('#printRange').textContent = `جدول المناوبات من ${S.fmt(sch.from)} إلى ${S.fmt(sch.to)}`;
+    $('#printRange').textContent = T('جدول المناوبات من {from} إلى {to}', { from: S.fmt(sch.from), to: S.fmt(sch.to) });
     const types = $('#fType').value ? [$('#fType').value] : ['going', 'school'];
     const days = S.range(sch.from, sch.to).filter(d => !S.isWeekend(d));
     const t = S.today();
@@ -1296,29 +1862,29 @@ const Cloud = (() => {
       const going = type === 'going';
       const rows = days.map(day => {
         const list = S.dutiesOn(day, type);
-        const dayCells = `<td><strong>${S.dayName(day)}</strong>${day === t ? ' <span class="chip going">اليوم</span>' : ''}</td><td class="num">${S.fmtShort(day)}</td>`;
-        if (!list.length) return `<tr>${dayCells}<td colspan="${going ? 7 : 6}" class="muted">لم يُعيّن سائق <button class="btn sm no-print" data-new="${type}|${day}" style="margin-inline-start:8px"><i class="fa-solid fa-plus"></i> تعيين</button></td><td class="no-print"></td></tr>`;
+        const dayCells = `<td><strong>${S.dayName(day)}</strong>${day === t ? ` <span class="chip going">${T('اليوم')}</span>` : ''}</td><td class="num">${S.fmtShort(day)}</td>`;
+        if (!list.length) return `<tr>${dayCells}<td colspan="${going ? 7 : 6}" class="muted">${T('لم يُعيّن سائق')} <button class="btn sm no-print" data-new="${type}|${day}" style="margin-inline-start:8px"><i class="fa-solid fa-plus"></i> ${T('تعيين')}</button></td><td class="no-print"></td></tr>`;
         return list.map((x, i) => {
-          const d = S.driver(x.driverId);
-          const leave = S.onLeave(x.driverId, day) ? ' <span class="chip bad">في إجازة</span>' : '';
+          const w = S.who(x);
+          const leave = leaveNoSub(x.driverId, day) ? ` <span class="chip bad">${T('في إجازة')}</span>` : '';
           return `<tr class="${x.done ? 'done' : ''}">${i === 0 ? dayCells : '<td></td><td></td>'}
-            <td><strong>${S.esc(d ? d.name : 'سائق محذوف')}</strong>${leave}</td>
-            <td>${plate(d)}</td><td>${S.esc(d ? d.area : '')}</td>
-            <td class="num">${S.esc(d ? d.phone : '')}${d && d.phone2 ? '<br>' + S.esc(d.phone2) : ''}</td>
+            <td>${whoName(x)}${leave}<span class="no-print">${autoChip(x)}</span></td>
+            <td>${plate(w)}</td><td>${S.esc(w ? w.area : '')}</td>
+            <td class="num">${S.esc(w ? w.phone : '')}${w && w.phone2 ? '<br>' + S.esc(w.phone2) : ''}</td>
             ${going ? `<td>${x.dest ? `<span class="chip going">${S.esc(x.dest)}</span>` : '<span class="muted">—</span>'}</td>` : ''}
             <td>${S.esc(x.note)}</td>
-            <td><label class="check"><input type="checkbox" data-done="${x.id}" ${x.done ? 'checked' : ''} aria-label="منفذة"></label></td>
+            <td><label class="check"><input type="checkbox" data-done="${x.id}" ${x.done ? 'checked' : ''} aria-label="${T('منفذة')}"></label></td>
             <td class="no-print" style="white-space:nowrap">${waBtn(x)}
-              <button class="btn sm icon" data-edit-duty="${x.id}" title="تعديل" aria-label="تعديل"><i class="fa-solid fa-pen"></i></button>
-              <button class="btn sm icon" data-del-duty="${x.id}" title="حذف" aria-label="حذف"><i class="fa-solid fa-trash" style="color:var(--red)"></i></button></td></tr>`;
+              <button class="btn sm icon" data-edit-duty="${x.id}" title="${T('تعديل')}" aria-label="${T('تعديل')}"><i class="fa-solid fa-pen"></i></button>
+              <button class="btn sm icon" data-del-duty="${x.id}" title="${T('حذف')}" aria-label="${T('حذف')}"><i class="fa-solid fa-trash" style="color:var(--red)"></i></button></td></tr>`;
         }).join('');
       }).join('');
       return `<div class="card" style="overflow:hidden">
         <div class="type-band ${type}"><i class="fa-solid ${going ? 'fa-bus' : 'fa-school'}"></i>
-          ${going ? `مناوبة الذهاب إلى (${S.esc(db().settings.destinations.join(' - '))})` : 'المناوبة اليومية في (المدرسة)'}</div>
+          ${going ? T('مناوبة الذهاب إلى ({dests})', { dests: S.esc(db().settings.destinations.join(' - ')) }) : T('المناوبة اليومية في (المدرسة)')}</div>
         <div class="table-wrap" style="border-radius:0"><table class="data">
-          <thead><tr><th>اليوم</th><th>التاريخ</th><th>السائق</th><th>الحافلة</th><th>المنطقة</th><th>الهاتف</th>${going ? '<th>الوجهة</th>' : ''}<th>ملاحظات</th><th>منفذة</th><th class="no-print"></th></tr></thead>
-          <tbody>${rows || `<tr><td colspan="10" class="empty-state">لا توجد أيام عمل في هذه الفترة</td></tr>`}</tbody>
+          <thead><tr><th>${T('اليوم|day')}</th><th>${T('التاريخ')}</th><th>${T('السائق')}</th><th>${T('الحافلة')}</th><th>${T('المنطقة')}</th><th>${T('الهاتف')}</th>${going ? `<th>${T('الوجهة')}</th>` : ''}<th>${T('ملاحظات')}</th><th>${T('منفذة')}</th><th class="no-print"></th></tr></thead>
+          <tbody>${rows || `<tr><td colspan="10" class="empty-state">${T('لا توجد أيام عمل في هذه الفترة')}</td></tr>`}</tbody>
         </table></div></div>`;
     }).join('');
   }
@@ -1327,24 +1893,27 @@ const Cloud = (() => {
   let editingDuty = null;
   function fillDriverSelect(sel, date, current) {
     const list = db().drivers.filter(d => d.active || d.id === current);
-    sel.innerHTML = '<option value="">اختر السائق</option>' + list.map(d => {
+    sel.innerHTML = `<option value="">${T('اختر السائق')}</option>` + list.map(d => {
       const n = date ? S.dutiesOn(date).filter(x => x.driverId === d.id && (!editingDuty || x.id !== editingDuty.id)).length : 0;
-      const tag = date && S.onLeave(d.id, date) ? ' (في إجازة)' : n ? ' (لديه مناوبة في هذا اليوم)' : '';
-      return `<option value="${d.id}"${d.id === current ? ' selected' : ''}>${S.esc(d.name)}${d.busNo ? ' – حافلة ' + S.esc(d.busNo) : ''}${tag}</option>`;
+      const sub = date && S.subFor(d.id, date);
+      const tag = sub ? ` (${T('ينوب عنه {name}', { name: sub.name })})` : date && S.onLeave(d.id, date) ? ` (${T('في إجازة')})` : n ? ` (${T('لديه مناوبة في هذا اليوم')})` : '';
+      return `<option value="${d.id}"${d.id === current ? ' selected' : ''}>${S.esc(d.name)}${d.busNo ? ' – ' + T('حافلة') + ' ' + S.esc(d.busNo) : ''}${S.esc(tag)}</option>`;
     }).join('');
   }
   function dutyWarn() {
     const date = $('#dDate').value, id = $('#dDriver').value, w = [];
     $('#dDestWrap').hidden = $('#dType').value !== 'going';
-    if (date && S.isWeekend(date)) w.push('هذا اليوم عطلة نهاية الأسبوع.');
-    if (date && id && S.onLeave(id, date)) w.push('السائق مسجل في إجازة في هذا التاريخ.');
-    if (date && id && S.dutiesOn(date).some(x => x.driverId === id && (!editingDuty || x.id !== editingDuty.id))) w.push('السائق لديه مناوبة أخرى في نفس اليوم.');
-    $('#dWarn').innerHTML = w.map(x => `<div class="alert-row" style="background:var(--amber-soft);color:var(--amber)"><i class="fa-solid fa-triangle-exclamation"></i>${x}</div>`).join('');
+    if (date && S.isWeekend(date)) w.push(T('هذا اليوم عطلة نهاية الأسبوع.'));
+    if (date && id && leaveNoSub(id, date)) w.push(T('السائق مسجل في إجازة في هذا التاريخ.'));
+    if (date && id && S.subFor(id, date)) w.push(T('سينفّذها البديل {name} نيابة عن السائق.', { name: S.subFor(id, date).name }));
+    if (date && id && S.dutiesOn(date).some(x => x.driverId === id && (!editingDuty || x.id !== editingDuty.id))) w.push(T('السائق لديه مناوبة أخرى في نفس اليوم.'));
+    if (rotActive()) w.push(T('قائمة الدور تتعدل تلقائياً بعد الحفظ.'));
+    $('#dWarn').innerHTML = w.map(x => `<div class="alert-row" style="background:var(--amber-soft);color:var(--amber)"><i class="fa-solid fa-triangle-exclamation"></i>${S.esc(x)}</div>`).join('');
   }
   function openDuty(duty, preset = {}) {
     editingDuty = duty || null;
     const x = duty || { type: preset.type || 'going', date: preset.date || S.today(), driverId: '', dest: '', note: '', done: false };
-    $('#dutyTitle').textContent = duty ? 'تعديل مناوبة' : 'مناوبة جديدة';
+    $('#dutyTitle').textContent = duty ? T('تعديل مناوبة') : T('مناوبة جديدة');
     $('#dType').value = x.type; $('#dDate').value = x.date;
     $('#dDest').innerHTML = '<option value="">—</option>' + db().settings.destinations.map(d => `<option${d === x.dest ? ' selected' : ''}>${S.esc(d)}</option>`).join('');
     fillDriverSelect($('#dDriver'), x.date, x.driverId);
@@ -1358,92 +1927,250 @@ const Cloud = (() => {
     if ($('#dutyDlg').returnValue !== 'save') return;
     const data = { type: $('#dType').value, date: $('#dDate').value, driverId: $('#dDriver').value, dest: $('#dType').value === 'going' ? $('#dDest').value : '', note: $('#dNote').value.trim(), done: $('#dDone').checked };
     const d = S.driver(data.driverId);
-    if (editingDuty) { Object.assign(editingDuty, data); commit(`تعديل مناوبة ${d ? d.name : ''} يوم ${S.fmtShort(data.date)}`); S.toast('تم حفظ التعديل'); }
-    else { db().duties.push({ id: S.uid(), ...data }); commit(`إضافة ${S.typeName(data.type)} لـ ${d ? d.name : ''} يوم ${S.fmtShort(data.date)}`); S.toast('تمت إضافة المناوبة'); }
+    if (editingDuty) {
+      const old = editingDuty, from = [old.date, data.date].sort()[0];
+      // تغيير السائق أو اليوم أو النوع يحوّلها لمناوبة يدوية
+      if (old.driverId !== data.driverId || old.date !== data.date || old.type !== data.type) data.auto = false;
+      Object.assign(old, data);
+      commit(`تعديل مناوبة ${d ? d.name : ''} يوم ${S.fmtShort(data.date)}`, S.addDays(from, 1)); S.toast(T('تم حفظ التعديل'));
+    } else {
+      db().duties.push({ id: S.uid(), ...data, auto: false });
+      commit(`إضافة ${S.typeNameAr(data.type)} لـ ${d ? d.name : ''} يوم ${S.fmtShort(data.date)}`, S.addDays(data.date, 1)); S.toast(T('تمت إضافة المناوبة'));
+    }
   });
   $('#addDuty').onclick = () => openDuty(null, { date: sch.from <= S.today() && S.today() <= sch.to ? S.today() : sch.from });
   $('#quickAdd').onclick = () => openDuty(null);
 
   // أحداث عامة داخل الصفحة
   document.addEventListener('click', async e => {
-    const el = e.target.closest('[data-new],[data-edit-duty],[data-del-duty],[data-edit-driver],[data-del-driver],[data-del-leave],button[data-done]');
+    const el = e.target.closest('[data-new],[data-edit-duty],[data-del-duty],[data-edit-driver],[data-del-driver],[data-del-leave],[data-del-sub],button[data-done]');
     if (!el) return;
     if (el.dataset.new) { const [type, date] = el.dataset.new.split('|'); openDuty(null, { type, date }); }
     else if (el.dataset.editDuty) openDuty(db().duties.find(x => x.id === el.dataset.editDuty));
     else if (el.dataset.delDuty) {
       const x = db().duties.find(y => y.id === el.dataset.delDuty), d = x && S.driver(x.driverId);
-      if (x && await ask('حذف المناوبة', `حذف مناوبة ${d ? d.name : ''} يوم ${S.dayName(x.date)} ${S.fmtShort(x.date)}؟`, 'حذف')) {
-        db().duties = db().duties.filter(y => y !== x); commit(`حذف مناوبة ${d ? d.name : ''} يوم ${S.fmtShort(x.date)}`); S.toast('تم حذف المناوبة');
+      const extra = x && x.auto && rotActive() ? ' ' + T('دور السائق ينتقل لليوم التالي وتتأخر القائمة.') : '';
+      if (x && await ask(T('حذف المناوبة'), T('حذف مناوبة {name} يوم {day} {date}؟', { name: d ? d.name : '', day: S.dayName(x.date), date: S.fmtShort(x.date) }) + extra, T('حذف'))) {
+        db().duties = db().duties.filter(y => y !== x); commit(`حذف مناوبة ${d ? d.name : ''} يوم ${S.fmtShort(x.date)}`, S.addDays(x.date, 1)); S.toast(T('تم حذف المناوبة'));
       }
     }
     else if (el.dataset.editDriver) openDriver(S.driver(el.dataset.editDriver));
     else if (el.dataset.delDriver) {
       const d = S.driver(el.dataset.delDriver), n = db().duties.filter(x => x.driverId === d.id).length;
-      if (await ask('حذف السائق', `حذف ${d.name}${n ? ` وحذف ${n} مناوبة مسجلة له` : ''}؟ يمكنك بدلاً من ذلك جعله غير نشط.`, 'حذف')) {
-        db().drivers = db().drivers.filter(x => x !== d); db().duties = db().duties.filter(x => x.driverId !== d.id); db().leaves = db().leaves.filter(x => x.driverId !== d.id);
-        commit(`حذف السائق ${d.name}`); S.toast('تم حذف السائق');
+      if (await ask(T('حذف السائق'), T('حذف {name}{extra}؟ يمكنك بدلاً من ذلك جعله غير نشط.', { name: d.name, extra: n ? T(' وحذف {n} مناوبة مسجلة له', { n }) : '' }), T('حذف'))) {
+        db().drivers = db().drivers.filter(x => x !== d); db().duties = db().duties.filter(x => x.driverId !== d.id); db().leaves = db().leaves.filter(x => x.driverId !== d.id); db().subs = db().subs.filter(x => x.driverId !== d.id);
+        rot().order = (rot().order || []).filter(id => id !== d.id);
+        commit(`حذف السائق ${d.name}`, S.today()); S.toast(T('تم حذف السائق'));
       }
     }
-    else if (el.dataset.delLeave) { const l = db().leaves.find(x => x.id === el.dataset.delLeave), d = l && S.driver(l.driverId); db().leaves = db().leaves.filter(x => x !== l); commit(`حذف إجازة ${d ? d.name : ''}`); }
+    else if (el.dataset.delLeave) { const l = db().leaves.find(x => x.id === el.dataset.delLeave), d = l && S.driver(l.driverId); db().leaves = db().leaves.filter(x => x !== l); commit(`حذف إجازة ${d ? d.name : ''}`, l && l.from); }
+    else if (el.dataset.delSub) {
+      const b = db().subs.find(x => x.id === el.dataset.delSub); if (!b) return;
+      if (!await ask(T('حذف البديل'), T('حذف {name} كبديل؟ ترجع المناوبات باسم السائق الأصلي.', { name: b.name }), T('حذف'))) return;
+      db().subs = db().subs.filter(x => x !== b); const d = S.driver(b.driverId);
+      commit(`حذف البديل ${b.name} عن ${d ? d.name : ''}`, b.from); S.toast(T('تم حذف البديل'));
+    }
     else if (el.dataset.done) toggleDone(el.dataset.done);
   });
   document.addEventListener('change', e => { if (e.target.matches('input[data-done]')) toggleDone(e.target.dataset.done); });
   function toggleDone(id) { const x = db().duties.find(y => y.id === id); if (!x) return; x.done = !x.done; const d = S.driver(x.driverId); commit(`${x.done ? 'تأكيد تنفيذ' : 'إلغاء تنفيذ'} مناوبة ${d ? d.name : ''} يوم ${S.fmtShort(x.date)}`); }
 
-  /* ========== التوزيع التلقائي ========== */
-  let proposal = null;
-  function initAuto() {
-    if (!$('#aFrom').value) { const ws = S.weekStart(S.today()); const next = S.today() > S.addDays(ws, 4) ? S.addDays(ws, 7) : ws; $('#aFrom').value = next; $('#aTo').value = S.addDays(next, 27); }
-    if ($('#aGoing').value === '') $('#aGoing').value = db().settings.goingPerDay;
-    if ($('#aSchool').value === '') $('#aSchool').value = db().settings.schoolPerDay;
+  /* ========== التوزيع بالدور ==========
+     القائمة دائرية: كل يوم عمل ياخذ التالي في الترتيب، وكل سائق ياخذ دوراً واحداً في كل لفّة.
+     أي سائق ينفّذ مناوبة (تلقائية أو يدوية) يُحسب دوره، فاللي بعده ياخذ اليوم التالي. */
+  const rot = () => db().rotation || (db().rotation = { ...S.ROTATION_DEFAULT, order: [] });
+  const rotActive = () => !!(rot().start && rot().until && rot().autoAdjust !== false);
+  function rotOrder(order) {
+    const act = activeDrivers(), ids = new Set(act.map(d => d.id));
+    const ord = (order || rot().order || []).filter((id, i, a) => ids.has(id) && a.indexOf(id) === i);
+    act.forEach(d => { if (!ord.includes(d.id)) ord.push(d.id); });
+    return ord;
   }
-  function plan(from, to, nG, nS, rotate, overwrite) {
-    const inRange = x => x.date >= from && x.date <= to && ((x.type === 'going' && nG) || (x.type === 'school' && nS));
-    const base = overwrite ? db().duties.filter(x => !inRange(x)) : db().duties.slice();
-    const drivers = activeDrivers(), order = new Map(drivers.map((d, i) => [d.id, i]));
-    const count = new Map(drivers.map(d => [d.id, 0])), last = new Map();
-    base.forEach(x => { if (count.has(x.driverId)) count.set(x.driverId, count.get(x.driverId) + 1); if (!last.has(x.driverId) || last.get(x.driverId) < x.date) last.set(x.driverId, x.date); });
-    const dests = db().settings.destinations; let di = 0;
-    const out = [], short = [];
-    S.range(from, to).filter(d => !S.isWeekend(d)).forEach(day => {
-      const today = base.filter(x => x.date === day), used = new Set(today.map(x => x.driverId));
-      [['going', nG], ['school', nS]].forEach(([type, n]) => {
-        let need = n - today.filter(x => x.type === type).length;
+  function simulate(cfg) {
+    const { start, until, from, rotateDest, overwrite } = cfg, nG = +cfg.goingPerDay || 0, nS = +cfg.schoolPerDay || 0;
+    const ord = rotOrder(cfg.order), n = ord.length, idx = new Map(ord.map((id, i) => [id, i]));
+    const types = [['going', nG], ['school', nS]].filter(x => x[1] > 0), tset = new Set(types.map(x => x[0]));
+    const dests = db().settings.destinations;
+    let p = 0, served = new Set(), gi = 0;
+    const add = [], drop = [], short = [], days = [];
+    // p: موضع الدور العادي في اللفّة الحالية. served: من أخذ دوره في هذه اللفّة
+    const mark = id => { if (!idx.has(id)) return; served.add(id); if (ord.every(x => served.has(x))) { served = new Set(); p = 0; } };
+    // المناوبة تُعاد كتابتها إذا كانت من القائمة ولم تُنفّذ، ولم يُبلَّغ السائق بها وهو متاح
+    const replaceable = x => tset.has(x.type) && !x.done && (x.auto || overwrite) && !(x.remindedAt && S.available(x.driverId, x.date));
+    function pick(day, used) {
+      const ok = id => !served.has(id) && !used.has(id) && S.available(id, day);
+      for (let pass = 0; pass < 2; pass++) {
+        // أولاً: سائق فاته دوره (كان في إجازة) ورجع متاحاً
+        for (let i = 0; i < p && i < n; i++) if (ok(ord[i])) return ord[i];
+        // بعدها: الدور العادي حسب الترتيب
+        for (let i = p; i < n; i++) if (ok(ord[i])) { p = i + 1; return ord[i]; }
+        // ما بقي أحد متاح في هذه اللفّة: تبدأ لفّة جديدة
+        served = new Set(); p = 0;
+      }
+      return null;
+    }
+    if (n && types.length && start && until) S.range(start, until).forEach(day => {
+      if (S.isWeekend(day)) return;
+      const gen = day >= from, all = S.dutiesOn(day);
+      const keep = [];
+      all.filter(x => tset.has(x.type)).forEach(x => (gen && replaceable(x) ? drop : keep).push(x));
+      const used = new Set(all.filter(x => !(gen && replaceable(x))).map(x => x.driverId));
+      keep.sort((a, b) => (!!a.auto - !!b.auto) || (a.type === b.type ? 0 : a.type === 'going' ? -1 : 1)).forEach(x => {
+        // إعادة تمثيل المناوبات السابقة بنفس منطق الاختيار حتى تبقى النتيجة ثابتة
+        if (x.auto && idx.has(x.driverId)) {
+          if (served.has(x.driverId)) { served = new Set(); p = 0; }
+          const i = idx.get(x.driverId); if (i >= p) p = i + 1;
+        }
+        mark(x.driverId);
+        if (x.type === 'going') gi++;
+      });
+      if (!gen) return;
+      const row = { day, going: keep.filter(x => x.type === 'going').map(x => ({ x, keep: true })), school: keep.filter(x => x.type === 'school').map(x => ({ x, keep: true })) };
+      types.forEach(([type, k]) => {
+        let need = k - keep.filter(x => x.type === type).length;
         while (need-- > 0) {
-          const c = drivers.filter(d => !used.has(d.id) && !S.onLeave(d.id, day))
-            .sort((a, b) => count.get(a.id) - count.get(b.id) || (last.get(a.id) || '').localeCompare(last.get(b.id) || '') || order.get(a.id) - order.get(b.id))[0];
-          if (!c) { short.push(`${S.dayName(day)} ${S.fmtShort(day)} – ${S.typeName(type)}`); break; }
-          used.add(c.id); count.set(c.id, count.get(c.id) + 1); last.set(c.id, day);
-          out.push({ id: S.uid(), type, date: day, driverId: c.id, dest: type === 'going' && rotate && dests.length ? dests[di++ % dests.length] : '', note: '', done: false });
+          const id = pick(day, used);
+          if (!id) { short.push(`${S.dayName(day)} ${S.fmtShort(day)} – ${S.typeName(type)}`); break; }
+          used.add(id); mark(id);
+          const x = { id: S.uid(), type, date: day, driverId: id, dest: type === 'going' && rotateDest && dests.length ? dests[gi % dests.length] : '', note: '', done: false, auto: true };
+          if (type === 'going') gi++;
+          add.push(x); row[type].push({ x, keep: false });
         }
       });
+      days.push(row);
     });
-    return { out, short, overwrite, from, to, nG, nS };
+    // السائق التالي في الدور بعد نهاية الفترة
+    const next = ord.slice(p).find(id => !served.has(id)) || ord.find(id => !served.has(id)) || ord[0] || null;
+    // نحتفظ بالمناوبات اللي ما تغيّرت (نفس اليوم والنوع والسائق) حتى ما تضيع ملاحظاتها وتذكيراتها
+    const reuse = [], fresh = [];
+    add.forEach(a => {
+      const i = drop.findIndex(x => x.date === a.date && x.type === a.type && x.driverId === a.driverId);
+      if (i >= 0) reuse.push([drop.splice(i, 1)[0], a]); else fresh.push(a);
+    });
+    const changed = reuse.filter(([x, a]) => !x.auto || (rotateDest && x.type === 'going' && x.dest !== a.dest)).length;
+    return { add: fresh, drop, reuse, short, days, next, ord, changes: fresh.length + drop.length + changed };
   }
-  $('#aRun').onclick = () => {
-    const from = $('#aFrom').value, to = $('#aTo').value, nG = +$('#aGoing').value || 0, nS = +$('#aSchool').value || 0;
-    if (!from || !to || to < from) return S.toast('حدد فترة صحيحة', true);
-    if (!nG && !nS) return S.toast('حدد عدد السائقين في اليوم', true);
-    if (!activeDrivers().length) return S.toast('لا يوجد سائقون نشطون', true);
-    proposal = plan(from, to, nG, nS, $('#aRotate').checked, $('#aOverwrite').checked);
-    const p = proposal;
-    $('#aPreview').innerHTML = `<div class="alert-row" style="background:var(--bus-soft)"><i class="fa-solid fa-circle-info"></i>
-      سيتم إنشاء <strong>&nbsp;${p.out.length}&nbsp;</strong> مناوبة من ${S.fmt(from)} إلى ${S.fmt(to)}${p.overwrite ? '، مع استبدال المناوبات الموجودة' : ''}.</div>
-      ${p.short.length ? `<div class="alert-row" style="background:var(--red-soft);color:var(--red)"><i class="fa-solid fa-triangle-exclamation"></i> لا يوجد سائق متاح في: ${p.short.slice(0, 6).join('، ')}${p.short.length > 6 ? '…' : ''}</div>` : ''}
-      <div class="table-wrap" style="border:1px solid var(--line);max-height:380px;overflow:auto"><table class="data"><thead><tr><th>التاريخ</th><th>اليوم</th><th>النوع</th><th>السائق</th><th>الوجهة</th></tr></thead><tbody>
-      ${p.out.map(x => `<tr><td class="num">${S.fmtShort(x.date)}</td><td>${S.dayName(x.date)}</td><td>${typeChip(x.type)}</td><td>${S.esc(S.driver(x.driverId).name)}</td><td>${S.esc(x.dest) || '—'}</td></tr>`).join('') || '<tr><td colspan="5" class="empty-state">كل الأيام مغطاة بالفعل</td></tr>'}
+  function applySim(res, rotateDest) {
+    const ids = new Set(res.drop.map(x => x.id));
+    if (ids.size) db().duties = db().duties.filter(x => !ids.has(x.id));
+    res.reuse.forEach(([x, a]) => { x.auto = true; if (rotateDest && x.type === 'going') x.dest = a.dest; });
+    db().duties.push(...res.add);
+  }
+  // تعديل القائمة تلقائياً بعد أي تغيير
+  function autoRebuild(from) {
+    const r = rot();
+    if (!rotActive() || !rotOrder().length) return 0;
+    from = maxDate(from, S.today(), r.start);
+    if (from > r.until) return 0;
+    const res = simulate({ ...r, from, overwrite: false });
+    if (!res.changes) return 0;
+    applySim(res, r.rotateDest);
+    return res.changes;
+  }
+
+  window.BusDutyDebug = { simulate, autoRebuild, rotOrder };
+
+  // مسودة إعدادات الدور (تُعتمد عند النشر)
+  let draft = null, draftDirty = false, proposal = null;
+  const freshDraft = () => { const r = rot(); draft = JSON.parse(JSON.stringify({ ...S.ROTATION_DEFAULT, ...r })); draft.order = rotOrder(draft.order); draftDirty = false; };
+  function initAuto() {
+    if (!draft || !draftDirty) freshDraft();
+    const r = rot();
+    if (!draft.start) { const ws = S.weekStart(S.today()); draft.start = S.today() > S.addDays(ws, 4) ? S.addDays(ws, 7) : ws; }
+    if (!draft.until || draft.until < draft.start) draft.until = S.addDays(draft.start, 27);
+    draft.order = rotOrder(draft.order);
+    $('#rStart').value = draft.start; $('#rUntil').value = draft.until;
+    $('#rGoing').value = draft.goingPerDay; $('#rSchool').value = draft.schoolPerDay;
+    $('#rAdjust').checked = draft.autoAdjust !== false; $('#rDest').checked = draft.rotateDest !== false;
+    $('#rStartHint').textContent = draft.start ? T('القائمة تبدأ يوم {day} {date}', { day: S.dayName(draft.start), date: S.fmt(draft.start) }) + (S.isWeekend(draft.start) ? ' – ' + T('هذا اليوم عطلة، التوزيع يبدأ من أول يوم عمل بعده') : '') : '';
+    // الدور القادم بعد نهاية الفترة المنشورة
+    const live = r.start && r.until ? simulate({ ...r, from: '9999-12-31' }) : null;
+    const nextId = live && live.next;
+    $('#rCount').textContent = T('{n} سائق', { n: draft.order.length });
+    $('#rList').innerHTML = draft.order.map((id, i) => {
+      const d = S.driver(id), away = S.onLeave(id, S.today()) && !S.subFor(id, S.today());
+      return `<li class="${id === nextId ? 'next' : ''}"><span class="pos">${i + 1}</span>
+        <span class="nm"><strong>${S.esc(d.name)}</strong><small>${d.busNo ? T('حافلة') + ' ' + S.esc(d.busNo) : ''}${away ? ' · ' + T('في إجازة') : ''}${id === nextId ? ' · ' + T('الدور القادم بعد {date}', { date: S.fmtShort(r.until) }) : ''}</small></span>
+        <span class="mv"><button class="btn sm icon" data-mv="${i}|-1" ${i ? '' : 'disabled'} aria-label="${T('لأعلى')}"><i class="fa-solid fa-arrow-up"></i></button>
+        <button class="btn sm icon" data-mv="${i}|1" ${i < draft.order.length - 1 ? '' : 'disabled'} aria-label="${T('لأسفل')}"><i class="fa-solid fa-arrow-down"></i></button>
+        <button class="btn sm icon" data-mv="${i}|top" ${i ? '' : 'disabled'} title="${T('اجعله أول القائمة')}" aria-label="${T('اجعله أول القائمة')}"><i class="fa-solid fa-angles-up"></i></button></span></li>`;
+    }).join('') || `<li class="empty-state" style="display:block">${T('لا يوجد سائقون نشطون. أضف السائقين أولاً.')}</li>`;
+    const st = $('#rStatus');
+    if (r.start && r.until) {
+      const left = S.daysUntil(r.until);
+      st.style.background = left < 7 ? 'var(--amber-soft)' : 'var(--green-soft)';
+      st.innerHTML = `<i class="fa-solid ${left < 7 ? 'fa-clock' : 'fa-circle-check'}" style="color:${left < 7 ? 'var(--amber)' : 'var(--green)'}"></i>
+        <span>${T('القائمة منشورة من {from} حتى {to}', { from: S.fmtShort(r.start), to: S.fmtShort(r.until) })}${r.autoAdjust !== false ? ' · ' + T('التعديل التلقائي شغّال') : ''}${left < 0 ? ' · ' + T('انتهت الفترة') : left < 7 ? ' · ' + T('تنتهي بعد {n} يوم', { n: left }) : ''}</span>
+        ${draftDirty ? `<span class="chip warn" style="margin-inline-start:auto">${T('تغييرات غير منشورة')}</span>` : ''}`;
+    } else {
+      st.style.background = 'var(--bus-soft)';
+      st.innerHTML = `<i class="fa-solid fa-circle-info"></i><span>${T('لم تُنشر قائمة بعد. رتّب السائقين واختر تاريخ البداية، ثم اضغط معاينة التوزيع.')}</span>`;
+    }
+  }
+  const touch = () => { draftDirty = true; proposal = null; $('#rPreviewCard').hidden = true; initAuto(); };
+  $('#rList').addEventListener('click', e => {
+    const b = e.target.closest('[data-mv]'); if (!b) return;
+    const [i, dir] = b.dataset.mv.split('|'), o = draft.order, k = +i;
+    const [id] = o.splice(k, 1);
+    o.splice(dir === 'top' ? 0 : Math.max(0, Math.min(o.length, k + +dir)), 0, id);
+    touch();
+  });
+  $('#rStart').onchange = e => { draft.start = e.target.value; touch(); };
+  $('#rUntil').onchange = e => { draft.until = e.target.value; touch(); };
+  $('#rGoing').onchange = e => { draft.goingPerDay = Math.max(0, +e.target.value || 0); touch(); };
+  $('#rSchool').onchange = e => { draft.schoolPerDay = Math.max(0, +e.target.value || 0); touch(); };
+  $('#rAdjust').onchange = e => { draft.autoAdjust = e.target.checked; touch(); };
+  $('#rDest').onchange = e => { draft.rotateDest = e.target.checked; touch(); };
+  $('#rOverwrite').onchange = () => { proposal = null; $('#rPreviewCard').hidden = true; };
+  $$('[data-until]').forEach(b => b.onclick = () => { draft.until = S.addDays(draft.start || S.today(), +b.dataset.until - 1); touch(); });
+
+  $('#rRun').onclick = () => {
+    const c = draft;
+    if (!c.start || !c.until || c.until < c.start) return S.toast(T('حدد فترة صحيحة'), true);
+    if (!(+c.goingPerDay) && !(+c.schoolPerDay)) return S.toast(T('حدد عدد السائقين في اليوم'), true);
+    if (!rotOrder(c.order).length) return S.toast(T('لا يوجد سائقون نشطون'), true);
+    const r = rot(), fresh = !r.start || r.start !== c.start;
+    const from = fresh ? c.start : maxDate(S.today(), c.start);
+    const overwrite = $('#rOverwrite').checked;
+    const res = simulate({ ...c, from, overwrite });
+    // مناوبات تلقائية خارج الفترة الجديدة (قبل البداية أو بعد النهاية) تُحذف
+    const outside = db().duties.filter(x => x.auto && !x.done && x.date >= S.today() && (x.date < c.start || x.date > c.until));
+    proposal = { c, res, outside, from, overwrite };
+    const name = id => { const d = S.driver(id); return d ? d.name : '—'; };
+    const cell = list => list.length ? list.map(({ x, keep }) => { const w = S.who(x); return `<div>${keep ? '' : '<i class="fa-solid fa-arrows-rotate" style="color:var(--bus);font-size:11px"></i> '}${S.esc(w ? w.name : name(x.driverId))}${w && w.sub ? ` <small class="muted">(${S.esc(T('بديل عن {name}', { name: w.orig ? w.orig.name : '' }))})</small>` : ''}${keep && !x.auto ? ` <small class="muted">(${T('يدوي')})</small>` : ''}${x.type === 'going' && x.dest ? ` <small class="muted">– ${S.esc(x.dest)}</small>` : ''}</div>`; }).join('') : '<span class="muted">—</span>';
+    const nG = +c.goingPerDay, nS = +c.schoolPerDay;
+    $('#rPreviewCard').hidden = false;
+    $('#rPreview').innerHTML = `<div class="panel-head"><h2>${T('معاينة التوزيع')}</h2><span class="muted">${T('من {from} إلى {to}', { from: S.fmt(from), to: S.fmt(c.until) })}</span></div>
+      <div class="alert-row" style="background:var(--bus-soft);flex-wrap:wrap"><i class="fa-solid fa-circle-info"></i>
+        ${T('مناوبات جديدة: {a} · تُحذف: {d} · بدون تغيير: {k}', { a: res.add.length, d: res.drop.length + outside.length, k: res.reuse.length })}
+        ${res.next ? ` · ${T('الدور القادم بعد هذه الفترة: {name}', { name: S.esc(name(res.next)) })}` : ''}</div>
+      ${res.short.length ? `<div class="alert-row" style="background:var(--red-soft);color:var(--red)"><i class="fa-solid fa-triangle-exclamation"></i> ${T('لا يوجد سائق متاح في: {list}', { list: res.short.slice(0, 6).join('، ') + (res.short.length > 6 ? '…' : '') })}</div>` : ''}
+      <div class="table-wrap" style="border:1px solid var(--line);max-height:460px;overflow:auto"><table class="data"><thead><tr><th>${T('اليوم|day')}</th><th>${T('التاريخ')}</th>${nG ? `<th>${T('مناوبة الذهاب')}</th>` : ''}${nS ? `<th>${T('المناوبة في المدرسة')}</th>` : ''}</tr></thead><tbody>
+      ${res.days.map((r, i, a) => `<tr${i && S.weekStart(a[i - 1].day) !== S.weekStart(r.day) ? ' style="border-top:3px solid var(--bus)"' : ''}><td><strong>${S.dayName(r.day)}</strong></td><td class="num">${S.fmtShort(r.day)}</td>${nG ? `<td>${cell(r.going)}</td>` : ''}${nS ? `<td>${cell(r.school)}</td>` : ''}</tr>`).join('') || `<tr><td colspan="4" class="empty-state">${T('لا توجد أيام عمل في هذه الفترة')}</td></tr>`}
       </tbody></table></div>
-      <div style="display:flex;gap:10px"><button class="btn primary" id="aApply" ${p.out.length ? '' : 'disabled'}><i class="fa-solid fa-check"></i> اعتماد التوزيع</button><button class="btn ghost" id="aCancel">إلغاء</button></div>`;
-    $('#aApply').onclick = () => {
+      <div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn primary" id="rApply"><i class="fa-solid fa-check"></i> ${T('اعتماد ونشر القائمة')}</button><button class="btn ghost" id="rCancel">${T('إلغاء')}</button></div>`;
+    $('#rApply').onclick = () => {
       const p = proposal; if (!p) return;
-      if (p.overwrite) db().duties = db().duties.filter(x => !(x.date >= p.from && x.date <= p.to && ((x.type === 'going' && p.nG) || (x.type === 'school' && p.nS))));
-      db().duties.push(...p.out);
-      commit(`توزيع تلقائي: ${p.out.length} مناوبة من ${S.fmtShort(p.from)} إلى ${S.fmtShort(p.to)}`);
-      S.toast(`تم توزيع ${p.out.length} مناوبة`); proposal = null; $('#aPreview').innerHTML = '';
-      sch.mode = 'custom'; $('#fMode').value = 'custom'; sch.from = p.from; sch.to = p.to; go('schedule');
+      const outIds = new Set(p.outside.map(x => x.id));
+      if (outIds.size) db().duties = db().duties.filter(x => !outIds.has(x.id));
+      applySim(p.res, p.c.rotateDest);
+      db().rotation = JSON.parse(JSON.stringify(p.c));
+      draftDirty = false; proposal = null; $('#rPreviewCard').hidden = true;
+      commit(`نشر قائمة الدور من ${S.fmtShort(p.from)} إلى ${S.fmtShort(p.c.until)} (${p.res.add.length} مناوبة جديدة)`);
+      S.toast(T('تم نشر القائمة'));
+      sch.mode = 'custom'; $('#fMode').value = 'custom'; sch.from = p.from; sch.to = p.c.until; go('schedule');
     };
-    $('#aCancel').onclick = () => { proposal = null; $('#aPreview').innerHTML = ''; };
+    $('#rCancel').onclick = () => { proposal = null; $('#rPreviewCard').hidden = true; };
+    $('#rPreviewCard').scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
+
+  // توزيع بسيط لمناوبات يدوية متعارضة مع إجازة (لو ما فيه قائمة دور)
+  function fillOne(x) {
+    const count = id => db().duties.filter(y => y.driverId === id).length;
+    const used = new Set(S.dutiesOn(x.date).map(y => y.driverId));
+    const c = activeDrivers().filter(d => !used.has(d.id) && S.available(d.id, x.date)).sort((a, b) => count(a.id) - count(b.id))[0];
+    return c ? { id: S.uid(), type: x.type, date: x.date, driverId: c.id, dest: x.dest, note: '', done: false, auto: false } : null;
+  }
 
   /* ========== تنبيهات واتساب ========== */
   const nextWorkday = from => { let d = S.addDays(from, 1); for (let i = 0; i < 14 && S.isWeekend(d); i++) d = S.addDays(d, 1); return d; };
@@ -1453,7 +2180,7 @@ const Cloud = (() => {
   function markSent(id, silent) {
     const x = db().duties.find(y => y.id === id); if (!x) return;
     x.remindedAt = new Date().toISOString();
-    const d = S.driver(x.driverId); S.log(`تذكير واتساب لـ ${d ? d.name : ''} عن ${S.typeName(x.type)} ${S.fmtShort(x.date)}`); S.save();
+    const w = S.who(x); S.log(`تذكير واتساب لـ ${w ? w.name : ''} عن ${S.typeNameAr(x.type)} ${S.fmtShort(x.date)}`); S.save();
     if (!silent) setTimeout(renderAll, 400);
   }
   document.addEventListener('click', e => { const a = e.target.closest('a[data-remind]'); if (a) markSent(a.dataset.remind); });
@@ -1461,16 +2188,17 @@ const Cloud = (() => {
     if (!nDate) nDate = nextWorkday(S.today());
     $('#nDate').value = nDate;
     const list = S.dutiesOn(nDate).sort((a, b) => a.type.localeCompare(b.type));
-    const pend = list.filter(x => !x.remindedAt && (S.driver(x.driverId) || {}).phone);
-    $('#nCount').textContent = `${S.dayName(nDate)} ${S.fmtShort(nDate)} · ${list.length} مناوبة`;
+    const pend = list.filter(x => !x.remindedAt && (S.who(x) || {}).phone);
+    $('#nCount').textContent = `${S.dayName(nDate)} ${S.fmtShort(nDate)} · ${T('{n} مناوبة', { n: list.length })}`;
     $('#nList').innerHTML = list.length ? list.map(x => {
-      const d = S.driver(x.driverId);
-      const st = !d || !d.phone ? '<span class="chip bad">لا يوجد رقم هاتف</span>' : x.remindedAt ? `<span class="chip ok"><i class="fa-solid fa-check"></i> أُرسل ${sentAt(x)}</span>` : '<span class="chip warn">لم يُرسل</span>';
-      const btn = d && d.phone ? `<a class="btn sm ${x.remindedAt ? '' : 'green'}" data-remind="${x.id}" href="${S.waLink(d.phone, S.reminderText(x))}" target="_blank" rel="noopener"><i class="fa-brands fa-whatsapp"></i> ${x.remindedAt ? 'إعادة الإرسال' : 'إرسال'}</a>` : `<button class="btn sm" data-edit-driver="${d ? d.id : ''}">إضافة رقم</button>`;
-      return `<div class="alert-row" style="flex-wrap:wrap">${typeChip(x.type)}<strong>${S.esc(d ? d.name : 'سائق محذوف')}</strong>${plate(d)}${x.dest ? `<span class="chip going">${S.esc(x.dest)}</span>` : ''}${st}<span style="margin-inline-start:auto">${btn}</span></div>`;
-    }).join('') : `<div class="empty-state">لا توجد مناوبات في هذا اليوم. <button class="btn sm primary" data-goto="auto">توزيع تلقائي</button></div>`;
+      const w = S.who(x), d = S.driver(x.driverId);
+      const st = !w || !w.phone ? `<span class="chip bad">${T('لا يوجد رقم هاتف')}</span>` : x.remindedAt ? `<span class="chip ok"><i class="fa-solid fa-check"></i> ${T('أُرسل {t}', { t: sentAt(x) })}</span>` : `<span class="chip warn">${T('لم يُرسل')}</span>`;
+      const btn = w && w.phone ? `<a class="btn sm ${x.remindedAt ? '' : 'green'}" data-remind="${x.id}" href="${S.waLink(w.phone, S.reminderText(x))}" target="_blank" rel="noopener"><i class="fa-brands fa-whatsapp"></i> ${x.remindedAt ? T('إعادة الإرسال') : T('إرسال')}</a>`
+        : w && w.sub ? `<button class="btn sm" data-goto="subs">${T('إضافة رقم')}</button>` : `<button class="btn sm" data-edit-driver="${d ? d.id : ''}">${T('إضافة رقم')}</button>`;
+      return `<div class="alert-row" style="flex-wrap:wrap">${typeChip(x.type)}${whoName(x)}${plate(w)}${x.dest ? `<span class="chip going">${S.esc(x.dest)}</span>` : ''}${st}<span style="margin-inline-start:auto">${btn}</span></div>`;
+    }).join('') : `<div class="empty-state">${T('لا توجد مناوبات في هذا اليوم.')} <button class="btn sm primary" data-goto="auto">${T('التوزيع بالدور')}</button></div>`;
     $('#nSendAll').disabled = !pend.length;
-    $('#nSendAll').innerHTML = `<i class="fa-brands fa-whatsapp"></i> ${pend.length ? `إرسال للجميع بالتتابع (${pend.length} متبقي)` : 'تم إرسال كل التذكيرات'}`;
+    $('#nSendAll').innerHTML = `<i class="fa-brands fa-whatsapp"></i> ${pend.length ? T('إرسال للجميع بالتتابع ({n} متبقي)', { n: pend.length }) : T('تم إرسال كل التذكيرات')}`;
 
     const ws = S.weekStart(nDate), we = S.addDays(ws, 6);
     const [gf, gt] = $('#gScope').value === 'week' ? [ws, we] : [nDate, nDate];
@@ -1479,22 +2207,27 @@ const Cloud = (() => {
     $('#gOpen').href = 'https://wa.me/?text=' + encodeURIComponent(txt);
 
     $('#wRange').textContent = `${S.fmtShort(ws)} – ${S.fmtShort(we)}`;
-    const drivers = db().drivers.map(d => ({ d, n: db().duties.filter(x => x.driverId === d.id && x.date >= ws && x.date <= we).length })).filter(r => r.n);
-    $('#wList').innerHTML = drivers.length ? drivers.map(({ d, n }) => `<div class="alert-row"><strong>${S.esc(d.name)}</strong><span class="chip">${n} مناوبة</span>
-      <span style="margin-inline-start:auto">${d.phone ? `<a class="btn sm green" href="${S.waLink(d.phone, S.weekText(d.id, ws, we))}" target="_blank" rel="noopener"><i class="fa-brands fa-whatsapp"></i> إرسال</a>` : '<span class="chip bad">لا يوجد رقم</span>'}</span></div>`).join('') : '<div class="empty-state">لا توجد مناوبات في هذا الأسبوع</div>';
+    const inWeek = x => x.date >= ws && x.date <= we;
+    const rows = db().drivers.map(d => ({ name: d.name, phone: d.phone, n: db().duties.filter(x => x.driverId === d.id && inWeek(x) && !S.subFor(d.id, x.date)).length, text: () => S.weekText(d.id, ws, we) }))
+      .concat(db().subs.filter(b => b.from <= we && b.to >= ws).map(b => {
+        const d = S.driver(b.driverId);
+        return { name: b.name, sub: d ? d.name : '', phone: b.phone, n: db().duties.filter(x => x.driverId === b.driverId && inWeek(x) && x.date >= b.from && x.date <= b.to).length, text: () => S.weekText(b.driverId, ws, we, b.id) };
+      })).filter(r => r.n);
+    $('#wList').innerHTML = rows.length ? rows.map(r => `<div class="alert-row" style="flex-wrap:wrap"><strong>${S.esc(r.name)}</strong>${r.sub ? ` <span class="chip sub">${S.esc(T('بديل عن {name}', { name: r.sub }))}</span>` : ''}<span class="chip">${T('{n} مناوبة', { n: r.n })}</span>
+      <span style="margin-inline-start:auto">${r.phone ? `<a class="btn sm green" href="${S.waLink(r.phone, r.text())}" target="_blank" rel="noopener"><i class="fa-brands fa-whatsapp"></i> ${T('إرسال')}</a>` : `<span class="chip bad">${T('لا يوجد رقم')}</span>`}</span></div>`).join('') : `<div class="empty-state">${T('لا توجد مناوبات في هذا الأسبوع')}</div>`;
   }
   $('#nDate').onchange = e => { nDate = e.target.value || null; renderNotify(); };
   $('#nToday').onclick = () => { nDate = S.today(); renderNotify(); };
   $('#nNext').onclick = () => { nDate = nextWorkday(S.today()); renderNotify(); };
   $('#gScope').onchange = renderNotify;
   $('#nSendAll').onclick = () => {
-    const x = pendingFor(nDate).find(y => (S.driver(y.driverId) || {}).phone); if (!x) return;
-    window.open(S.waLink(S.driver(x.driverId).phone, S.reminderText(x)), '_blank', 'noopener');
+    const x = pendingFor(nDate).find(y => (S.who(y) || {}).phone); if (!x) return;
+    window.open(S.waLink(S.who(x).phone, S.reminderText(x)), '_blank', 'noopener');
     markSent(x.id, true); renderAll();
   };
   $('#gCopy').onclick = async () => {
-    try { await navigator.clipboard.writeText($('#gText').value); S.toast('تم نسخ النص، ألصقه في قروب واتساب'); }
-    catch (_) { $('#gText').select(); S.toast('حدد النص وانسخه يدوياً', true); }
+    try { await navigator.clipboard.writeText($('#gText').value); S.toast(T('تم نسخ النص، ألصقه في قروب واتساب')); }
+    catch (_) { $('#gText').select(); S.toast(T('حدد النص وانسخه يدوياً'), true); }
   };
 
   /* ========== السائقون ========== */
@@ -1502,23 +2235,27 @@ const Cloud = (() => {
   function renderDrivers() {
     const q = $('#drvSearch').value.trim();
     const list = db().drivers.filter(d => !q || [d.name, d.area, d.phone, d.phone2, d.busNo, d.plate].join(' ').includes(q));
-    $('#drvCount').textContent = `${db().drivers.length} سائق`;
-    $('#drvBody').innerHTML = list.map(d => `<tr>
+    const t = S.today();
+    $('#drvCount').textContent = T('{n} سائق', { n: db().drivers.length });
+    $('#drvBody').innerHTML = list.map(d => {
+      const sub = S.subFor(d.id, t);
+      return `<tr>
       <td><strong>${S.esc(d.name)}</strong>${d.notes ? `<br><small class="muted">${S.esc(d.notes)}</small>` : ''}</td>
       <td>${S.esc(d.area)}</td><td class="num">${S.esc(d.phone)}</td><td class="num">${S.esc(d.phone2)}</td>
       <td>${plate(d)}${d.plate ? `<br><small class="muted">${S.esc(d.plate)}</small>` : ''}</td>
       <td class="num">${S.esc(d.capacity) || '—'}</td>
       <td style="display:flex;gap:4px;flex-wrap:wrap">${docChip(d.licenseExp, 'الرخصة')}${docChip(d.insuranceExp, 'التأمين')}${!d.licenseExp && !d.insuranceExp ? '<span class="muted">—</span>' : ''}</td>
-      <td>${d.active ? '<span class="chip ok">نشط</span>' : '<span class="chip">غير نشط</span>'}${S.onLeave(d.id, S.today()) ? ' <span class="chip warn">في إجازة</span>' : ''}</td>
-      <td style="white-space:nowrap">${d.phone ? `<a class="btn sm green icon" href="${S.waLink(d.phone, '')}" target="_blank" rel="noopener" aria-label="واتساب"><i class="fa-brands fa-whatsapp"></i></a>` : ''}
-        <button class="btn sm icon" data-edit-driver="${d.id}" aria-label="تعديل"><i class="fa-solid fa-pen"></i></button>
-        <button class="btn sm icon" data-del-driver="${d.id}" aria-label="حذف"><i class="fa-solid fa-trash" style="color:var(--red)"></i></button></td></tr>`).join('') || '<tr><td colspan="9" class="empty-state">لا يوجد سائق مطابق</td></tr>';
+      <td>${d.active ? `<span class="chip ok">${T('نشط')}</span>` : `<span class="chip">${T('غير نشط')}</span>`}${S.onLeave(d.id, t) ? ` <span class="chip warn">${T('في إجازة')}</span>` : ''}${sub ? ` <span class="chip sub">${S.esc(T('ينوب عنه {name}', { name: sub.name }))}</span>` : ''}</td>
+      <td style="white-space:nowrap">${d.phone ? `<a class="btn sm green icon" href="${S.waLink(d.phone, '')}" target="_blank" rel="noopener" aria-label="${T('واتساب')}"><i class="fa-brands fa-whatsapp"></i></a>` : ''}
+        <button class="btn sm icon" data-edit-driver="${d.id}" aria-label="${T('تعديل')}"><i class="fa-solid fa-pen"></i></button>
+        <button class="btn sm icon" data-del-driver="${d.id}" aria-label="${T('حذف')}"><i class="fa-solid fa-trash" style="color:var(--red)"></i></button></td></tr>`;
+    }).join('') || `<tr><td colspan="9" class="empty-state">${T('لا يوجد سائق مطابق')}</td></tr>`;
   }
   $('#drvSearch').oninput = renderDrivers;
   const F = { vName: 'name', vArea: 'area', vPhone: 'phone', vPhone2: 'phone2', vBus: 'busNo', vPlate: 'plate', vCap: 'capacity', vLic: 'licenseExp', vIns: 'insuranceExp', vNotes: 'notes' };
   function openDriver(d) {
     editingDriver = d || null;
-    $('#drvTitle').textContent = d ? 'تعديل بيانات السائق' : 'سائق جديد';
+    $('#drvTitle').textContent = d ? T('تعديل بيانات السائق') : T('سائق جديد');
     Object.entries(F).forEach(([id, k]) => $('#' + id).value = d ? d[k] || '' : '');
     $('#vActive').checked = d ? d.active : true;
     $('#drvDlg').returnValue = ''; $('#drvDlg').showModal();
@@ -1528,47 +2265,98 @@ const Cloud = (() => {
     if ($('#drvDlg').returnValue !== 'save') return;
     const data = { active: $('#vActive').checked };
     Object.entries(F).forEach(([id, k]) => data[k] = $('#' + id).value.trim());
-    if (editingDriver) { Object.assign(editingDriver, data); commit(`تعديل بيانات ${data.name}`); }
-    else { db().drivers.push({ id: S.uid(), ...data }); commit(`إضافة السائق ${data.name}`); }
-    S.toast('تم حفظ بيانات السائق');
+    if (editingDriver) { const wasActive = editingDriver.active; Object.assign(editingDriver, data); commit(`تعديل بيانات ${data.name}`, wasActive !== data.active ? S.today() : null); }
+    else {
+      // السائق الجديد ينضاف تلقائياً آخر قائمة الدور
+      const d = { id: S.uid(), ...data }; db().drivers.push(d);
+      commit(`إضافة السائق ${data.name}`, d.active ? S.today() : null);
+    }
+    S.toast(T('تم حفظ بيانات السائق'));
   });
 
   /* ========== الإجازات ========== */
   function renderLeaves() {
     const cur = $('#lDriver').value;
-    $('#lDriver').innerHTML = '<option value="">اختر السائق</option>' + db().drivers.map(d => `<option value="${d.id}"${d.id === cur ? ' selected' : ''}>${S.esc(d.name)}</option>`).join('');
+    $('#lDriver').innerHTML = `<option value="">${T('اختر السائق')}</option>` + db().drivers.map(d => `<option value="${d.id}"${d.id === cur ? ' selected' : ''}>${S.esc(d.name)}</option>`).join('');
     const t = S.today();
     const list = db().leaves.slice().sort((a, b) => b.from.localeCompare(a.from));
     $('#leaveBody').innerHTML = list.map(l => {
       const d = S.driver(l.driverId), n = S.range(l.from, l.to).length;
-      const st = l.to < t ? '<span class="chip">منتهية</span>' : l.from > t ? '<span class="chip warn">قادمة</span>' : '<span class="chip bad">جارية</span>';
-      return `<tr><td><strong>${S.esc(d ? d.name : '')}</strong></td><td class="num">${S.fmtShort(l.from)}</td><td class="num">${S.fmtShort(l.to)}</td><td>${n} يوم</td><td>${S.esc(l.reason) || '—'}</td><td>${st}</td>
-        <td><button class="btn sm icon" data-del-leave="${l.id}" aria-label="حذف"><i class="fa-solid fa-trash" style="color:var(--red)"></i></button></td></tr>`;
-    }).join('') || '<tr><td colspan="7" class="empty-state">لا توجد إجازات مسجلة</td></tr>';
+      const st = l.to < t ? `<span class="chip">${T('انتهت')}</span>` : l.from > t ? `<span class="chip warn">${T('قادمة')}</span>` : `<span class="chip bad">${T('جارية')}</span>`;
+      return `<tr><td><strong>${S.esc(d ? d.name : '')}</strong></td><td class="num">${S.fmtShort(l.from)}</td><td class="num">${S.fmtShort(l.to)}</td><td>${T('{n} يوم', { n })}</td><td>${S.esc(l.reason) || '—'}</td><td>${st}</td>
+        <td><button class="btn sm icon" data-del-leave="${l.id}" aria-label="${T('حذف')}"><i class="fa-solid fa-trash" style="color:var(--red)"></i></button></td></tr>`;
+    }).join('') || `<tr><td colspan="7" class="empty-state">${T('لا توجد إجازات مسجلة')}</td></tr>`;
   }
   $('#leaveForm').onsubmit = e => {
     e.preventDefault();
     const l = { id: S.uid(), driverId: $('#lDriver').value, from: $('#lFrom').value, to: $('#lTo').value, reason: $('#lReason').value.trim() };
-    if (l.to < l.from) return S.toast('تاريخ النهاية قبل تاريخ البداية', true);
+    if (l.to < l.from) return S.toast(T('تاريخ النهاية قبل تاريخ البداية'), true);
     db().leaves.push(l);
     const d = S.driver(l.driverId);
-    const clash = db().duties.filter(x => x.driverId === l.driverId && x.date >= l.from && x.date <= l.to);
-    commit(`تسجيل إجازة ${d.name} من ${S.fmtShort(l.from)} إلى ${S.fmtShort(l.to)}`);
-    S.toast('تم تسجيل الإجازة');
+    commit(`تسجيل إجازة ${d.name} من ${S.fmtShort(l.from)} إلى ${S.fmtShort(l.to)}`, l.from);
+    // بعد إعادة ترتيب الدور، المتبقي فقط المناوبات اليدوية أو اللي ما تقدر تتغير
+    const clash = db().duties.filter(x => x.driverId === l.driverId && x.date >= l.from && x.date <= l.to && !x.done && leaveNoSub(x.driverId, x.date));
+    S.toast(T('تم تسجيل الإجازة'));
     $('#leaveForm').reset();
     $('#leaveConflicts').innerHTML = clash.length ? `<div class="alert-row" style="background:var(--amber-soft);flex-wrap:wrap"><i class="fa-solid fa-triangle-exclamation" style="color:var(--amber)"></i>
-      ${S.esc(d.name)} لديه ${clash.length} مناوبة خلال الإجازة.
-      <button class="btn sm" id="unassign" style="margin-inline-start:auto">إلغاء تعيينها</button><button class="btn sm primary" id="reassign">إعادة توزيعها تلقائياً</button></div>` : '';
+      ${S.esc(T('{name} لديه {n} مناوبة خلال الإجازة.', { name: d.name, n: clash.length }))}
+      <button class="btn sm" id="unassign" style="margin-inline-start:auto">${T('إلغاء تعيينها')}</button><button class="btn sm primary" id="reassign">${T('إعادة توزيعها تلقائياً')}</button><button class="btn sm orange" data-goto="subs">${T('تعيين سائق بديل')}</button></div>` : '';
     if (clash.length) {
       const ids = new Set(clash.map(x => x.id));
-      $('#unassign').onclick = () => { db().duties = db().duties.filter(x => !ids.has(x.id)); commit(`إلغاء ${ids.size} مناوبة لـ ${d.name} بسبب الإجازة`); $('#leaveConflicts').innerHTML = ''; S.toast('تم إلغاء التعيين'); };
+      $('#unassign').onclick = () => { db().duties = db().duties.filter(x => !ids.has(x.id)); commit(`إلغاء ${ids.size} مناوبة لـ ${d.name} بسبب الإجازة`, l.from); $('#leaveConflicts').innerHTML = ''; S.toast(T('تم إلغاء التعيين')); };
       $('#reassign').onclick = () => {
         db().duties = db().duties.filter(x => !ids.has(x.id));
         let added = 0;
-        clash.forEach(x => { const p = plan(x.date, x.date, x.type === 'going' ? 1 : 0, x.type === 'school' ? 1 : 0, false, false); const n = p.out[0]; if (n) { n.dest = x.dest; db().duties.push(n); added++; } });
-        commit(`إعادة توزيع ${added} مناوبة بدلاً من ${d.name}`); $('#leaveConflicts').innerHTML = ''; S.toast(`تمت إعادة توزيع ${added} مناوبة`);
+        if (rotActive()) { autoRebuild(l.from); added = clash.length; }
+        else clash.forEach(x => { const n = fillOne(x); if (n) { db().duties.push(n); added++; } });
+        commit(`إعادة توزيع ${added} مناوبة بدلاً من ${d.name}`); $('#leaveConflicts').innerHTML = ''; S.toast(T('تمت إعادة توزيع {n} مناوبة', { n: added }));
       };
+      $('#leaveConflicts').querySelector('[data-goto="subs"]').addEventListener('click', () => setTimeout(() => { $('#bDriver').value = l.driverId; $('#bFrom').value = l.from; $('#bTo').value = l.to; $('#bDays').value = workdays(l.from, l.to) || 1; subInfo(); }, 0));
     }
+  };
+
+  /* ========== السائق البديل ========== */
+  const workdays = (from, to) => from && to && to >= from ? S.range(from, to).filter(d => !S.isWeekend(d)).length : 0;
+  function endAfter(from, n) { let d = from, c = 0; for (let i = 0; i < 1000; i++) { if (!S.isWeekend(d) && ++c >= n) return d; d = S.addDays(d, 1); } return d; }
+  function subInfo() {
+    const id = $('#bDriver').value, from = $('#bFrom').value, to = $('#bTo').value, d = S.driver(id);
+    $('#bBus').placeholder = d && d.busNo ? T('نفس حافلة السائق ({n})', { n: d.busNo }) : T('نفس حافلة السائق');
+    if (!d || !from || !to || to < from) { $('#bInfo').textContent = ''; return; }
+    const list = db().duties.filter(x => x.driverId === id && x.date >= from && x.date <= to).sort((a, b) => a.date.localeCompare(b.date));
+    $('#bInfo').textContent = T('ينوب عن {name} من {from} إلى {to} ({n} يوم عمل). مناوبات {name} في هذه الفترة: {m}', { name: d.name, from: `${S.dayName(from)} ${S.fmtShort(from)}`, to: `${S.dayName(to)} ${S.fmtShort(to)}`, n: workdays(from, to), m: list.length ? list.map(x => `${S.dayName(x.date)} ${S.fmtShort(x.date)}`).join('، ') : T('لا يوجد حالياً') });
+  }
+  $('#bFrom').onchange = () => { if ($('#bFrom').value) $('#bTo').value = endAfter($('#bFrom').value, Math.max(1, +$('#bDays').value || 1)); subInfo(); };
+  $('#bDays').oninput = () => { if ($('#bFrom').value && +$('#bDays').value > 0) $('#bTo').value = endAfter($('#bFrom').value, +$('#bDays').value); subInfo(); };
+  $('#bTo').onchange = () => { const n = workdays($('#bFrom').value, $('#bTo').value); if (n) $('#bDays').value = n; subInfo(); };
+  $('#bDriver').onchange = subInfo;
+  function renderSubs() {
+    const cur = $('#bDriver').value;
+    $('#bDriver').innerHTML = `<option value="">${T('اختر السائق')}</option>` + db().drivers.filter(d => d.active || d.id === cur).map(d => `<option value="${d.id}"${d.id === cur ? ' selected' : ''}>${S.esc(d.name)}${d.busNo ? ' – ' + T('حافلة') + ' ' + S.esc(d.busNo) : ''}</option>`).join('');
+    if (!$('#bFrom').value) { $('#bFrom').value = S.today(); $('#bTo').value = endAfter(S.today(), Math.max(1, +$('#bDays').value || 1)); }
+    subInfo();
+    const t = S.today();
+    const list = db().subs.slice().sort((a, b) => b.from.localeCompare(a.from));
+    $('#subBody').innerHTML = list.map(b => {
+      const d = S.driver(b.driverId);
+      const st = b.to < t ? `<span class="chip">${T('انتهت')}</span>` : b.from > t ? `<span class="chip warn">${T('قادمة')}</span>` : `<span class="chip ok">${T('جارية')}</span>`;
+      return `<tr><td><strong>${S.esc(b.name)}</strong>${b.note ? `<br><small class="muted">${S.esc(b.note)}</small>` : ''}</td><td>${S.esc(d ? d.name : '')}</td><td class="num">${S.esc(b.phone) || '—'}</td>
+        <td>${plate({ busNo: b.busNo || (d ? d.busNo : '') })}</td><td class="num">${S.fmtShort(b.from)}</td><td class="num">${S.fmtShort(b.to)}</td><td>${workdays(b.from, b.to)}</td><td>${st}</td>
+        <td style="white-space:nowrap">${b.phone ? `<a class="btn sm green icon" href="${S.waLink(b.phone, '')}" target="_blank" rel="noopener" aria-label="${T('واتساب')}"><i class="fa-brands fa-whatsapp"></i></a>` : ''}
+        <button class="btn sm icon" data-del-sub="${b.id}" aria-label="${T('حذف')}"><i class="fa-solid fa-trash" style="color:var(--red)"></i></button></td></tr>`;
+    }).join('') || `<tr><td colspan="9" class="empty-state">${T('لا يوجد سائقون بدلاء')}</td></tr>`;
+  }
+  $('#subForm').onsubmit = e => {
+    e.preventDefault();
+    const b = { id: S.uid(), driverId: $('#bDriver').value, name: $('#bName').value.trim(), phone: $('#bPhone').value.trim(), busNo: $('#bBus').value.trim(), from: $('#bFrom').value, to: $('#bTo').value, note: $('#bNote').value.trim() };
+    if (!b.driverId || !b.name) return;
+    if (b.to < b.from) return S.toast(T('تاريخ النهاية قبل تاريخ البداية'), true);
+    const clash = db().subs.find(x => x.driverId === b.driverId && x.from <= b.to && b.from <= x.to);
+    if (clash) return S.toast(T('هذا السائق عنده بديل ({name}) في نفس الفترة', { name: clash.name }), true);
+    db().subs.push(b);
+    const d = S.driver(b.driverId);
+    commit(`تعيين ${b.name} بديلاً عن ${d ? d.name : ''} من ${S.fmtShort(b.from)} إلى ${S.fmtShort(b.to)}`, b.from);
+    S.toast(T('تم حفظ البديل'));
+    ['bName', 'bPhone', 'bBus', 'bNote'].forEach(id => $('#' + id).value = '');
   };
 
   /* ========== التقارير ========== */
@@ -1579,9 +2367,10 @@ const Cloud = (() => {
       const ds = db().duties.filter(x => x.driverId === d.id && x.date >= from && x.date <= to);
       const g = ds.filter(x => x.type === 'going').length, s = ds.length - g, done = ds.filter(x => x.done).length;
       const leaveDays = S.range(from, to).filter(day => !S.isWeekend(day) && S.onLeave(d.id, day)).length;
-      return { d, g, s, total: ds.length, done, leaveDays };
+      const subDays = ds.filter(x => S.subFor(d.id, x.date)).length;
+      return { d, g, s, total: ds.length, done, leaveDays, subDays };
     }).sort((a, b) => b.total - a.total);
-    $('#repBody').innerHTML = rows.map(r => `<tr><td><strong>${S.esc(r.d.name)}</strong>${r.d.active ? '' : ' <span class="chip">غير نشط</span>'}</td><td>${plate(r.d)}</td>
+    $('#repBody').innerHTML = rows.map(r => `<tr><td><strong>${S.esc(r.d.name)}</strong>${r.d.active ? '' : ` <span class="chip">${T('غير نشط')}</span>`}${r.subDays ? ` <span class="chip sub" title="${S.esc(T('مناوبات نفّذها البديل'))}"><i class="fa-solid fa-user-clock"></i> ${r.subDays}</span>` : ''}</td><td>${plate(r.d)}</td>
       <td class="num">${r.g}</td><td class="num">${r.s}</td><td class="num"><strong>${r.total}</strong></td><td class="num">${r.done}</td>
       <td>${r.total ? `<span class="chip ${r.done / r.total >= .8 ? 'ok' : r.done / r.total >= .5 ? 'warn' : 'bad'}">${Math.round(r.done / r.total * 100)}%</span>` : '—'}</td><td class="num">${r.leaveDays || '—'}</td></tr>`).join('');
   }
@@ -1593,7 +2382,7 @@ const Cloud = (() => {
     const st = db().settings;
     $('#sSchool').value = st.school; $('#sDest').value = st.destinations.join('، '); $('#sAlert').value = st.alertDays;
     $('#sTpl').value = st.template || S.DEFAULT_TEMPLATE; tplPreview();
-    $('#sWeekend').innerHTML = S.DAYS.map((d, i) => `<label class="check"><input type="checkbox" value="${i}" ${st.weekend.includes(i) ? 'checked' : ''}> ${d}</label>`).join('');
+    weekendBoxes($('#sWeekend'), st.weekend);
   }
   $('#setForm').onsubmit = e => {
     e.preventDefault();
@@ -1602,8 +2391,9 @@ const Cloud = (() => {
     st.destinations = $('#sDest').value.split(/[,،]/).map(s => s.trim()).filter(Boolean);
     st.alertDays = +$('#sAlert').value || 30;
     st.template = $('#sTpl').value.trim() || S.DEFAULT_TEMPLATE;
-    st.weekend = $$('#sWeekend input:checked').map(i => +i.value);
-    commit('تحديث الإعدادات'); S.toast('تم حفظ الإعدادات');
+    const wk = $$('#sWeekend input:checked').map(i => +i.value), wkChanged = wk.join() !== st.weekend.join();
+    st.weekend = wk;
+    commit('تحديث الإعدادات', wkChanged ? S.today() : null); S.toast(T('تم حفظ الإعدادات'));
   };
   function tplPreview() {
     const d = db().drivers[0];
@@ -1611,7 +2401,7 @@ const Cloud = (() => {
     $('#sTplPrev').textContent = S.fillTemplate($('#sTpl').value || S.DEFAULT_TEMPLATE, sample);
   }
   $('#sTpl').oninput = tplPreview;
-  $('#exportBtn').onclick = () => { download(`نسخة-مناوبات-الحافلات-${S.today()}.json`, JSON.stringify(db(), null, 2), 'application/json'); S.toast('تم حفظ النسخة الاحتياطية'); };
+  $('#exportBtn').onclick = () => { download(`نسخة-مناوبات-الحافلات-${S.today()}.json`, JSON.stringify(db(), null, 2), 'application/json'); S.toast(T('تم حفظ النسخة الاحتياطية')); };
   $('#importBtn').onclick = () => $('#importFile').click();
   $('#importFile').onchange = e => {
     const f = e.target.files[0]; if (!f) return;
@@ -1620,99 +2410,97 @@ const Cloud = (() => {
       try {
         const d = JSON.parse(r.result);
         if (!Array.isArray(d.drivers) || !Array.isArray(d.duties) || !d.settings) throw 0;
-        if (!await ask('استيراد نسخة', `ستُستبدل البيانات الحالية بـ ${d.drivers.length} سائق و${d.duties.length} مناوبة من الملف.`, 'استيراد')) return;
-        d.leaves = d.leaves || []; d.log = d.log || [];
+        if (!await ask(T('استيراد نسخة'), T('ستُستبدل البيانات الحالية بـ {d} سائق و{n} مناوبة من الملف.', { d: d.drivers.length, n: d.duties.length }), T('استيراد'))) return;
+        d.leaves = d.leaves || []; d.subs = d.subs || []; d.log = d.log || [];
+        d.rotation = Object.assign({}, S.ROTATION_DEFAULT, { order: [] }, d.rotation || {});
         d.settings.setupDone = true; d.log = []; delete d.settings.pin;
-        S.db = d; commit('استيراد نسخة احتياطية'); S.toast('تم استيراد البيانات');
-      } catch (_) { S.toast('الملف غير صالح. اختر نسخة احتياطية من هذا النظام', true); }
+        S.db = d; draft = null; commit('استيراد نسخة احتياطية'); S.toast(T('تم استيراد البيانات'));
+      } catch (_) { S.toast(T('الملف غير صالح. اختر نسخة احتياطية من هذا النظام'), true); }
     };
     r.readAsText(f); e.target.value = '';
   };
   $('#csvBtn').onclick = () => {
     const q = v => `"${String(v ?? '').replace(/"/g, '""')}"`;
-    const rows = [['التاريخ', 'اليوم', 'النوع', 'السائق', 'الحافلة', 'الهاتف', 'الوجهة', 'ملاحظات', 'منفذة']];
-    db().duties.slice().sort((a, b) => a.date.localeCompare(b.date)).forEach(x => { const d = S.driver(x.driverId) || {}; rows.push([x.date, S.dayName(x.date), S.typeName(x.type), d.name, d.busNo, d.phone, x.dest, x.note, x.done ? 'نعم' : 'لا']); });
+    const rows = [[T('التاريخ'), T('اليوم|day'), T('النوع'), T('السائق'), T('البديل'), T('الحافلة'), T('الهاتف'), T('الوجهة'), T('ملاحظات'), T('منفذة')]];
+    db().duties.slice().sort((a, b) => a.date.localeCompare(b.date)).forEach(x => { const d = S.driver(x.driverId) || {}, w = S.who(x) || {}; rows.push([x.date, S.dayName(x.date), S.typeName(x.type), d.name, w.sub ? w.name : '', w.busNo, w.phone, x.dest, x.note, x.done ? T('نعم') : T('لا')]); });
     download(`مناوبات-الحافلات-${S.today()}.csv`, '﻿' + rows.map(r => r.map(q).join(',')).join('\r\n'), 'text/csv;charset=utf-8');
   };
-  $('#clearDuties').onclick = async () => { if (await ask('حذف جميع المناوبات', `سيتم حذف ${db().duties.length} مناوبة. بيانات السائقين تبقى كما هي.`, 'حذف الكل')) { db().duties = []; commit('حذف جميع المناوبات'); S.toast('تم حذف جميع المناوبات'); } };
+  $('#clearDuties').onclick = async () => { if (await ask(T('حذف جميع المناوبات'), T('سيتم حذف {n} مناوبة. بيانات السائقين تبقى كما هي.', { n: db().duties.length }), T('حذف الكل'))) { db().duties = []; db().rotation = { ...S.ROTATION_DEFAULT, order: rot().order || [] }; draft = null; commit('حذف جميع المناوبات'); S.toast(T('تم حذف جميع المناوبات')); } };
 
   $('#sLogo').onchange = async e => {
-    try { db().settings.logo = await S.readLogo(e.target.files[0]); commit('تغيير شعار المدرسة'); S.toast('تم تغيير الشعار'); }
-    catch (_) { S.toast('اختر ملف صورة (PNG أو JPG)', true); }
+    try { db().settings.logo = await S.readLogo(e.target.files[0]); commit('تغيير شعار المدرسة'); S.toast(T('تم تغيير الشعار')); }
+    catch (_) { S.toast(T('اختر ملف صورة (PNG أو JPG)'), true); }
     e.target.value = '';
   };
-  $('#sLogoRemove').onclick = () => { db().settings.logo = ''; commit('إزالة شعار المدرسة'); S.toast('تمت إزالة الشعار'); };
+  $('#sLogoRemove').onclick = () => { db().settings.logo = ''; commit('إزالة شعار المدرسة'); S.toast(T('تمت إزالة الشعار')); };
 
   /* ========== المستخدمون ========== */
   function renderUsers() {
     const me = Cloud.profile || {};
     $('#userBody').innerHTML = Cloud.users.map(u => {
-      const self = u.id === me.id, role = u.role === 'admin' ? 'مدير' : 'مشرف';
-      return `<tr><td><strong>${S.esc(u.name)}</strong>${self ? ' <span class="chip">أنت</span>' : ''}</td><td class="num">${S.esc(u.username)}</td>
-        <td>${self ? role : `<select class="input" data-role="${u.id}" style="width:auto" aria-label="الصلاحية"><option value="supervisor"${u.role !== 'admin' ? ' selected' : ''}>مشرف</option><option value="admin"${u.role === 'admin' ? ' selected' : ''}>مدير</option></select>`}</td>
-        <td style="white-space:nowrap">${self ? '' : `<button class="btn sm icon" data-reset-pw="${u.id}" title="تعيين كلمة مرور جديدة" aria-label="تعيين كلمة مرور جديدة"><i class="fa-solid fa-key"></i></button>
-          <button class="btn sm icon" data-del-user="${u.id}" aria-label="إزالة"><i class="fa-solid fa-trash" style="color:var(--red)"></i></button>`}</td></tr>`;
-    }).join('') || '<tr><td colspan="4" class="empty-state">لا يوجد مستخدمون</td></tr>';
+      const self = u.id === me.id, role = u.role === 'admin' ? T('مدير') : T('مشرف');
+      return `<tr><td><strong>${S.esc(u.name)}</strong>${self ? ` <span class="chip">${T('أنت')}</span>` : ''}</td><td class="num">${S.esc(u.email)}</td>
+        <td>${self ? role : `<select class="input" data-role="${u.id}" style="width:auto" aria-label="${T('الصلاحية')}"><option value="supervisor"${u.role !== 'admin' ? ' selected' : ''}>${T('مشرف')}</option><option value="admin"${u.role === 'admin' ? ' selected' : ''}>${T('مدير')}</option></select>`}</td>
+        <td>${self ? '' : `<button class="btn sm icon" data-del-user="${u.id}" aria-label="${T('إزالة')}"><i class="fa-solid fa-trash" style="color:var(--red)"></i></button>`}</td></tr>`;
+    }).join('') || `<tr><td colspan="4" class="empty-state">${T('لا يوجد مستخدمون')}</td></tr>`;
   }
   $('#userForm').onsubmit = async e => {
     e.preventDefault();
     const b = e.submitter; if (b) b.disabled = true;
-    const data = { name: $('#uName').value.trim(), username: $('#uUser').value, password: $('#uPass').value, role: $('#uRole').value };
-    try { await Cloud.addUser(data); S.log(`إضافة المستخدم ${data.name}`); S.save(); $('#userForm').reset(); S.toast(`تمت إضافة ${data.name}`); }
+    const data = { name: $('#uName').value.trim(), email: $('#uEmail').value, password: $('#uPass').value, role: $('#uRole').value };
+    try { await Cloud.addUser(data); S.log(`إضافة المستخدم ${data.name}`); S.save(); $('#userForm').reset(); S.toast(T('تمت إضافة {name}', { name: data.name })); }
     catch (err) { S.toast(Cloud.errText(err), true); }
     if (b) b.disabled = false;
   };
   document.addEventListener('change', async e => {
     const s = e.target.closest('select[data-role]'); if (!s) return;
-    try { await Cloud.setRole(s.dataset.role, s.value); S.toast('تم تغيير الصلاحية'); } catch (err) { S.toast(Cloud.errText(err), true); }
-  });
-  document.addEventListener('click', e => {
-    const b = e.target.closest('[data-reset-pw]'); if (!b) return;
-    const u = Cloud.users.find(x => x.id === b.dataset.resetPw); if (u) openPw(u);
+    try { await Cloud.setRole(s.dataset.role, s.value); S.toast(T('تم تغيير الصلاحية')); } catch (err) { S.toast(Cloud.errText(err), true); }
   });
   document.addEventListener('click', async e => {
     const b = e.target.closest('[data-del-user]'); if (!b) return;
     const u = Cloud.users.find(x => x.id === b.dataset.delUser); if (!u) return;
-    if (!await ask('إزالة المستخدم', `إزالة ${u.name}؟ لن يقدر يدخل لوحة التحكم بعد الآن.`, 'إزالة')) return;
-    try { await Cloud.removeUser(u.id); S.log(`إزالة المستخدم ${u.name}`); S.save(); S.toast('تمت الإزالة'); } catch (err) { S.toast(Cloud.errText(err), true); }
+    if (!await ask(T('إزالة المستخدم'), T('إزالة {name}؟ لن يقدر يدخل لوحة التحكم بعد الآن.', { name: u.name }), T('إزالة'))) return;
+    try { await Cloud.removeUser(u.id); S.log(`إزالة المستخدم ${u.name}`); S.save(); S.toast(T('تمت الإزالة')); } catch (err) { S.toast(Cloud.errText(err), true); }
   });
 
   /* ========== التحديث العام ========== */
   function renderAll() {
     S.brand();
+    $('#viewTitle').textContent = T(TITLES[view]);
     if ($('#app').hidden) return;
     $('#todayTop').textContent = `${S.dayName(S.today())} ${S.fmt(S.today())} · ${S.hijri(S.today())}`;
     const n = S.alerts().filter(a => a.level !== 'info').length;
     $('#alertBadge').hidden = !n; $('#alertBadge').textContent = n;
     const np = pendingFor(nextWorkday(S.today())).length;
     $('#notifyBadge').hidden = !np; $('#notifyBadge').textContent = np;
-    ({ dash: renderDash, schedule: renderSchedule, auto: initAuto, drivers: renderDrivers, leaves: renderLeaves, notify: renderNotify, users: renderUsers, reports: renderReports, settings: renderSettings })[view]();
+    const ns = db().subs.filter(b => b.from <= S.today() && S.today() <= b.to).length;
+    $('#subBadge').hidden = !ns; $('#subBadge').textContent = ns;
+    ({ dash: renderDash, schedule: renderSchedule, auto: initAuto, drivers: renderDrivers, leaves: renderLeaves, subs: renderSubs, notify: renderNotify, users: renderUsers, reports: renderReports, settings: renderSettings })[view]();
   }
-  Cloud.on('change', () => { S.brand(); if (!$('#app').hidden) renderAll(); });
+  Cloud.on('change', () => { S.brand(); if (!draftDirty) draft = null; if (!$('#app').hidden) renderAll(); });
   Cloud.on('status', s => {
     const el = $('#saveState'); el.hidden = false; el.textContent = s.text; el.className = 'chip ' + s.level;
     clearTimeout(el._t); if (s.level === 'ok') el._t = setTimeout(() => el.hidden = true, 2500);
     if (s.level === 'bad') S.toast(s.text, true);
   });
+  I18N.onChange(() => {
+    weekendBoxes($('#suWeekend'), $$('#suWeekend input:checked').map(i => +i.value));
+    if ($('#inactiveText').dataset.email !== undefined) $('#inactiveText').textContent = T('الحساب {email} غير مضاف للنظام. اطلب من مدير النظام إضافتك.', { email: $('#inactiveText').dataset.email });
+    applyRole(); renderAll();
+  });
+  I18N.apply();
   S.brand();
   if (!Cloud.ready) show('noConfig');
   else Cloud.watchAuth(async st => {
     if (st.state === 'staff') return showApp();
-    const need = await Cloud.needsSetup().catch(() => false);
-    if (need) {
-      await Cloud.loadPublicSettings().catch(() => {});
-      const st = db().settings;
-      if (st.school) $('#suSchool').value = st.school;
-      if (st.destinations && st.destinations.length) $('#suDest').value = st.destinations.join('، ');
-      if (st.weekend) $$('#suWeekend input').forEach(i => i.checked = st.weekend.includes(+i.value));
-      if (st.logo) { setupLogo = st.logo; $('#setupLogoPrev').src = st.logo; }
-      $('#suSample').closest('label').hidden = !!st.school;
+    const exists = await Cloud.settingsExist().catch(() => true);
+    if (!exists) {
       $('#suAccount').hidden = Cloud.signedIn;
       $$('#suAccount input').forEach(i => i.required = !Cloud.signedIn);
       return show('setup');
     }
     Cloud.subscribePublic();
-    if (st.state === 'inactive') { $('#inactiveText').textContent = `الحساب غير مضاف للنظام. اطلب من مدير النظام إضافتك.`; return show('inactive'); }
+    if (st.state === 'inactive') { $('#inactiveText').dataset.email = st.email || ''; $('#inactiveText').textContent = T('الحساب {email} غير مضاف للنظام. اطلب من مدير النظام إضافتك.', { email: st.email || '' }); return show('inactive'); }
     show('login');
   });
 })();

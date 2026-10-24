@@ -42,6 +42,8 @@ create table if not exists public.duties (
   reminded_at text
 );
 create index if not exists duties_date_idx on public.duties (date);
+-- مناوبات التوزيع بالدور (تتعدل تلقائياً عند تغيير الجدول)
+alter table public.duties add column if not exists auto boolean not null default false;
 
 create table if not exists public.leaves (
   id        text primary key,
@@ -49,6 +51,18 @@ create table if not exists public.leaves (
   date_from text,
   date_to   text,
   reason    text
+);
+
+-- السائق البديل (ينوب مؤقتاً عن سائق)
+create table if not exists public.subs (
+  id        text primary key,
+  driver_id text,
+  name      text not null,
+  phone     text,
+  bus_no    text,
+  date_from text,
+  date_to   text,
+  note      text
 );
 
 create table if not exists public.log (
@@ -83,6 +97,7 @@ alter table public.settings enable row level security;
 alter table public.drivers  enable row level security;
 alter table public.duties   enable row level security;
 alter table public.leaves   enable row level security;
+alter table public.subs     enable row level security;
 alter table public.log      enable row level security;
 
 -- المستخدمون
@@ -101,6 +116,9 @@ drop policy if exists settings_read  on public.settings;
 drop policy if exists settings_write on public.settings;
 create policy settings_read  on public.settings for select using (true);
 create policy settings_write on public.settings for all using (public.is_admin()) with check (public.is_admin());
+-- قائمة التوزيع بالدور: يعدّلها المشرفون والمدير
+drop policy if exists settings_rotation on public.settings;
+create policy settings_rotation on public.settings for all using (id = 'rotation' and public.is_staff()) with check (id = 'rotation' and public.is_staff());
 
 -- المناوبات: يقرأها الجميع، ويعدّلها المشرفون والمدير
 drop policy if exists duties_read  on public.duties;
@@ -113,6 +131,8 @@ drop policy if exists drivers_all on public.drivers;
 drop policy if exists leaves_all  on public.leaves;
 create policy drivers_all on public.drivers for all using (public.is_staff()) with check (public.is_staff());
 create policy leaves_all  on public.leaves  for all using (public.is_staff()) with check (public.is_staff());
+drop policy if exists subs_all on public.subs;
+create policy subs_all    on public.subs    for all using (public.is_staff()) with check (public.is_staff());
 
 -- سجل العمليات
 drop policy if exists log_read   on public.log;
@@ -127,11 +147,16 @@ create or replace view public.public_drivers as
   select id, name, area, bus_no, active from public.drivers;
 grant select on public.public_drivers to anon, authenticated;
 
+-- ---------- عرض عام للسائقين البدلاء بدون أرقام الهواتف ----------
+create or replace view public.public_subs as
+  select id, driver_id, name, bus_no, date_from, date_to from public.subs;
+grant select on public.public_subs to anon, authenticated;
+
 -- ---------- التحديث اللحظي ----------
 do $$
 declare t text;
 begin
-  foreach t in array array['settings', 'drivers', 'duties', 'leaves', 'log', 'profiles'] loop
+  foreach t in array array['settings', 'drivers', 'duties', 'leaves', 'subs', 'log', 'profiles'] loop
     if not exists (select 1 from pg_publication_tables where pubname = 'supabase_realtime' and schemaname = 'public' and tablename = t) then
       execute format('alter publication supabase_realtime add table public.%I', t);
     end if;
