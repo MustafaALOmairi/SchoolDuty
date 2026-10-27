@@ -320,6 +320,90 @@ body:has(#app:not([hidden])) .lang-float{display:none}
 [dir="ltr"] .toast{right:auto;left:20px}
 @media print{.lang-btn{display:none!important}}
 
+/* ===== إظهار كلمة المرور ===== */
+.pw-wrap{position:relative;display:block}
+.pw-wrap .input{padding-inline-end:46px}
+.pw-eye{position:absolute;inset-inline-end:6px;top:50%;transform:translateY(-50%);width:36px;height:36px;border:0;border-radius:50%;background:transparent;color:var(--muted);cursor:pointer;display:grid;place-items:center;font-size:16px}
+.pw-eye:hover{background:var(--surface-2);color:var(--ink)}
+
+/* ===== التقويم الشهري ===== */
+.cal{padding:0;overflow:hidden}
+.cal-head,.cal-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr))}
+.cal-head{background:var(--band-grad);color:#fff;font:700 14px var(--f-display);text-align:center}
+.cal-head span{padding:11px 4px}
+.cal-head .short{display:none}
+.cal-day{position:relative;min-height:96px;padding:8px 9px;border:0;border-inline-start:1px solid var(--line);border-top:1px solid var(--line);background:var(--surface);text-align:start;display:flex;flex-direction:column;gap:4px;font:inherit;color:inherit;min-width:0}
+.cal-grid .cal-day:nth-child(7n+1){border-inline-start:0}
+button.cal-day{cursor:pointer;transition:background .15s}
+button.cal-day:hover{background:var(--bus-soft)}
+.cal-day .n{font:700 15px var(--f-display);font-variant-numeric:tabular-nums}
+.cal-day.other{background:color-mix(in srgb,var(--surface-2) 55%,var(--surface))}
+.cal-day.other .n,.cal-day.other .ln{opacity:.45}
+.cal-day.off{background:repeating-linear-gradient(135deg,var(--surface-2) 0 8px,color-mix(in srgb,var(--surface-2) 60%,var(--line)) 8px 9px);color:var(--muted);cursor:default}
+.cal-day.off .n{opacity:.6}
+.cal-day.today{box-shadow:inset 0 0 0 3px var(--bus);background:var(--bus-soft)}
+.cal-day.today .n{background:var(--bus);color:#fff;border-radius:999px;min-width:28px;height:28px;display:inline-grid;place-items:center;align-self:flex-start;padding:0 6px}
+.cal-day .ln{display:flex;align-items:center;gap:5px;font-size:12.5px;line-height:1.3;min-width:0}
+.cal-day .ln b{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.cal-day .ln i{font-size:10px;color:var(--blue);width:9px;flex:none}
+.cal-dot{width:9px;height:9px;border-radius:50%;flex:none;background:var(--muted)}
+.cal-day .dots{display:none;gap:3px;flex-wrap:wrap;margin-top:auto}
+.cal-day .more{font-size:11px;color:var(--muted)}
+.cal-day .empty{font-size:11.5px;color:var(--muted)}
+.cal-legend{display:flex;gap:14px;flex-wrap:wrap;margin-top:12px;font-size:13px;color:var(--muted);align-items:center}
+.cal-legend span{display:inline-flex;align-items:center;gap:6px}
+@media (max-width:700px){
+  .cal-head .full{display:none}.cal-head .short{display:inline}
+  .cal-head span{padding:9px 0;font-size:12px}
+  .cal-day{min-height:62px;padding:5px 4px;align-items:center}
+  .cal-day .ln,.cal-day .more,.cal-day .empty{display:none}
+  .cal-day .dots{display:flex;justify-content:center;margin-top:auto}
+  .cal-day .n{font-size:13px}
+  .cal-day.today .n{min-width:24px;height:24px}
+}
+
+/* ===== نافذة / لوحة تفاصيل اليوم ===== */
+.sheet-back{position:fixed;inset:0;background:rgba(11,14,19,.5);z-index:80;animation:fadeIn .18s}
+.sheet{position:fixed;z-index:81;background:var(--surface);color:var(--ink);box-shadow:0 20px 60px rgba(0,0,0,.35);display:flex;flex-direction:column;
+  top:50%;left:50%;transform:translate(-50%,-50%);width:min(760px,calc(100vw - 32px));max-height:min(86vh,720px);border-radius:18px;animation:popIn .18s}
+.sheet-grip{display:none}
+.sheet-head{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;padding:18px 22px 12px;border-bottom:1px solid var(--line)}
+.sheet-head h3{font-size:19px}
+.sheet-body{padding:16px 22px;overflow:auto;display:flex;flex-direction:column;gap:14px}
+.sheet-foot{display:flex;justify-content:space-between;gap:10px;padding:12px 22px;border-top:1px solid var(--line);background:var(--surface-2);border-radius:0 0 18px 18px}
+.sh-cols{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.sh-col{border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.sh-col h4{margin:0;padding:10px 14px;background:var(--band-grad);color:#fff;font:600 15px var(--f-display);display:flex;align-items:center;gap:8px}
+.sh-col ol{list-style:none;margin:0;padding:6px 0;counter-reset:n}
+.sh-col li{counter-increment:n;display:flex;gap:10px;align-items:flex-start;padding:9px 14px}
+.sh-col li+li{border-top:1px dashed var(--line)}
+.sh-col li::before{content:counter(n);flex:none;width:24px;height:24px;border-radius:50%;background:var(--bus-soft);color:var(--bus);font:700 12.5px var(--f-display);display:grid;place-items:center;margin-top:1px}
+.sh-col li .who{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px}
+.sh-col li .who strong{font:600 15.5px var(--f-display)}
+.sh-col li .meta{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.sh-col .none{padding:16px 14px;color:var(--muted);font-size:14px}
+.sh-dest{display:flex;gap:8px;flex-wrap:wrap;align-items:center;padding:10px 14px;border-radius:12px;background:var(--surface-2);font-weight:600}
+@keyframes fadeIn{from{opacity:0}}
+@keyframes popIn{from{opacity:0;transform:translate(-50%,-46%)}}
+@keyframes slideUp{from{transform:translateY(100%)}}
+@media (max-width:640px){
+  .sheet{top:auto;left:0;right:0;bottom:0;transform:none;width:100%;max-height:88vh;border-radius:20px 20px 0 0;animation:slideUp .22s ease-out;padding-bottom:env(safe-area-inset-bottom)}
+  .sheet.dragging{transition:none}
+  .sheet.snap{transition:transform .2s}
+  .sheet-grip{display:block;padding:8px 0 2px;cursor:grab;touch-action:none}
+  .sheet-grip span{display:block;width:44px;height:5px;border-radius:9px;background:var(--line);margin:auto}
+  .sheet-head{padding:6px 18px 10px;touch-action:none}
+  .sheet-body{padding:14px 16px}
+  .sheet-foot{border-radius:0;padding:10px 16px calc(10px + env(safe-area-inset-bottom))}
+  .sh-cols{grid-template-columns:1fr}
+}
+@media (prefers-reduced-motion:reduce){.sheet,.sheet-back{animation:none}}
+@media print{.sheet,.sheet-back{display:none!important}}
+.cal-day.off.hol{background:repeating-linear-gradient(135deg,var(--amber-soft) 0 8px,color-mix(in srgb,var(--amber-soft) 70%,var(--amber)) 8px 9px);color:var(--amber)}
+.cal-day .hol-name{font-size:11.5px;font-weight:700;line-height:1.3;overflow:hidden;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical}
+.cal-day .hol-name i{font-size:9px}
+@media (max-width:700px){.cal-day .hol-name{display:none}}
+
 </style>
 </head>
 <body data-title="مناوبات الحافلات">
@@ -355,20 +439,19 @@ body:has(#app:not([hidden])) .lang-float{display:none}
 
   <section>
     <div class="sec-title">
-      <h2>جدول الأسبوع</h2>
-      <span class="muted" id="weekLabel"></span>
+      <h2>جدول الشهر</h2>
+      <span class="muted" id="monthLabel"></span>
       <div class="week-nav">
-        <button class="btn sm" id="prevWeek"><i class="fa-solid fa-chevron-right flip-ltr"></i> السابق</button>
-        <button class="btn sm" id="thisWeek">هذا الأسبوع</button>
-        <button class="btn sm" id="nextWeek">التالي <i class="fa-solid fa-chevron-left flip-ltr"></i></button>
+        <button class="btn sm" id="prevMonth"><i class="fa-solid fa-chevron-right flip-ltr"></i> السابق</button>
+        <button class="btn sm" id="thisMonth">هذا الشهر</button>
+        <button class="btn sm" id="nextMonth">التالي <i class="fa-solid fa-chevron-left flip-ltr"></i></button>
       </div>
     </div>
-    <div class="card table-wrap">
-      <table class="data">
-        <thead><tr><th data-i18n="اليوم|day">اليوم</th><th>التاريخ</th><th>مناوبة الذهاب</th><th>الوجهة</th><th>المناوبة في المدرسة</th></tr></thead>
-        <tbody id="weekBody"></tbody>
-      </table>
+    <div class="card cal">
+      <div class="cal-head" id="calHead"></div>
+      <div class="cal-grid" id="calGrid"></div>
     </div>
+    <div class="cal-legend" id="calLegend"></div>
   </section>
 
   <section>
@@ -380,6 +463,20 @@ body:has(#app:not([hidden])) .lang-float{display:none}
     <div class="dir-grid" id="dirGrid"></div>
   </section>
 </main>
+<!-- تفاصيل اليوم: نافذة في الكمبيوتر، ولوحة من أسفل الشاشة في الجوال -->
+<div class="sheet-back" id="sheetBack" hidden></div>
+<div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="shTitle" hidden>
+  <div class="sheet-grip" id="sheetGrip" aria-hidden="true"><span></span></div>
+  <div class="sheet-head" id="sheetHead">
+    <div><h3 id="shTitle"></h3><span class="muted" id="shSub"></span></div>
+    <button class="btn icon ghost" id="shClose" aria-label="إغلاق"><i class="fa-solid fa-xmark"></i></button>
+  </div>
+  <div class="sheet-body" id="shBody"></div>
+  <div class="sheet-foot">
+    <button class="btn sm" id="shPrev"><i class="fa-solid fa-chevron-right flip-ltr"></i> اليوم السابق</button>
+    <button class="btn sm" id="shNext">اليوم التالي <i class="fa-solid fa-chevron-left flip-ltr"></i></button>
+  </div>
+</div>
 <footer class="pub-foot">نظام إدارة مناوبات الحافلات – <span data-school></span> © <span id="year"></span></footer>
 
 
@@ -787,7 +884,32 @@ const I18N = (() => {
 "واتساب ويب (web.whatsapp.com)": "WhatsApp Web (web.whatsapp.com)",
 "تطبيق واتساب على الكمبيوتر": "WhatsApp desktop app",
 "رابط api.whatsapp.com": "api.whatsapp.com link",
-"رابط wa.me": "wa.me link"
+"رابط wa.me": "wa.me link",
+"إظهار كلمة المرور": "Show password",
+"إخفاء كلمة المرور": "Hide password",
+"لا توجد مناوبة": "No duty",
+"اضغط على أي يوم لعرض التفاصيل": "Tap any day to see details",
+"جدول الشهر": "Monthly schedule",
+"هذا الشهر": "This month",
+"اليوم السابق": "Previous day",
+"اليوم التالي": "Next day",
+"لديه مناوبة يوم {day} {date} وهو {off}": "Has a duty on {day} {date}, which is a day off ({off})",
+"هذا اليوم لا يظهر في جدول المناوبات.": "This day does not appear in the duty schedule.",
+"لا توجد إجازات رسمية مسجلة": "No official holidays recorded",
+"تم حفظ الإجازة. انتبه: فيه {n} مناوبة يدوية في هذه الأيام": "Holiday saved. Note: there are {n} manual duties on these days",
+"تم حفظ الإجازة": "Holiday saved",
+"حذف الإجازة": "Delete holiday",
+"حذف إجازة {name}؟ ترجع أيامها أيام عمل عادية.": "Delete the {name} holiday? Its days become normal working days.",
+"تم حذف الإجازة": "Holiday deleted",
+"إجازة رسمية": "Official holiday",
+"إجازة رسمية: {name}": "Official holiday: {name}",
+"إجازة": "Holiday",
+"الإجازات الرسمية والعطل": "Official holidays & breaks",
+"مثل الأعياد واليوم الوطني وإجازة منتصف الفصل. هذه الأيام تتظلل في التقويم، والتوزيع بالدور يتخطاها ويكمل القائمة بعدها.": "Such as Eid, National Day and mid-term break. These days are shaded in the calendar, and the rotation skips them and continues after.",
+"اسم الإجازة": "Holiday name",
+"مثال: إجازة عيد الفطر": "e.g. Eid Al-Fitr holiday",
+"إضافة الإجازة": "Add holiday",
+"الإجازة": "Holiday"
 };
   const fill = (s, v) => v ? String(s).replace(/\{(\w+)\}/g, (m, k) => k in v ? v[k] : m) : s;
   // مفتاح بالشكل 'نص|سياق' يُعرض عربياً بالجزء الأول فقط
@@ -905,7 +1027,12 @@ const Store = (() => {
 
   // ===== أدوات البيانات =====
   const driver = id => db.drivers.find(d => d.id === id);
-  const isWeekend = s => db.settings.weekend.includes(parse(s).getDay());
+  // الإجازة الرسمية في يوم معيّن (إن وجدت)
+  const holidayOn = s => (db.settings.holidays || []).find(h => h.from <= s && s <= (h.to || h.from));
+  // يوم عطلة: العطلة الأسبوعية أو إجازة رسمية. التوزيع والجداول تتخطاه
+  const isWeekend = s => db.settings.weekend.includes(parse(s).getDay()) || !!holidayOn(s);
+  // نص يوضح سبب العطلة
+  const offLabel = s => { const h = holidayOn(s); return h ? T('إجازة رسمية: {name}', { name: h.name || T('إجازة') }) : T('عطلة نهاية الأسبوع'); };
   const onLeave = (driverId, s) => db.leaves.some(l => l.driverId === driverId && l.from <= s && s <= l.to);
   // البديل المؤقت لسائق في يوم معيّن
   const subFor = (driverId, s) => (db.subs || []).find(x => x.driverId === driverId && x.from <= s && s <= x.to);
@@ -1059,7 +1186,7 @@ const Store = (() => {
   return {
     get db() { return db; }, set db(v) { db = v; }, KEY, load, save, log, seed, uid, hash, ROTATION_DEFAULT,
     iso, parse, today, addDays, dayName, dayNameAr, fmt, fmtAr, fmtShort, hijri, weekStart, daysUntil, range,
-    driver, isWeekend, onLeave, subFor, available, who, dutiesOn, typeName, typeNameAr, intlPhone, waLink, waMode, setWaMode, esc, reminderText, alerts,
+    driver, isWeekend, holidayOn, offLabel, onLeave, subFor, available, who, dutiesOn, typeName, typeNameAr, intlPhone, waLink, waMode, setWaMode, esc, reminderText, alerts,
     onChange, toggleTheme, toast, get DAYS() { return en() ? DAYS_EN : DAYS_AR; }, DEFAULT_TEMPLATE, fillTemplate, weekText, groupText, sampleDrivers, logo, schoolName, brand, readLogo
   };
 })();
@@ -1341,7 +1468,6 @@ const Cloud = (() => {
 <script>
 (() => {
   const S = Store, $ = s => document.querySelector(s);
-  let week = S.weekStart(S.today());
 
   const plate = d => d && d.busNo
     ? `<span class="plate" title="${T('رقم الحافلة')}"><b>BUS</b><span>${S.esc(d.busNo)}</span></span>`
@@ -1368,7 +1494,7 @@ const Cloud = (() => {
     const box = (type, icon) => {
       const list = S.dutiesOn(t, type);
       let body;
-      if (S.isWeekend(t) && !list.length) body = `<div class="empty-state"><i class="fa-solid fa-mug-hot"></i> ${T('عطلة نهاية الأسبوع')}</div>`;
+      if (S.isWeekend(t) && !list.length) body = `<div class="empty-state"><i class="fa-solid fa-mug-hot"></i> ${S.esc(S.offLabel(t))}</div>`;
       else if (!list.length) body = `<div class="empty-state">${T('لا توجد مناوبة مسجلة لهذا اليوم')}</div>`;
       else body = list.map(driverLine).join('');
       return `<article class="card duty-card ${type}">
@@ -1379,24 +1505,101 @@ const Cloud = (() => {
     $('#todayGrid').innerHTML = box('going', 'fa-bus') + box('school', 'fa-school');
   }
 
-  function names(list) {
-    if (!list.length) return '<span class="muted">—</span>';
-    return list.map(x => { const w = S.who(x); return w ? S.esc(w.name) + (w.sub ? ` <small class="muted">(${S.esc(T('بديل عن {name}', { name: w.orig ? w.orig.name : '' }))})</small>` : '') : ''; }).join('<br>');
-  }
+  /* ========== التقويم الشهري ========== */
+  const DAYS_SHORT = { ar: ['أحد', 'إثنين', 'ثلاثاء', 'أربعاء', 'خميس', 'جمعة', 'سبت'], en: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'] };
+  const PALETTE = ['#2e86de', '#e67e22', '#27ae60', '#8e44ad', '#c0392b', '#16a085', '#d4ac0d', '#e84393'];
+  const destColor = d => { const i = S.db.settings.destinations.indexOf(d); return i >= 0 ? PALETTE[i % PALETTE.length] : '#95a5a6'; };
+  const SCHOOL_COLOR = 'var(--blue)';
+  const shortName = n => String(n || '').trim().split(/\s+/).slice(0, 2).join(' ');
+  const monthOf = s => s.slice(0, 7) + '-01';
+  let month = monthOf(S.today()), openDay = null;
 
-  function renderWeek() {
-    const days = S.range(week, S.addDays(week, 6)).filter(d => !S.isWeekend(d));
-    $('#weekLabel').textContent = T('من {date}', { date: S.fmt(week) });
-    const t = S.today();
-    $('#weekBody').innerHTML = days.map(d => {
-      const g = S.dutiesOn(d, 'going'), s = S.dutiesOn(d, 'school');
-      const dests = [...new Set(g.map(x => x.dest).filter(Boolean))].map(x => `<span class="chip going">${S.esc(x)}</span>`).join(' ');
-      return `<tr${d === t ? ' style="outline:2px solid var(--bus);outline-offset:-2px"' : ''}>
-        <td><strong>${S.dayName(d)}</strong>${d === t ? ` <span class="chip going">${T('اليوم')}</span>` : ''}</td>
-        <td class="num">${S.fmtShort(d)}</td>
-        <td>${names(g)}</td><td>${dests || '<span class="muted">—</span>'}</td><td>${names(s)}</td></tr>`;
+  function renderMonth() {
+    const first = month, d0 = S.parse(first), t = S.today();
+    $('#monthLabel').textContent = d0.toLocaleDateString(I18N.lang === 'en' ? 'en-GB' : 'ar-OM-u-nu-latn', { month: 'long', year: 'numeric' });
+    const short = DAYS_SHORT[I18N.lang === 'en' ? 'en' : 'ar'];
+    $('#calHead').innerHTML = S.DAYS.map((d, i) => `<span><b class="full">${d}</b><b class="short">${short[i]}</b></span>`).join('');
+    const start = S.weekStart(first);
+    const last = S.iso(new Date(d0.getFullYear(), d0.getMonth() + 1, 0));
+    const end = S.addDays(S.weekStart(last), 6);
+    $('#calGrid').innerHTML = S.range(start, end).map(day => {
+      const other = day.slice(0, 7) !== first.slice(0, 7), n = +day.slice(8);
+      const cls = `cal-day${other ? ' other' : ''}${day === t ? ' today' : ''}`;
+      if (S.isWeekend(day)) { const h = S.holidayOn(day); return `<div class="${cls} off${h ? ' hol' : ''}"${h ? ` title="${S.esc(S.offLabel(day))}"` : ' aria-hidden="true"'}><span class="n">${n}</span>${h ? `<span class="hol-name"><i class="fa-solid fa-star"></i> ${S.esc(h.name)}</span>` : ''}</div>`; }
+      const g = S.dutiesOn(day, 'going'), sc = S.dutiesOn(day, 'school');
+      const line = (x, school) => { const w = S.who(x); if (!w) return ''; return `<span class="ln">${school ? '<i class="fa-solid fa-school"></i>' : `<span class="cal-dot" style="background:${destColor(x.dest)}"></span>`}<b>${S.esc(shortName(w.name))}</b></span>`; };
+      const lines = [...g.map(x => line(x, false)), ...sc.map(x => line(x, true))];
+      const shown = lines.slice(0, 3).join('') + (lines.length > 3 ? `<span class="more">+${lines.length - 3}</span>` : '');
+      const dots = g.map(x => `<span class="cal-dot" style="background:${destColor(x.dest)}"></span>`).join('') + sc.map(() => `<span class="cal-dot" style="background:${SCHOOL_COLOR}"></span>`).join('');
+      const label = `${S.dayName(day)} ${S.fmt(day)}`;
+      return `<button type="button" class="${cls}" data-day="${day}" aria-label="${S.esc(label)}"><span class="n">${n}</span>${shown || `<span class="empty">${T('لا توجد مناوبة')}</span>`}<span class="dots">${dots}</span></button>`;
     }).join('');
+    const dests = S.db.settings.destinations;
+    $('#calLegend').innerHTML = dests.map(d => `<span><span class="cal-dot" style="background:${destColor(d)}"></span>${S.esc(d)}</span>`).join('') +
+      `<span><span class="cal-dot" style="background:${SCHOOL_COLOR}"></span>${T('المناوبة في المدرسة')}</span>` +
+      ((S.db.settings.holidays || []).length ? `<span><span class="cal-dot" style="background:var(--amber)"></span>${T('إجازة رسمية')}</span>` : '') +
+      `<span style="margin-inline-start:auto">${T('اضغط على أي يوم لعرض التفاصيل')}</span>`;
   }
+  $('#calGrid').addEventListener('click', e => { const c = e.target.closest('[data-day]'); if (c) openSheet(c.dataset.day); });
+  $('#prevMonth').onclick = () => { const d = S.parse(month); d.setMonth(d.getMonth() - 1); month = S.iso(d); renderMonth(); };
+  $('#nextMonth').onclick = () => { const d = S.parse(month); d.setMonth(d.getMonth() + 1); month = S.iso(d); renderMonth(); };
+  $('#thisMonth').onclick = () => { month = monthOf(S.today()); renderMonth(); };
+
+  /* ========== تفاصيل اليوم ========== */
+  const stepDay = (day, dir) => { let d = S.addDays(day, dir); for (let i = 0; i < 14 && S.isWeekend(d); i++) d = S.addDays(d, dir); return d; };
+  function sheetBody(day) {
+    const col = (type, icon) => {
+      const list = S.dutiesOn(day, type);
+      const items = list.map(x => {
+        const w = S.who(x); if (!w) return '';
+        return `<li><span class="who"><strong>${S.esc(w.name)}</strong><span class="meta">${plate(w)}${type === 'going' && x.dest ? `<span class="chip going"><span class="cal-dot" style="background:${destColor(x.dest)}"></span>${S.esc(x.dest)}</span>` : ''}${x.done ? `<span class="chip ok"><i class="fa-solid fa-check"></i> ${T('منفذة')}</span>` : ''}${subChip(w)}</span></span></li>`;
+      }).join('');
+      return `<div class="sh-col"><h4><i class="fa-solid ${icon}"></i> ${S.typeName(type)}</h4>${items ? `<ol>${items}</ol>` : `<div class="none">${T('لم يُعيّن سائق')}</div>`}</div>`;
+    };
+    const dests = [...new Set(S.dutiesOn(day, 'going').map(x => x.dest).filter(Boolean))];
+    return `<div class="sh-cols">${col('going', 'fa-bus')}${col('school', 'fa-school')}</div>
+      <div class="sh-dest"><i class="fa-solid fa-location-dot"></i> ${T('الوجهة')}: ${dests.length ? dests.map(d => `<span class="chip going"><span class="cal-dot" style="background:${destColor(d)}"></span>${S.esc(d)}</span>`).join(' ') : `<span class="muted">—</span>`}</div>`;
+  }
+  function fillSheet() {
+    const day = openDay;
+    $('#shTitle').textContent = `${S.dayName(day)} ${S.fmt(day)}`;
+    $('#shSub').textContent = (day === S.today() ? T('اليوم') + ' · ' : '') + S.hijri(day);
+    $('#shBody').innerHTML = sheetBody(day);
+  }
+  let lastFocus = null;
+  function openSheet(day) {
+    openDay = day; fillSheet();
+    if ($('#sheet').hidden) { lastFocus = document.activeElement; $('#sheet').hidden = false; $('#sheetBack').hidden = false; document.body.style.overflow = 'hidden'; $('#shClose').focus(); }
+  }
+  function closeSheet() {
+    const sh = $('#sheet'); sh.hidden = true; $('#sheetBack').hidden = true; sh.style.transform = ''; sh.classList.remove('snap', 'dragging');
+    document.body.style.overflow = ''; openDay = null; if (lastFocus) lastFocus.focus();
+  }
+  function moveSheet(dir) {
+    openDay = stepDay(openDay, dir); fillSheet();
+    if (monthOf(openDay) !== month) { month = monthOf(openDay); renderMonth(); }
+  }
+  $('#shClose').onclick = closeSheet; $('#sheetBack').onclick = closeSheet;
+  $('#shPrev').onclick = () => moveSheet(-1); $('#shNext').onclick = () => moveSheet(1);
+  document.addEventListener('keydown', e => {
+    if ($('#sheet').hidden) return;
+    if (e.key === 'Escape') closeSheet();
+    const rtl = document.documentElement.dir === 'rtl';
+    if (e.key === 'ArrowLeft') moveSheet(rtl ? 1 : -1);
+    if (e.key === 'ArrowRight') moveSheet(rtl ? -1 : 1);
+  });
+  // السحب للأسفل لإغلاق اللوحة في الجوال
+  (() => {
+    const sh = $('#sheet'); let y0 = null, dy = 0;
+    const down = e => { if (innerWidth > 640 || e.target.closest('button')) return; y0 = e.clientY; dy = 0; sh.classList.add('dragging'); sh.classList.remove('snap'); e.currentTarget.setPointerCapture && e.currentTarget.setPointerCapture(e.pointerId); };
+    const move = e => { if (y0 === null) return; dy = Math.max(0, e.clientY - y0); sh.style.transform = `translateY(${dy}px)`; };
+    const up = () => {
+      if (y0 === null) return; y0 = null; sh.classList.remove('dragging');
+      if (dy > Math.min(140, sh.offsetHeight * .25)) closeSheet();
+      else { sh.classList.add('snap'); sh.style.transform = ''; }
+    };
+    ['#sheetGrip', '#sheetHead'].forEach(s => { const el = $(s); el.addEventListener('pointerdown', down); el.addEventListener('pointermove', move); el.addEventListener('pointerup', up); el.addEventListener('pointercancel', up); });
+  })();
 
   function renderDir() {
     const q = $('#dirSearch').value.trim();
@@ -1418,14 +1621,12 @@ const Cloud = (() => {
   function all() {
     S.brand();
     $('#setupNotice').hidden = !Cloud.settingsLoaded || !!S.db.settings.setupDone;
-    renderToday(); renderWeek(); renderDir();
+    renderToday(); renderMonth(); renderDir();
+    if (openDay) fillSheet();
   }
 
   $('#year').textContent = new Date().getFullYear();
   $('#themeBtn').onclick = S.toggleTheme;
-  $('#prevWeek').onclick = () => { week = S.addDays(week, -7); renderWeek(); };
-  $('#nextWeek').onclick = () => { week = S.addDays(week, 7); renderWeek(); };
-  $('#thisWeek').onclick = () => { week = S.weekStart(S.today()); renderWeek(); };
   $('#dirSearch').oninput = renderDir;
   I18N.apply();
   I18N.onChange(all);
