@@ -341,8 +341,17 @@ button.cal-day:hover{background:var(--bus-soft)}
 .cal-day.other .n,.cal-day.other .ln{opacity:.45}
 .cal-day.off{background:repeating-linear-gradient(135deg,var(--surface-2) 0 8px,color-mix(in srgb,var(--surface-2) 60%,var(--line)) 8px 9px);color:var(--muted);cursor:default}
 .cal-day.off .n{opacity:.6}
-.cal-day.today{box-shadow:inset 0 0 0 3px var(--bus);background:var(--bus-soft)}
-.cal-day.today .n{background:var(--bus);color:#fff;border-radius:999px;min-width:28px;height:28px;display:inline-grid;place-items:center;align-self:flex-start;padding:0 6px}
+.cal-day.today{background:var(--navy-grad);color:#fff;box-shadow:inset 0 0 0 3px #f2b705,0 6px 18px rgba(44,62,80,.35);z-index:1}
+button.cal-day.today:hover{background:var(--navy-grad);filter:brightness(1.12)}
+.cal-day.today .n{background:#f2b705;color:#2c3e50;border-radius:999px;min-width:30px;height:30px;display:inline-grid;place-items:center;align-self:flex-start;padding:0 7px;font-size:16px}
+.cal-day.today .ln b,.cal-day.today .empty,.cal-day.today .more{color:#fff}
+.cal-day.today .ln i{color:#9fd3ff}
+.cal-day.today .cal-dot{box-shadow:0 0 0 2px #fff}
+.cal-day .today-tag{display:none}
+.cal-day.today .today-tag{display:inline-block;position:absolute;top:8px;inset-inline-end:8px;background:#f2b705;color:#2c3e50;font:800 11px var(--f-display);padding:2px 8px;border-radius:999px}
+.cal-day.today.off{background:repeating-linear-gradient(135deg,#34486b 0 8px,#2c3e50 8px 9px)}
+@media (prefers-reduced-motion:no-preference){.cal-day.today .n{animation:todayPulse 2.4s ease-in-out infinite}}
+@keyframes todayPulse{0%,100%{box-shadow:0 0 0 0 rgba(242,183,5,.7)}50%{box-shadow:0 0 0 7px rgba(242,183,5,0)}}
 .cal-day .ln{display:flex;align-items:center;gap:5px;font-size:12.5px;line-height:1.3;min-width:0}
 .cal-day .ln b{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
 .cal-day .ln i{font-size:10px;color:var(--blue);width:9px;flex:none}
@@ -359,7 +368,8 @@ button.cal-day:hover{background:var(--bus-soft)}
   .cal-day .ln,.cal-day .more,.cal-day .empty{display:none}
   .cal-day .dots{display:flex;justify-content:center;margin-top:auto}
   .cal-day .n{font-size:13px}
-  .cal-day.today .n{min-width:24px;height:24px}
+  .cal-day.today .n{min-width:24px;height:24px;font-size:13px}
+  .cal-day.today .today-tag{display:none}
 }
 
 /* ===== نافذة / لوحة تفاصيل اليوم ===== */
@@ -431,16 +441,9 @@ button.cal-day:hover{background:var(--bus-soft)}
   </section>
   <section>
     <div class="sec-title">
-      <h2>مناوبة اليوم</h2>
-      <span class="muted" id="todayLabel"></span>
-    </div>
-    <div class="today-grid" id="todayGrid"></div>
-  </section>
-
-  <section>
-    <div class="sec-title">
       <h2>جدول الشهر</h2>
       <span class="muted" id="monthLabel"></span>
+      <span class="chip going" id="todayChip"></span>
       <div class="week-nav">
         <button class="btn sm" id="prevMonth"><i class="fa-solid fa-chevron-right flip-ltr"></i> السابق</button>
         <button class="btn sm" id="thisMonth">هذا الشهر</button>
@@ -1488,22 +1491,7 @@ const Cloud = (() => {
     </div>`;
   }
 
-  function renderToday() {
-    const t = S.today();
-    $('#todayLabel').textContent = `${S.dayName(t)} ${S.fmt(t)} · ${S.hijri(t)}`;
-    const box = (type, icon) => {
-      const list = S.dutiesOn(t, type);
-      let body;
-      if (S.isWeekend(t) && !list.length) body = `<div class="empty-state"><i class="fa-solid fa-mug-hot"></i> ${S.esc(S.offLabel(t))}</div>`;
-      else if (!list.length) body = `<div class="empty-state">${T('لا توجد مناوبة مسجلة لهذا اليوم')}</div>`;
-      else body = list.map(driverLine).join('');
-      return `<article class="card duty-card ${type}">
-        <div class="top"><i class="fa-solid ${icon}"></i><h3>${S.typeName(type)}</h3>
-        ${type === 'going' ? `<span class="muted" style="margin-inline-start:auto;font-size:13px">${T('إلى ({dests})', { dests: S.esc(S.db.settings.destinations.join(' - ')) })}</span>` : ''}</div>
-        ${body}</article>`;
-    };
-    $('#todayGrid').innerHTML = box('going', 'fa-bus') + box('school', 'fa-school');
-  }
+
 
   /* ========== التقويم الشهري ========== */
   const DAYS_SHORT = { ar: ['أحد', 'إثنين', 'ثلاثاء', 'أربعاء', 'خميس', 'جمعة', 'سبت'], en: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'] };
@@ -1515,6 +1503,8 @@ const Cloud = (() => {
   let month = monthOf(S.today()), openDay = null;
 
   function renderMonth() {
+    const td = S.today();
+    $('#todayChip').innerHTML = `<i class="fa-solid fa-calendar-day"></i> ${T('اليوم')}: ${S.esc(S.dayName(td))} ${S.fmtShort(td)}`;
     const first = month, d0 = S.parse(first), t = S.today();
     $('#monthLabel').textContent = d0.toLocaleDateString(I18N.lang === 'en' ? 'en-GB' : 'ar-OM-u-nu-latn', { month: 'long', year: 'numeric' });
     const short = DAYS_SHORT[I18N.lang === 'en' ? 'en' : 'ar'];
@@ -1525,14 +1515,14 @@ const Cloud = (() => {
     $('#calGrid').innerHTML = S.range(start, end).map(day => {
       const other = day.slice(0, 7) !== first.slice(0, 7), n = +day.slice(8);
       const cls = `cal-day${other ? ' other' : ''}${day === t ? ' today' : ''}`;
-      if (S.isWeekend(day)) { const h = S.holidayOn(day); return `<div class="${cls} off${h ? ' hol' : ''}"${h ? ` title="${S.esc(S.offLabel(day))}"` : ' aria-hidden="true"'}><span class="n">${n}</span>${h ? `<span class="hol-name"><i class="fa-solid fa-star"></i> ${S.esc(h.name)}</span>` : ''}</div>`; }
+      if (S.isWeekend(day)) { const h = S.holidayOn(day); return `<div class="${cls} off${h ? ' hol' : ''}"${h ? ` title="${S.esc(S.offLabel(day))}"` : ' aria-hidden="true"'}><span class="n">${n}</span>${day === t ? `<span class="today-tag">${T('اليوم')}</span>` : ''}${h ? `<span class="hol-name"><i class="fa-solid fa-star"></i> ${S.esc(h.name)}</span>` : ''}</div>`; }
       const g = S.dutiesOn(day, 'going'), sc = S.dutiesOn(day, 'school');
       const line = (x, school) => { const w = S.who(x); if (!w) return ''; return `<span class="ln">${school ? '<i class="fa-solid fa-school"></i>' : `<span class="cal-dot" style="background:${destColor(x.dest)}"></span>`}<b>${S.esc(shortName(w.name))}</b></span>`; };
       const lines = [...g.map(x => line(x, false)), ...sc.map(x => line(x, true))];
       const shown = lines.slice(0, 3).join('') + (lines.length > 3 ? `<span class="more">+${lines.length - 3}</span>` : '');
       const dots = g.map(x => `<span class="cal-dot" style="background:${destColor(x.dest)}"></span>`).join('') + sc.map(() => `<span class="cal-dot" style="background:${SCHOOL_COLOR}"></span>`).join('');
-      const label = `${S.dayName(day)} ${S.fmt(day)}`;
-      return `<button type="button" class="${cls}" data-day="${day}" aria-label="${S.esc(label)}"><span class="n">${n}</span>${shown || `<span class="empty">${T('لا توجد مناوبة')}</span>`}<span class="dots">${dots}</span></button>`;
+      const label = `${day === t ? T('اليوم') + ' – ' : ''}${S.dayName(day)} ${S.fmt(day)}`;
+      return `<button type="button" class="${cls}" data-day="${day}" aria-label="${S.esc(label)}"><span class="n">${n}</span>${day === t ? `<span class="today-tag">${T('اليوم')}</span>` : ''}${shown || `<span class="empty">${T('لا توجد مناوبة')}</span>`}<span class="dots">${dots}</span></button>`;
     }).join('');
     const dests = S.db.settings.destinations;
     $('#calLegend').innerHTML = dests.map(d => `<span><span class="cal-dot" style="background:${destColor(d)}"></span>${S.esc(d)}</span>`).join('') +
@@ -1543,6 +1533,15 @@ const Cloud = (() => {
   $('#calGrid').addEventListener('click', e => { const c = e.target.closest('[data-day]'); if (c) openSheet(c.dataset.day); });
   $('#prevMonth').onclick = () => { const d = S.parse(month); d.setMonth(d.getMonth() - 1); month = S.iso(d); renderMonth(); };
   $('#nextMonth').onclick = () => { const d = S.parse(month); d.setMonth(d.getMonth() + 1); month = S.iso(d); renderMonth(); };
+  // تحديث تلقائي عند تغيّر اليوم (لو الصفحة مفتوحة من أمس)
+  let shownToday = S.today();
+  function checkNewDay() {
+    const t = S.today(); if (t === shownToday) return;
+    if (month === monthOf(shownToday)) month = monthOf(t);
+    shownToday = t; all();
+  }
+  setInterval(checkNewDay, 60000);
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) checkNewDay(); });
   $('#thisMonth').onclick = () => { month = monthOf(S.today()); renderMonth(); };
 
   /* ========== تفاصيل اليوم ========== */
@@ -1621,7 +1620,7 @@ const Cloud = (() => {
   function all() {
     S.brand();
     $('#setupNotice').hidden = !Cloud.settingsLoaded || !!S.db.settings.setupDone;
-    renderToday(); renderMonth(); renderDir();
+    renderMonth(); renderDir();
     if (openDay) fillSheet();
   }
 
