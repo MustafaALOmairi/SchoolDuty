@@ -414,6 +414,37 @@ button.cal-day.today:hover{background:var(--navy-grad);filter:brightness(1.12)}
 .cal-day .hol-name i{font-size:9px}
 @media (max-width:700px){.cal-day .hol-name{display:none}}
 
+/* ===== صفحة بديل المناوبة ===== */
+.bd-wrap{max-width:560px;margin:auto;padding:24px 16px 40px}
+.bd-card{padding:0;overflow:hidden}
+.bd-head{display:flex;gap:14px;align-items:center;padding:20px;background:var(--navy-grad);color:#fff}
+.bd-head .logo-disc{width:64px;height:64px;border:3px solid #fff}
+.bd-head h1{font-size:22px}
+.bd-head .muted{color:rgba(255,255,255,.85)}
+.bd-body{padding:20px;display:flex;flex-direction:column;gap:16px}
+.bd-hi{margin:0;font:600 18px var(--f-display)}
+.bd-day{display:flex;flex-direction:column;gap:8px;padding:14px 16px;border-radius:14px;background:var(--surface-2);border:1px solid var(--line)}
+.bd-day>strong{font:700 19px var(--f-display)}
+.bd-duty{display:flex;gap:10px;align-items:center}
+.bd-duty>i{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;background:var(--band-grad);color:#fff;flex:none}
+.bd-current{display:flex;gap:12px;align-items:center;padding:14px 16px;border-radius:14px;background:var(--green-soft)}
+.bd-current i{font-size:22px;color:var(--green)}
+.bd-current div{display:flex;flex-direction:column}
+.bd-current strong{font:700 18px var(--f-display)}
+.bd-form{display:flex;flex-direction:column;gap:14px}
+.bd-form h2{font-size:17px}
+.bd-seg{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.bd-seg button{padding:12px 8px;border-radius:12px;border:2px solid var(--line);background:var(--surface);cursor:pointer;font-weight:700;display:flex;gap:8px;align-items:center;justify-content:center}
+.bd-seg button.on{border-color:var(--bus);background:var(--bus-soft);color:var(--bus)}
+.bd-form .input{font-size:16px;padding:12px 14px}
+.bd-actions{display:flex;gap:10px;flex-wrap:wrap}
+.bd-actions .btn{flex:1;justify-content:center;padding:13px 18px;font-size:16px}
+.bd-msg{text-align:center;padding:10px 6px;display:flex;flex-direction:column;align-items:center;gap:8px}
+.bd-msg>i{font-size:40px}
+.bd-msg h2{font-size:19px}
+.bd-msg p{margin:0}
+.bd-lang{margin-inline-start:auto;background:rgba(255,255,255,.18)!important;color:#fff!important;border:0!important;box-shadow:none!important}
+
 </style>
 </head>
 <body data-title="مناوبات الحافلات">
@@ -832,7 +863,6 @@ const I18N = (() => {
 "وجهات الذهاب (افصل بفاصلة)": "Trip destinations (comma separated)",
 "تنبيه انتهاء الوثائق قبل (يوم)": "Document expiry alert before (days)",
 "نص رسالة التذكير": "Reminder message text",
-"الكلمات اللي يستبدلها النظام: {الاسم} {المدرسة} {النوع} {اليوم} {التاريخ} {الوجهة} {الحافلة}": "Placeholders the system replaces: {الاسم} name · {المدرسة} school · {النوع} type · {اليوم} day · {التاريخ} date · {الوجهة} destination · {الحافلة} bus",
 "معاينة": "Preview",
 "حفظ الإعدادات": "Save settings",
 "النسخ الاحتياطي والبيانات": "Backup & data",
@@ -912,7 +942,44 @@ const I18N = (() => {
 "اسم الإجازة": "Holiday name",
 "مثال: إجازة عيد الفطر": "e.g. Eid Al-Fitr holiday",
 "إضافة الإجازة": "Add holiday",
-"الإجازة": "Holiday"
+"الإجازة": "Holiday",
+"الكلمات اللي يستبدلها النظام: {الاسم} {المدرسة} {النوع} {اليوم} {التاريخ} {الوجهة} {الحافلة} {رابط_البديل}": "Placeholders the system replaces: {الاسم} name · {المدرسة} school · {النوع} type · {اليوم} day · {التاريخ} date · {الوجهة} destination · {الحافلة} bus · {رابط_البديل} substitute link",
+"وضع بديلاً عنه يوم {day} {date}: {name}": "set a substitute for {day} {date}: {name}",
+"من السائق": "by driver",
+"الإدارة سجّلت لك بديلاً لهذا اليوم ({name}). لأي تغيير تواصل مع المشرف.": "Management already set a substitute for you on this day ({name}). Contact the supervisor for any change.",
+"الرابط غير صحيح": "Invalid link",
+"افتح الرابط كامل من رسالة واتساب.": "Open the full link from the WhatsApp message.",
+"جارٍ التحميل…": "Loading…",
+"ما قدرنا نفتح المناوبة": "We couldn't open this duty",
+"أهلاً {name}": "Hello {name}",
+"مناوبتك يوم": "Your duty on",
+"تم إلغاء البديل": "Substitute cancelled",
+"تم تسجيل {name} بديلاً عنك": "{name} is now your substitute",
+"المناوبة رجعت باسمك.": "The duty is back under your name.",
+"المشرف وصله تنبيه. تقدر ترجع لنفس الرابط إذا تبي تغيّر البديل أو تلغيه.": "The supervisor has been notified. Come back to the same link to change or cancel the substitute.",
+"انتهى يوم هذه المناوبة": "This duty day has passed",
+"عندك بديل من الإدارة": "You have a substitute from management",
+"البديل الحالي": "Current substitute",
+"تغيير البديل": "Change substitute",
+"إلغاء البديل": "Cancel substitute",
+"عنده مناوبة في نفس اليوم": "has a duty the same day",
+"مين بينوب عنك؟": "Who will cover for you?",
+"زميل من السائقين": "A fellow driver",
+"شخص آخر": "Someone else",
+"اختر الزميل": "Choose the colleague",
+"رقم هاتف البديل": "Substitute's phone",
+"ملاحظة للمشرف (اختياري)": "Note for the supervisor (optional)",
+"تأكيد البديل": "Confirm substitute",
+"رجوع": "Back",
+"إلغاء البديل؟ المناوبة ترجع باسمك.": "Cancel the substitute? The duty goes back under your name.",
+"الرابط غير صالح، أو المناوبة انحذفت من الجدول. تواصل مع مشرف النقل.": "The link is invalid, or the duty was removed. Contact the transport supervisor.",
+"انتهى يوم هذه المناوبة، ما تقدر تغيّر البديل.": "This duty day has passed; the substitute can't be changed.",
+"اكتب رقم هاتف صحيح للبديل.": "Enter a valid phone number for the substitute.",
+"اكتب اسم البديل.": "Enter the substitute's name.",
+"اختر زميلاً من القائمة.": "Choose a colleague from the list.",
+"ما فيه بديل مسجّل منك لهذا اليوم.": "You have no substitute set for this day.",
+"النظام يحتاج تحديث من الإدارة. تواصل مع مشرف النقل.": "The system needs an update by management. Contact the transport supervisor.",
+"بديل المناوبة": "Duty substitute"
 };
   const fill = (s, v) => v ? String(s).replace(/\{(\w+)\}/g, (m, k) => k in v ? v[k] : m) : s;
   // مفتاح بالشكل 'نص|سياق' يُعرض عربياً بالجزء الأول فقط
@@ -999,7 +1066,8 @@ const Store = (() => {
       drivers: [],
       duties: [],   // {id,type:'going'|'school',date,driverId,dest,note,done,auto}
       leaves: [],   // {id,driverId,from,to,reason}
-      subs: [],     // {id,driverId,name,phone,busNo,from,to,note} سائق بديل مؤقت
+      subs: [],     // {id,driverId,name,phone,busNo,from,to,note,source} سائق بديل مؤقت
+      duty_tokens: [], // {id: رقم المناوبة, token} لرابط البديل
       log: []       // {t,msg}
     };
   }
@@ -1111,15 +1179,33 @@ const Store = (() => {
   }
 
   // رسائل واتساب للسائقين تبقى بالعربي دائماً
-  const DEFAULT_TEMPLATE = 'السلام عليكم {الاسم}،\nتذكير من {المدرسة}: لديك {النوع} يوم {اليوم} {التاريخ}{الوجهة}.\nشاكرين تعاونكم.';
+  const DEFAULT_TEMPLATE = 'السلام عليكم {الاسم}،\nتذكير من {المدرسة}: لديك {النوع} يوم {اليوم} {التاريخ}{الوجهة}.{رابط_البديل}\nشاكرين تعاونكم.';
+  // رابط البديل الخاص بالمناوبة (رمز عشوائي لكل مناوبة، يُنشأ عند أول حاجة)
+  let tokenSave = null;
+  function badilLink(duty) {
+    if (typeof Cloud === 'undefined' || !Cloud.tokensReady || !duty || !duty.id || duty.date < today()) return '';
+    db.duty_tokens = db.duty_tokens || [];
+    let t = db.duty_tokens.find(x => x.id === duty.id);
+    if (!t) {
+      const a = new Uint8Array(9); crypto.getRandomValues(a);
+      t = { id: duty.id, token: Array.from(a, b => 'abcdefghjkmnpqrstuvwxyz23456789'[b % 31]).join('') };
+      db.duty_tokens.push(t);
+      clearTimeout(tokenSave); tokenSave = setTimeout(save, 300);
+    }
+    return new URL('badil.html', location.href).href.split('?')[0] + '?c=' + t.token;
+  }
+  const badilLine = duty => { const u = badilLink(duty); return u ? `\nإذا ما تقدر تحضر، حط بديلك من هنا:\n${u}` : ''; };
   function fillTemplate(tpl, duty) {
     const w = who(duty) || {};
     const map = {
       '{الاسم}': w.name || '', '{المدرسة}': db.settings.school || '',
       '{النوع}': typeNameAr(duty.type) + (w.sub && w.orig ? ` (نيابة عن ${w.orig.name})` : ''),
       '{اليوم}': dayNameAr(duty.date), '{التاريخ}': fmtAr(duty.date), '{الحافلة}': w.busNo || '',
-      '{الوجهة}': duty.type === 'going' && duty.dest ? ` – الوجهة: ${duty.dest}` : ''
+      '{الوجهة}': duty.type === 'going' && duty.dest ? ` – الوجهة: ${duty.dest}` : '',
+      '{رابط_البديل}': badilLine(duty)
     };
+    // القوالب القديمة اللي ما فيها رابط البديل: يُضاف في آخر الرسالة
+    if (!tpl.includes('{رابط_البديل}')) tpl += '{رابط_البديل}';
     return tpl.replace(/\{[^}]+\}/g, k => k in map ? map[k] : k);
   }
   const reminderText = duty => fillTemplate(db.settings.template || DEFAULT_TEMPLATE, duty);
@@ -1132,7 +1218,8 @@ const Store = (() => {
       (sub ? (x.date >= sub.from && x.date <= sub.to) : !subFor(driverId, x.date))).sort((a, b) => a.date.localeCompare(b.date));
     const name = sub ? sub.name : d ? d.name : '';
     return `السلام عليكم ${name}،\nمناوباتك من ${fmtShort(from)} إلى ${fmtShort(to)} – ${db.settings.school || ''}${sub && d ? ` (نيابة عن ${d.name})` : ''}:\n` +
-      list.map(x => `- ${dayNameAr(x.date)} ${fmtShort(x.date)}: ${dutyLine(x)}`).join('\n') + '\nشاكرين تعاونكم.';
+      list.map(x => { const u = badilLink(x); return `- ${dayNameAr(x.date)} ${fmtShort(x.date)}: ${dutyLine(x)}` + (u ? `\n  البديل: ${u}` : ''); }).join('\n') +
+      (list.some(x => badilLink(x)) ? '\nإذا ما تقدر تحضر يوماً، افتح رابط البديل لذاك اليوم.' : '') + '\nشاكرين تعاونكم.';
   }
   // رسالة جماعية لمجموعة السائقين
   function groupText(from, to) {
@@ -1189,7 +1276,7 @@ const Store = (() => {
   return {
     get db() { return db; }, set db(v) { db = v; }, KEY, load, save, log, seed, uid, hash, ROTATION_DEFAULT,
     iso, parse, today, addDays, dayName, dayNameAr, fmt, fmtAr, fmtShort, hijri, weekStart, daysUntil, range,
-    driver, isWeekend, holidayOn, offLabel, onLeave, subFor, available, who, dutiesOn, typeName, typeNameAr, intlPhone, waLink, waMode, setWaMode, esc, reminderText, alerts,
+    driver, isWeekend, holidayOn, offLabel, onLeave, subFor, available, who, dutiesOn, typeName, typeNameAr, intlPhone, waLink, badilLink, waMode, setWaMode, esc, reminderText, alerts,
     onChange, toggleTheme, toast, get DAYS() { return en() ? DAYS_EN : DAYS_AR; }, DEFAULT_TEMPLATE, fillTemplate, weekText, groupText, sampleDrivers, logo, schoolName, brand, readLogo
   };
 })();
@@ -1211,7 +1298,8 @@ const Cloud = (() => {
     drivers: ['id', 'name', 'area', 'phone', 'phone2', 'busNo', 'plate', 'capacity', 'licenseExp', 'insuranceExp', 'active', 'notes'],
     duties: ['id', 'type', 'date', 'driverId', 'dest', 'note', 'done', 'remindedAt', 'auto'],
     leaves: ['id', 'driverId', 'from', 'to', 'reason'],
-    subs: ['id', 'driverId', 'name', 'phone', 'busNo', 'from', 'to', 'note'],
+    subs: ['id', 'driverId', 'name', 'phone', 'busNo', 'from', 'to', 'note', 'source'],
+    duty_tokens: ['id', 'token'],
     log: ['id', 't', 'msg', 'by']
   };
   const MAP = {
@@ -1219,6 +1307,7 @@ const Cloud = (() => {
     duties: { driverId: 'driver_id', remindedAt: 'reminded_at' },
     leaves: { driverId: 'driver_id', from: 'date_from', to: 'date_to' },
     subs: { driverId: 'driver_id', busNo: 'bus_no', from: 'date_from', to: 'date_to' },
+    duty_tokens: {},
     log: { by: 'by_name' }
   };
   const toRow = (t, o) => { const r = {}; COLS[t].forEach(k => { const v = o[k]; r[MAP[t][k] || k] = v === undefined || v === '' ? null : v; }); return r; };
@@ -1229,7 +1318,8 @@ const Cloud = (() => {
   const clean = o => JSON.parse(JSON.stringify(o));
   const windowStart = () => S().addDays(S().today(), -365);
 
-  let shadow = { settings: null, rotation: null, drivers: {}, duties: {}, leaves: {}, subs: {} };
+  let shadow = { settings: null, rotation: null, drivers: {}, duties: {}, leaves: {}, subs: {}, duty_tokens: {} };
+  let tokensReady = false;
   let profile = null, users = [], settingsLoaded = false, setupInProgress = false, channel = null, poll = null, mode = null;
   const listeners = { change: [], status: [], recovery: [] };
   const emit = (k, v) => listeners[k].forEach(f => f(v));
@@ -1333,7 +1423,8 @@ const Cloud = (() => {
   async function subscribeStaff() {
     stop(); mode = 'staff';
     try {
-      await Promise.all([loadSettings(), loadTable('drivers'), loadTable('duties'), loadTable('leaves'), loadTable('subs'), loadLog()]);
+      await Promise.all([loadSettings(), loadTable('drivers'), loadTable('duties'), loadTable('leaves'), loadTable('subs'), loadLog(),
+        loadTable('duty_tokens').then(() => { tokensReady = true; }, () => { tokensReady = false; })]);
       if (profile.role === 'admin') await loadUsers();
       changed();
     } catch (e) { fail(e); }
@@ -1354,7 +1445,9 @@ const Cloud = (() => {
       const rt = clean(db.rotation);
       if (stable(rt) !== shadow.rotation) { shadow.rotation = stable(rt); jobs.push(() => sb.from('settings').upsert({ id: 'rotation', data: rt })); }
     }
-    ['drivers', 'duties', 'leaves', 'subs'].forEach(t => {
+    // رموز المناوبات المحذوفة تنحذف معها
+    if (tokensReady) { const ids = new Set(db.duties.map(x => x.id)); db.duty_tokens = (db.duty_tokens || []).filter(x => ids.has(x.id)); }
+    ['drivers', 'duties', 'leaves', 'subs'].concat(tokensReady ? ['duty_tokens'] : []).forEach(t => {
       const up = [], seen = new Set();
       db[t].forEach(x => {
         if (!x.id) x.id = S().uid();
@@ -1455,12 +1548,14 @@ const Cloud = (() => {
     must(await sb.from('profiles').insert({ id: uid, name, email: email.trim(), role }));
     await loadUsers();
   }
+  // دوال البديل من الرابط (بدون تسجيل دخول)
+  async function rpc(fn, args) { return must(await sb.rpc(fn, args)); }
   async function setRole(uid, role) { must(await sb.from('profiles').update({ role }).eq('id', uid)); await loadUsers(); }
   async function removeUser(uid) { must(await sb.from('profiles').delete().eq('id', uid)); await loadUsers(); }
 
   return {
     configured, get ready() { return !!sb; }, on, save, watchAuth, signIn, signOut, resetPassword, updatePassword, setup, settingsExist,
-    addUser, setRole, removeUser, subscribePublic, errText,
+    addUser, setRole, removeUser, subscribePublic, errText, rpc, get tokensReady() { return tokensReady; },
     get signedIn() { return !!currentUser; }, get settingsLoaded() { return settingsLoaded; },
     get profile() { return profile; }, get users() { return users; }, isAdmin: () => !!profile && profile.role === 'admin'
   };
