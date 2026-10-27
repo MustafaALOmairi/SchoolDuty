@@ -463,6 +463,33 @@ button.cal-day.today:hover{background:var(--navy-grad);filter:brightness(1.12)}
 .sc-new h3{font-size:17px}
 @media (max-width:520px){.sc-grid{grid-template-columns:1fr}.sc-link{grid-template-columns:1fr}.sc-act{justify-content:flex-end}}
 
+/* ===== الصلاحيات والملاحظات ===== */
+.perm-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:8px}
+.perm-grid label{display:flex;gap:8px;align-items:center;padding:9px 12px;border:1px solid var(--line);border-radius:10px;background:var(--surface-2);cursor:pointer;font-weight:500;color:var(--ink)}
+.perm-grid input{width:18px;height:18px;accent-color:#4a6491}
+section[data-panel="feedback"]:not([hidden]){display:flex}
+.fb-item{padding:14px 16px;display:flex;flex-direction:column;gap:10px;border:1px solid var(--line);border-radius:14px;background:var(--surface)}
+.fb-item.new{border-inline-start:5px solid var(--red)}
+.fb-item.progress{border-inline-start:5px solid var(--amber)}
+.fb-item.closed{opacity:.75}
+.fb-top{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.fb-msg{white-space:pre-wrap;line-height:1.7;font-size:15px}
+.fb-row{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center}
+.chip.kind-complaint{background:var(--red-soft);color:var(--red);border-color:transparent}
+.chip.kind-suggestion{background:var(--green-soft);color:var(--green);border-color:transparent}
+.chip.kind-note{background:var(--blue-soft);color:var(--blue);border-color:transparent}
+@media (max-width:640px){.fb-row{grid-template-columns:1fr}}
+/* نموذج الملاحظات في الصفحة العامة */
+.fb-form{display:flex;flex-direction:column;gap:14px}
+.fb-form .input{font-size:16px}
+.fb-seg{display:flex;gap:8px;flex-wrap:wrap}
+.fb-seg label{flex:1;min-width:110px;display:flex;align-items:center;justify-content:center;gap:6px;padding:11px 10px;border:2px solid var(--line);border-radius:12px;cursor:pointer;font-weight:700;background:var(--surface)}
+.fb-seg input{position:absolute;opacity:0;pointer-events:none}
+.fb-seg label:has(input:checked){border-color:var(--bus);background:var(--bus-soft);color:var(--bus)}
+.fb-seg label:has(input:focus-visible){outline:3px solid var(--bus);outline-offset:2px}
+body.fb-only .page>section:not(#feedbackSec),body.fb-only #schoolContent>section:not(#feedbackSec){display:none!important}
+body.fb-only .page{max-width:640px}
+
 </style>
 </head>
 <body data-title="لوحة التحكم">
@@ -560,6 +587,7 @@ button.cal-day.today:hover{background:var(--navy-grad);filter:brightness(1.12)}
     <button class="nav-btn" data-view="drivers"><i class="fa-solid fa-id-card"></i> السائقون والحافلات <span class="badge" id="alertBadge" hidden></span></button>
     <button class="nav-btn" data-view="leaves"><i class="fa-solid fa-plane-departure"></i> الإجازات والغياب</button>
     <button class="nav-btn" data-view="subs"><i class="fa-solid fa-user-clock"></i> السائق البديل <span class="badge" id="subBadge" hidden style="background:var(--amber)"></span></button>
+    <button class="nav-btn" data-view="feedback"><i class="fa-solid fa-comment-dots"></i> الملاحظات والشكاوى <span class="badge" id="fbBadge" hidden></span></button>
     <button class="nav-btn" data-view="reports"><i class="fa-solid fa-chart-column"></i> التقارير</button>
     <button class="nav-btn admin-only" data-view="users"><i class="fa-solid fa-user-shield"></i> المستخدمون</button>
     <button class="nav-btn admin-only" data-view="settings"><i class="fa-solid fa-gear"></i> الإعدادات</button>
@@ -815,6 +843,29 @@ button.cal-day.today:hover{background:var(--navy-grad);filter:brightness(1.12)}
         </div>
       </section>
 
+      <!-- الملاحظات والشكاوى -->
+      <section data-panel="feedback" hidden style="flex-direction:column;gap:22px">
+        <div class="card panel">
+          <div class="panel-head"><h2><i class="fa-solid fa-link"></i> رابط نموذج الملاحظات</h2></div>
+          <p class="muted" style="margin:0">أرسل الرابط للسائقين أو أولياء الأمور. يفتحونه من الجوال ويكتبون ملاحظتهم أو شكواهم بدون تسجيل دخول.</p>
+          <div class="sc-link"><span class="muted"><i class="fa-solid fa-mobile-screen"></i> رابط الجوال</span><code class="num" id="fbLink"></code>
+            <span class="sc-act"><button type="button" class="btn sm" id="fbCopy"><i class="fa-solid fa-copy"></i> نسخ</button><a class="btn sm" id="fbOpen" target="_blank" rel="noopener"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></span></div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <a class="btn green" id="fbGroup" target="_blank" rel="noopener"><i class="fa-brands fa-whatsapp"></i> إرسال لقروب السائقين</a>
+            <button class="btn" type="button" id="fbEachBtn"><i class="fa-solid fa-users"></i> إرسال لكل سائق على حدة</button>
+          </div>
+          <div id="fbEach" hidden style="display:flex;flex-direction:column;gap:8px;max-height:360px;overflow:auto"></div>
+        </div>
+        <div class="card panel">
+          <div class="panel-head"><h2>الملاحظات والشكاوى</h2><span class="chip" id="fbCount"></span>
+            <div class="tools">
+              <select class="input" id="fbStatus" style="width:auto" aria-label="الحالة"><option value="open">المفتوحة</option><option value="new">جديدة</option><option value="progress">قيد المتابعة</option><option value="closed">مغلقة</option><option value="">الكل</option></select>
+              <select class="input" id="fbKind" style="width:auto" aria-label="النوع"><option value="">كل الأنواع</option><option value="complaint">شكوى</option><option value="note">ملاحظة</option><option value="suggestion">اقتراح</option></select>
+            </div></div>
+          <div id="fbList" style="display:flex;flex-direction:column;gap:12px"></div>
+        </div>
+      </section>
+
       <!-- المستخدمون -->
       <section data-panel="users" hidden>
         <div class="card panel">
@@ -824,13 +875,14 @@ button.cal-day.today:hover{background:var(--navy-grad);filter:brightness(1.12)}
             <label class="f">الإيميل<input type="email" class="input num" id="uEmail" required autocomplete="off"></label>
             <label class="f">كلمة مرور مؤقتة<input type="text" class="input" id="uPass" required minlength="6" autocomplete="off"></label>
             <label class="f">الصلاحية<select class="input" id="uRole"><option value="supervisor">مشرف</option><option value="admin">مدير</option></select></label>
+            <div class="f" id="uPermsWrap" style="grid-column:1/-1"><span>الأقسام اللي يقدر المشرف يدخلها</span><div class="perm-grid" id="uPerms"></div></div>
             <div style="display:flex;align-items:flex-end"><button class="btn primary"><i class="fa-solid fa-user-plus"></i> إضافة</button></div>
           </form>
-          <p class="muted" style="margin:0">المشرف يدير المناوبات والسائقين والإجازات والتنبيهات. المدير يقدر كذلك يغيّر الإعدادات ويضيف المستخدمين. أرسل للمستخدم إيميله وكلمة المرور المؤقتة، ويقدر يغيّرها بعد الدخول بالضغط على اسمه في القائمة.</p>
+          <p class="muted" style="margin:0">المدير يدخل كل الأقسام، ويقدر يغيّر الإعدادات ويضيف المستخدمين. المشرف يدخل الأقسام المحددة له بس. أرسل للمستخدم إيميله وكلمة المرور المؤقتة، ويقدر يغيّرها بعد الدخول بالضغط على اسمه في القائمة.</p>
         </div>
         <div class="card table-wrap">
           <table class="data">
-            <thead><tr><th>الاسم</th><th>الإيميل</th><th>الصلاحية</th><th></th></tr></thead>
+            <thead><tr><th>الاسم</th><th>الإيميل</th><th>الصلاحية</th><th>الأقسام</th><th></th></tr></thead>
             <tbody id="userBody"></tbody>
           </table>
         </div>
@@ -928,6 +980,15 @@ button.cal-day.today:hover{background:var(--navy-grad);filter:brightness(1.12)}
       <label class="f">ملاحظات<input class="input" id="vNotes"></label>
       <label class="check"><input type="checkbox" id="vActive" checked> سائق نشط (يدخل في التوزيع)</label>
     </div>
+    <div class="dlg-foot"><button class="btn primary" value="save">حفظ</button><button class="btn ghost" value="cancel" formnovalidate>إلغاء</button></div>
+  </form>
+</dialog>
+
+<!-- نافذة صلاحيات المشرف -->
+<dialog id="permDlg" style="width:min(480px,calc(100vw - 32px))">
+  <form method="dialog">
+    <div class="dlg-head"><h3 id="permTitle">صلاحيات المشرف</h3><button class="btn icon ghost" value="cancel" formnovalidate aria-label="إغلاق"><i class="fa-solid fa-xmark"></i></button></div>
+    <div class="dlg-body"><p class="muted" style="margin:0">اختر الأقسام اللي يقدر يدخلها ويعدّل فيها.</p><div class="perm-grid" id="permBoxes"></div></div>
     <div class="dlg-foot"><button class="btn primary" value="save">حفظ</button><button class="btn ghost" value="cancel" formnovalidate>إلغاء</button></div>
   </form>
 </dialog>
@@ -1487,7 +1548,58 @@ const I18N = (() => {
 "بحث بالاسم أو الرمز": "Search by name or code",
 "نظام إدارة مناوبات الحافلات": "Bus duty management system",
 "حذف المدرسة نهائياً": "Delete school permanently",
-"حذف نهائي": "Delete permanently"
+"حذف نهائي": "Delete permanently",
+"{n} ملاحظة أو شكوى جديدة": "{n} new notes or complaints",
+"كل الأقسام": "All sections",
+"بدون أقسام": "No sections",
+"تعديل الأقسام": "Edit sections",
+"اختر قسماً واحداً على الأقل": "Choose at least one section",
+"أقسام {name}": "Sections for {name}",
+"تم حفظ الصلاحيات": "Permissions saved",
+"{n} رسالة": "{n} messages",
+"بدون اسم": "No name",
+"ملاحظة داخلية: وش تم بخصوصها؟": "Internal note: what was done about it?",
+"لا توجد رسائل بهذا التصنيف": "No messages in this filter",
+"ما وصلت أي ملاحظات بعد. أرسل الرابط للسائقين.": "No feedback yet. Send the link to the drivers.",
+"حذف الرسالة": "Delete message",
+"حذف هذه الرسالة نهائياً؟": "Delete this message permanently?",
+"تم الحذف": "Deleted",
+"اكتب رسالتك (3 أحرف على الأقل).": "Write your message (at least 3 characters).",
+"موقع المدرسة غير متاح حالياً.": "The school site is not available right now.",
+"وصلت رسائل كثيرة الحين، حاول بعد شوي.": "Too many messages right now, try again shortly.",
+"شكوى": "Complaint",
+"ملاحظة": "Note",
+"اقتراح": "Suggestion",
+"ولي أمر": "Parent",
+"موظف": "Staff",
+"أخرى": "Other",
+"جديدة": "New",
+"قيد المتابعة": "In progress",
+"مغلقة": "Closed",
+"المناوبات والتوزيع بالدور": "Duties & rotation",
+"الإجازات والسائق البديل": "Leaves & substitutes",
+"الملاحظات والشكاوى": "Feedback & complaints",
+"رابط نموذج الملاحظات": "Feedback form link",
+"أرسل الرابط للسائقين أو أولياء الأمور. يفتحونه من الجوال ويكتبون ملاحظتهم أو شكواهم بدون تسجيل دخول.": "Send the link to drivers or parents. They open it on their phone and write their note or complaint without signing in.",
+"رابط الجوال": "Mobile link",
+"إرسال لقروب السائقين": "Send to drivers' group",
+"إرسال لكل سائق على حدة": "Send to each driver",
+"المفتوحة": "Open",
+"الكل": "All",
+"كل الأنواع": "All types",
+"الأقسام اللي يقدر المشرف يدخلها": "Sections the supervisor can access",
+"المدير يدخل كل الأقسام، ويقدر يغيّر الإعدادات ويضيف المستخدمين. المشرف يدخل الأقسام المحددة له بس. أرسل للمستخدم إيميله وكلمة المرور المؤقتة، ويقدر يغيّرها بعد الدخول بالضغط على اسمه في القائمة.": "Admins access all sections and can change settings and add users. Supervisors only access the sections chosen for them. Send the user their email and temporary password; they can change it after signing in by clicking their name in the menu.",
+"الأقسام": "Sections",
+"صلاحيات المشرف": "Supervisor permissions",
+"اختر الأقسام اللي يقدر يدخلها ويعدّل فيها.": "Choose the sections they can access and edit.",
+"رأيك يهمنا. اكتب ملاحظتك أو شكواك أو اقتراحك بخصوص النقل المدرسي، وتوصل مباشرة لإدارة المدرسة.": "Your opinion matters. Write your note, complaint or suggestion about school transport, and it goes straight to the school's management.",
+"نوع الرسالة": "Message type",
+"الرسالة": "Message",
+"اسمك (اختياري)": "Your name (optional)",
+"رقم هاتفك للتواصل (اختياري)": "Your phone for follow-up (optional)",
+"وصلت رسالتك، شكراً لك": "Your message was received, thank you",
+"إدارة المدرسة بتطّلع عليها.": "The school's management will review it.",
+"إرسال رسالة ثانية": "Send another message"
 };
   const fill = (s, v) => v ? String(s).replace(/\{(\w+)\}/g, (m, k) => k in v ? v[k] : m) : s;
   // مفتاح بالشكل 'نص|سياق' يُعرض عربياً بالجزء الأول فقط
@@ -1576,6 +1688,7 @@ const Store = (() => {
       leaves: [],   // {id,driverId,from,to,reason}
       subs: [],     // {id,driverId,name,phone,busNo,from,to,note,source} سائق بديل مؤقت
       duty_tokens: [], // {id: رقم المناوبة, token} لرابط البديل
+      feedback: [],    // ملاحظات وشكاوى الصفحة العامة
       log: []       // {t,msg}
     };
   }
@@ -1824,6 +1937,7 @@ const Cloud = (() => {
     leaves: ['id', 'driverId', 'from', 'to', 'reason'],
     subs: ['id', 'driverId', 'name', 'phone', 'busNo', 'from', 'to', 'note', 'source'],
     duty_tokens: ['id', 'token'],
+    feedback: ['id', 'kind', 'sender', 'name', 'phone', 'message', 'status', 'reply', 'createdAt'],
     log: ['id', 't', 'msg', 'by']
   };
   const MAP = {
@@ -1832,6 +1946,7 @@ const Cloud = (() => {
     leaves: { driverId: 'driver_id', from: 'date_from', to: 'date_to' },
     subs: { driverId: 'driver_id', busNo: 'bus_no', from: 'date_from', to: 'date_to' },
     duty_tokens: {},
+    feedback: { createdAt: 'created_at' },
     log: { by: 'by_name' }
   };
   const toRow = (t, o) => { const r = { school_id: SID }; COLS[t].forEach(k => { const v = o[k]; r[MAP[t][k] || k] = v === undefined || v === '' ? null : v; }); return r; };
@@ -1842,8 +1957,10 @@ const Cloud = (() => {
   const clean = o => JSON.parse(JSON.stringify(o));
   const windowStart = () => S().addDays(S().today(), -365);
 
-  let shadow = { settings: null, rotation: null, drivers: {}, duties: {}, leaves: {}, subs: {}, duty_tokens: {} };
-  let tokensReady = false;
+  let shadow = { settings: null, rotation: null, drivers: {}, duties: {}, leaves: {}, subs: {}, duty_tokens: {}, feedback: {} };
+  let tokensReady = false, feedbackReady = false;
+  // صلاحية قسم: المدير له كل شي، والمشرف حسب قائمته (بدون قائمة = كل الأقسام)
+  const can = perm => !!profile && (profile.role === 'admin' || !Array.isArray(profile.perms) || profile.perms.includes(perm));
   let profile = null, users = [], settingsLoaded = false, setupInProgress = false, channel = null, poll = null, mode = null;
   const listeners = { change: [], status: [], recovery: [] };
   const emit = (k, v) => listeners[k].forEach(f => f(v));
@@ -1954,12 +2071,13 @@ const Cloud = (() => {
     stop(); mode = 'staff';
     try {
       await Promise.all([loadSettings(), loadTable('drivers'), loadTable('duties'), loadTable('leaves'), loadTable('subs'), loadLog(),
-        loadTable('duty_tokens').then(() => { tokensReady = true; }, () => { tokensReady = false; })]);
+        loadTable('duty_tokens').then(() => { tokensReady = true; }, () => { tokensReady = false; }),
+        can('feedback') ? loadTable('feedback').then(() => { feedbackReady = true; }, () => { feedbackReady = false; }) : (feedbackReady = false)]);
       if (profile.role === 'admin') await loadUsers();
       changed();
     } catch (e) { fail(e); }
-    listen(['settings', 'drivers', 'duties', 'leaves', 'subs', 'log', 'profiles'], {});
-    poll = setInterval(() => { if (!document.hidden) reload(['settings', 'drivers', 'duties', 'leaves', 'subs', 'log']); }, 120000);
+    listen(['settings', 'drivers', 'duties', 'leaves', 'subs', 'log', 'profiles'].concat(feedbackReady ? ['feedback'] : []), {});
+    poll = setInterval(() => { if (!document.hidden) reload(['settings', 'drivers', 'duties', 'leaves', 'subs', 'log'].concat(feedbackReady ? ['feedback'] : [])); }, 120000);
   }
 
   /* ===== الحفظ ===== */
@@ -1977,7 +2095,7 @@ const Cloud = (() => {
     }
     // رموز المناوبات المحذوفة تنحذف معها
     if (tokensReady) { const ids = new Set(db.duties.map(x => x.id)); db.duty_tokens = (db.duty_tokens || []).filter(x => ids.has(x.id)); }
-    ['drivers', 'duties', 'leaves', 'subs'].concat(tokensReady ? ['duty_tokens'] : []).forEach(t => {
+    ['drivers', 'duties', 'leaves', 'subs'].concat(tokensReady ? ['duty_tokens'] : [], feedbackReady ? ['feedback'] : []).forEach(t => {
       const up = [], seen = new Set();
       db[t].forEach(x => {
         if (!x.id) x.id = S().uid();
@@ -2093,23 +2211,24 @@ const Cloud = (() => {
   }
 
   // المدير يضيف مستخدماً بدون الخروج من حسابه (اتصال مؤقت منفصل)
-  async function addUser({ name, email, password, role }) {
+  async function addUser({ name, email, password, role, perms }) {
     const tmp = window.supabase.createClient(URL_, KEY_, { auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false, storageKey: 'tmp-' + Date.now() } });
     const data = must(await tmp.auth.signUp({ email: email.trim(), password }));
     const uid = data.user && data.user.id;
     if (!uid) throw new Error('signup');
-    must(await sb.from('profiles').insert({ id: uid, school_id: SID, name, email: email.trim(), role }));
+    must(await sb.from('profiles').insert({ id: uid, school_id: SID, name, email: email.trim(), role, perms: role === 'admin' ? null : perms }));
     await loadUsers();
   }
   // دوال البديل من الرابط (بدون تسجيل دخول)
   async function rpc(fn, args) { return must(await sb.rpc(fn, args)); }
+  async function setPerms(uid, perms) { must(await sb.from('profiles').update({ perms }).eq('id', uid)); await loadUsers(); }
   async function setRole(uid, role) { must(await sb.from('profiles').update({ role }).eq('id', uid)); await loadUsers(); }
   async function removeUser(uid) { must(await sb.from('profiles').delete().eq('id', uid)); await loadUsers(); }
 
   return {
     configured, get ready() { return !!sb; }, on, save, watchAuth, signIn, signOut, resetPassword, updatePassword, setup, canBootstrap, acceptInvite,
     get schoolId() { return SID; }, get school() { return school; }, setSchool, validSlug, pageUrl, loadSchool, listSchools, isSuper: () => !!profile && !!profile.isSuper,
-    addUser, setRole, removeUser, subscribePublic, errText, rpc, get tokensReady() { return tokensReady; },
+    addUser, setRole, setPerms, can, get feedbackReady() { return feedbackReady; }, removeUser, subscribePublic, errText, rpc, get tokensReady() { return tokensReady; },
     get signedIn() { return !!currentUser; }, get settingsLoaded() { return settingsLoaded; },
     get profile() { return profile; }, get users() { return users; }, isAdmin: () => !!profile && profile.role === 'admin'
   };
@@ -2123,18 +2242,24 @@ const Cloud = (() => {
   const db = () => S.db;
   // حفظ التغيير. rebuildFrom: إعادة ترتيب قائمة الدور ابتداءً من هذا التاريخ
   const commit = (msg, rebuildFrom) => { if (rebuildFrom) autoRebuild(rebuildFrom); if (msg) S.log(msg); S.save(); renderAll(); };
-  const TITLES = { dash: 'الرئيسية', schedule: 'جدول المناوبات', auto: 'التوزيع بالدور', drivers: 'السائقون والحافلات', leaves: 'الإجازات والغياب', subs: 'السائق البديل', notify: 'تنبيهات واتساب', reports: 'التقارير', settings: 'الإعدادات', users: 'المستخدمون' };
+  const TITLES = { feedback: 'الملاحظات والشكاوى', dash: 'الرئيسية', schedule: 'جدول المناوبات', auto: 'التوزيع بالدور', drivers: 'السائقون والحافلات', leaves: 'الإجازات والغياب', subs: 'السائق البديل', notify: 'تنبيهات واتساب', reports: 'التقارير', settings: 'الإعدادات', users: 'المستخدمون' };
   let view = 'dash';
 
   /* ========== الدخول ========== */
   const SCREENS = ['noConfig', 'login', 'inactive', 'setup', 'invite', 'app'];
   const show = id => SCREENS.forEach(s => $('#' + s).hidden = s !== id);
+  // الأقسام وصلاحياتها
+  const PERMS = [['schedule', 'المناوبات والتوزيع بالدور'], ['drivers', 'السائقون والحافلات'], ['leaves', 'الإجازات والسائق البديل'], ['notify', 'تنبيهات واتساب'], ['reports', 'التقارير'], ['feedback', 'الملاحظات والشكاوى']];
+  const VIEW_PERM = { schedule: 'schedule', auto: 'schedule', drivers: 'drivers', leaves: 'leaves', subs: 'leaves', notify: 'notify', reports: 'reports', feedback: 'feedback' };
+  const canView = v => ['settings', 'users'].includes(v) ? Cloud.isAdmin() : !VIEW_PERM[v] || Cloud.can(VIEW_PERM[v]);
   function applyRole() {
     const admin = Cloud.isAdmin(), p = Cloud.profile;
     $$('.admin-only').forEach(el => el.hidden = !admin);
+    $$('.nav-btn[data-view]').forEach(b => { if (!b.classList.contains('admin-only')) b.hidden = !canView(b.dataset.view); });
+    $('#quickAdd').hidden = !Cloud.can('schedule');
     $('#whoami').textContent = p ? `${p.name || p.email} · ${admin ? T('مدير') : T('مشرف')}` : '';
   }
-  function showApp() { show('app'); applyRole(); if (!Cloud.isAdmin() && ['settings', 'users'].includes(view)) view = 'dash'; renderAll(); }
+  function showApp() { show('app'); applyRole(); if (!canView(view)) view = 'dash'; go(view); }
   $('#loginForm').onsubmit = async e => {
     e.preventDefault();
     const b = e.submitter; if (b) b.disabled = true;
@@ -2203,7 +2328,7 @@ const Cloud = (() => {
 
   /* ========== التنقل ========== */
   function go(v) {
-    if (!Cloud.isAdmin() && ['settings', 'users'].includes(v)) v = 'dash';
+    if (!canView(v)) v = 'dash';
     view = v;
     $$('.nav-btn[data-view]').forEach(b => b.classList.toggle('on', b.dataset.view === v));
     $$('[data-panel]').forEach(p => p.hidden = p.dataset.panel !== v);
@@ -2279,7 +2404,9 @@ const Cloud = (() => {
     const offDuty = db().duties.filter(x => x.date >= t && S.holidayOn(x.date)).map(x => ({ level: 'warn', driver: S.driver(x.driverId), text: T('لديه مناوبة يوم {day} {date} وهو {off}', { day: S.dayName(x.date), date: S.fmtShort(x.date), off: S.offLabel(x.date) }) }));
     // بدلاء حطهم السائقون بأنفسهم من رابط واتساب
     const linkSubs = db().subs.filter(b => b.source === 'link' && b.to >= t).sort((a, b) => a.from.localeCompare(b.from)).map(b => ({ level: 'info', icon: 'fa-user-clock" style="color:var(--amber)', driver: S.driver(b.driverId), goto: 'subs', text: T('وضع بديلاً عنه يوم {day} {date}: {name}', { day: S.dayName(b.from), date: S.fmtShort(b.from), name: b.name }) }));
-    const all = [...linkSubs, ...rotAlert, ...conflicts, ...offDuty, ...S.alerts()];
+    const newFb = Cloud.can('feedback') ? db().feedback.filter(x => x.status === 'new').length : 0;
+    const fbAlert = newFb ? [{ level: 'warn', icon: 'fa-comment-dots" style="color:var(--red)', goto: 'feedback', text: T('{n} ملاحظة أو شكوى جديدة', { n: newFb }) }] : [];
+    const all = [...fbAlert, ...linkSubs, ...rotAlert, ...conflicts, ...offDuty, ...S.alerts()];
     const ic = { bad: 'fa-circle-exclamation" style="color:var(--red)', warn: 'fa-clock" style="color:var(--amber)', info: 'fa-circle-info" style="color:var(--blue)' };
     $('#alertCount').textContent = all.length;
     $('#alertsList').innerHTML = all.length ? all.map(a => `<div class="alert-row"><i class="fa-solid ${a.icon || ic[a.level]}"></i><span>${a.driver ? `<strong>${S.esc(a.driver.name)}</strong> – ` : ''}${S.esc(a.text)}</span>
@@ -2972,20 +3099,30 @@ const Cloud = (() => {
   $('#sLogoRemove').onclick = () => { db().settings.logo = ''; commit('إزالة شعار المدرسة'); S.toast(T('تمت إزالة الشعار')); };
 
   /* ========== المستخدمون ========== */
+  const permBoxes = (el, sel) => { el.innerHTML = PERMS.map(([k, l]) => `<label><input type="checkbox" value="${k}" ${!sel || sel.includes(k) ? 'checked' : ''}> ${T(l)}</label>`).join(''); };
+  const permChips = u => u.role === 'admin' ? `<span class="chip ok">${T('كل الأقسام')}</span>`
+    : !Array.isArray(u.perms) ? `<span class="chip">${T('كل الأقسام')}</span>`
+    : u.perms.length ? PERMS.filter(([k]) => u.perms.includes(k)).map(([, l]) => `<span class="chip">${T(l)}</span>`).join(' ') : `<span class="chip warn">${T('بدون أقسام')}</span>`;
+  $('#uRole').onchange = () => { $('#uPermsWrap').hidden = $('#uRole').value === 'admin'; };
   function renderUsers() {
+    if (!$('#uPerms').children.length) permBoxes($('#uPerms'), null);
+    $('#uPermsWrap').hidden = $('#uRole').value === 'admin';
     const me = Cloud.profile || {};
     $('#userBody').innerHTML = Cloud.users.map(u => {
       const self = u.id === me.id, role = u.role === 'admin' ? T('مدير') : T('مشرف');
       return `<tr><td><strong>${S.esc(u.name)}</strong>${self ? ` <span class="chip">${T('أنت')}</span>` : ''}</td><td class="num">${S.esc(u.email)}</td>
         <td>${self ? role : `<select class="input" data-role="${u.id}" style="width:auto" aria-label="${T('الصلاحية')}"><option value="supervisor"${u.role !== 'admin' ? ' selected' : ''}>${T('مشرف')}</option><option value="admin"${u.role === 'admin' ? ' selected' : ''}>${T('مدير')}</option></select>`}</td>
+        <td><div style="display:flex;gap:4px;flex-wrap:wrap;align-items:center;justify-content:center">${permChips(u)}${!self && u.role !== 'admin' ? ` <button class="btn sm icon" data-edit-perms="${u.id}" title="${T('تعديل الأقسام')}" aria-label="${T('تعديل الأقسام')}"><i class="fa-solid fa-sliders"></i></button>` : ''}</div></td>
         <td>${self ? '' : `<button class="btn sm icon" data-del-user="${u.id}" aria-label="${T('إزالة')}"><i class="fa-solid fa-trash" style="color:var(--red)"></i></button>`}</td></tr>`;
-    }).join('') || `<tr><td colspan="4" class="empty-state">${T('لا يوجد مستخدمون')}</td></tr>`;
+    }).join('') || `<tr><td colspan="5" class="empty-state">${T('لا يوجد مستخدمون')}</td></tr>`;
   }
   $('#userForm').onsubmit = async e => {
     e.preventDefault();
     const b = e.submitter; if (b) b.disabled = true;
-    const data = { name: $('#uName').value.trim(), email: $('#uEmail').value, password: $('#uPass').value, role: $('#uRole').value };
-    try { await Cloud.addUser(data); S.log(`إضافة المستخدم ${data.name}`); S.save(); $('#userForm').reset(); S.toast(T('تمت إضافة {name}', { name: data.name })); }
+    const data = { name: $('#uName').value.trim(), email: $('#uEmail').value, password: $('#uPass').value, role: $('#uRole').value, perms: $$('#uPerms input:checked').map(i => i.value) };
+    if (data.role !== 'admin' && !data.perms.length) { if (b) b.disabled = false; return S.toast(T('اختر قسماً واحداً على الأقل'), true); }
+    if (data.perms.length === PERMS.length) data.perms = null; // كل الأقسام
+    try { await Cloud.addUser(data); S.log(`إضافة المستخدم ${data.name}`); S.save(); $('#userForm').reset(); permBoxes($('#uPerms'), null); $('#uPermsWrap').hidden = false; S.toast(T('تمت إضافة {name}', { name: data.name })); }
     catch (err) { S.toast(Cloud.errText(err), true); }
     if (b) b.disabled = false;
   };
@@ -2993,11 +3130,70 @@ const Cloud = (() => {
     const s = e.target.closest('select[data-role]'); if (!s) return;
     try { await Cloud.setRole(s.dataset.role, s.value); S.toast(T('تم تغيير الصلاحية')); } catch (err) { S.toast(Cloud.errText(err), true); }
   });
+  document.addEventListener('click', e => {
+    const b = e.target.closest('[data-edit-perms]'); if (!b) return;
+    const u = Cloud.users.find(x => x.id === b.dataset.editPerms); if (!u) return;
+    $('#permTitle').textContent = T('أقسام {name}', { name: u.name || u.email });
+    permBoxes($('#permBoxes'), Array.isArray(u.perms) ? u.perms : null);
+    const d = $('#permDlg'); d.returnValue = ''; d.showModal();
+    d.addEventListener('close', async () => {
+      if (d.returnValue !== 'save') return;
+      let perms = $$('#permBoxes input:checked').map(i => i.value);
+      if (perms.length === PERMS.length) perms = null;
+      try { await Cloud.setPerms(u.id, perms); S.log(`تعديل أقسام المستخدم ${u.name}`); S.save(); S.toast(T('تم حفظ الصلاحيات')); renderUsers(); } catch (err) { S.toast(Cloud.errText(err), true); }
+    }, { once: true });
+  });
   document.addEventListener('click', async e => {
     const b = e.target.closest('[data-del-user]'); if (!b) return;
     const u = Cloud.users.find(x => x.id === b.dataset.delUser); if (!u) return;
     if (!await ask(T('إزالة المستخدم'), T('إزالة {name}؟ لن يقدر يدخل لوحة التحكم بعد الآن.', { name: u.name }), T('إزالة'))) return;
     try { await Cloud.removeUser(u.id); S.log(`إزالة المستخدم ${u.name}`); S.save(); S.toast(T('تمت الإزالة')); } catch (err) { S.toast(Cloud.errText(err), true); }
+  });
+
+  /* ========== الملاحظات والشكاوى ========== */
+  const FB_KIND = { complaint: 'شكوى', note: 'ملاحظة', suggestion: 'اقتراح' };
+  const FB_SENDER = { driver: 'سائق', parent: 'ولي أمر', staff: 'موظف', other: 'أخرى' };
+  const FB_STATUS = { new: 'جديدة', progress: 'قيد المتابعة', closed: 'مغلقة' };
+  const fbLink = () => Cloud.pageUrl('index.html', { f: '1' });
+  const fbMsg = name => `السلام عليكم${name ? ' ' + name : ''}،\nلأي ملاحظة أو شكوى أو اقتراح بخصوص النقل المدرسي في ${db().settings.school || ''}، اكتبها من هذا الرابط:\n${fbLink()}\nشاكرين تعاونكم.`;
+  function renderFeedback() {
+    $('#fbLink').textContent = fbLink(); $('#fbOpen').href = fbLink();
+    $('#fbGroup').href = S.waLink('', fbMsg(''));
+    $('#fbEach').innerHTML = db().drivers.filter(d => d.active).map(d => `<div class="alert-row"><strong>${S.esc(d.name)}</strong>${d.phone ? `<a class="btn sm green" style="margin-inline-start:auto" href="${S.waLink(d.phone, fbMsg(d.name))}" target="_blank" rel="noopener"><i class="fa-brands fa-whatsapp"></i> ${T('إرسال')}</a>` : `<span class="chip bad" style="margin-inline-start:auto">${T('لا يوجد رقم')}</span>`}</div>`).join('') || `<div class="empty-state">${T('لا يوجد سائقون نشطون')}</div>`;
+    if (!Cloud.feedbackReady) { $('#fbList').innerHTML = `<div class="alert-row" style="background:var(--red-soft);color:var(--red)"><i class="fa-solid fa-triangle-exclamation"></i> ${T('قاعدة البيانات تحتاج تحديث: شغّل ملف supabase.sql مرة ثانية')}</div>`; return; }
+    const st = $('#fbStatus').value, kd = $('#fbKind').value;
+    const all = db().feedback.slice().sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)));
+    const list = all.filter(x => (st === 'open' ? x.status !== 'closed' : !st || x.status === st) && (!kd || x.kind === kd));
+    $('#fbCount').textContent = T('{n} رسالة', { n: list.length });
+    $('#fbList').innerHTML = list.map(x => {
+      const when = x.createdAt ? new Date(x.createdAt).toLocaleString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '';
+      const contact = x.phone ? `<a class="btn sm" href="tel:${S.esc(x.phone)}"><i class="fa-solid fa-phone"></i> <span class="num">${S.esc(x.phone)}</span></a><a class="btn sm green" href="${S.waLink(x.phone, '')}" target="_blank" rel="noopener"><i class="fa-brands fa-whatsapp"></i></a>` : '';
+      return `<article class="fb-item ${x.status}">
+        <div class="fb-top"><span class="chip kind-${x.kind}">${T(FB_KIND[x.kind] || x.kind)}</span><span class="chip">${T(FB_SENDER[x.sender] || 'أخرى')}</span>
+          ${x.name ? `<strong>${S.esc(x.name)}</strong>` : `<span class="muted">${T('بدون اسم')}</span>`}<span class="muted num" style="margin-inline-start:auto">${when}</span></div>
+        <div class="fb-msg">${S.esc(x.message)}</div>
+        <div class="fb-row">
+          <select class="input" data-fb-status="${x.id}" style="width:auto" aria-label="${T('الحالة')}">${Object.entries(FB_STATUS).map(([k, l]) => `<option value="${k}"${x.status === k ? ' selected' : ''}>${T(l)}</option>`).join('')}</select>
+          <input class="input" data-fb-reply="${x.id}" value="${S.esc(x.reply)}" placeholder="${T('ملاحظة داخلية: وش تم بخصوصها؟')}">
+          <span style="display:flex;gap:6px">${contact}<button class="btn sm icon" data-fb-del="${x.id}" aria-label="${T('حذف')}"><i class="fa-solid fa-trash" style="color:var(--red)"></i></button></span>
+        </div></article>`;
+    }).join('') || `<div class="empty-state">${all.length ? T('لا توجد رسائل بهذا التصنيف') : T('ما وصلت أي ملاحظات بعد. أرسل الرابط للسائقين.')}</div>`;
+  }
+  $('#fbStatus').onchange = renderFeedback; $('#fbKind').onchange = renderFeedback;
+  $('#fbEachBtn').onclick = () => { $('#fbEach').hidden = !$('#fbEach').hidden; };
+  $('#fbCopy').onclick = async () => { try { await navigator.clipboard.writeText(fbLink()); S.toast(T('تم النسخ')); } catch (_) { window.prompt(T('انسخ الرابط:'), fbLink()); } };
+  document.addEventListener('change', e => {
+    const s = e.target.closest('[data-fb-status]'), r = e.target.closest('[data-fb-reply]');
+    const x = s ? db().feedback.find(y => y.id === s.dataset.fbStatus) : r ? db().feedback.find(y => y.id === r.dataset.fbReply) : null;
+    if (!x) return;
+    if (s) { x.status = s.value; commit(`تغيير حالة ${FB_KIND[x.kind] || 'ملاحظة'} إلى: ${FB_STATUS[x.status]}`); }
+    else { x.reply = r.value.trim(); S.save(); S.toast(T('تم الحفظ')); }
+  });
+  document.addEventListener('click', async e => {
+    const b = e.target.closest('[data-fb-del]'); if (!b) return;
+    const x = db().feedback.find(y => y.id === b.dataset.fbDel); if (!x) return;
+    if (!await ask(T('حذف الرسالة'), T('حذف هذه الرسالة نهائياً؟'), T('حذف'))) return;
+    db().feedback = db().feedback.filter(y => y !== x); commit(`حذف ${FB_KIND[x.kind] || 'ملاحظة'}`); S.toast(T('تم الحذف'));
   });
 
   /* ========== التحديث العام ========== */
@@ -3012,7 +3208,9 @@ const Cloud = (() => {
     $('#notifyBadge').hidden = !np; $('#notifyBadge').textContent = np;
     const ns = db().subs.filter(b => b.from <= S.today() && S.today() <= b.to).length;
     $('#subBadge').hidden = !ns; $('#subBadge').textContent = ns;
-    ({ dash: renderDash, schedule: renderSchedule, auto: initAuto, drivers: renderDrivers, leaves: renderLeaves, subs: renderSubs, notify: renderNotify, users: renderUsers, reports: renderReports, settings: renderSettings })[view]();
+    const nf = Cloud.can('feedback') ? db().feedback.filter(x => x.status === 'new').length : 0;
+    $('#fbBadge').hidden = !nf; $('#fbBadge').textContent = nf;
+    ({ dash: renderDash, schedule: renderSchedule, auto: initAuto, drivers: renderDrivers, leaves: renderLeaves, subs: renderSubs, feedback: renderFeedback, notify: renderNotify, users: renderUsers, reports: renderReports, settings: renderSettings })[view]();
   }
   Cloud.on('change', () => { S.brand(); if (!draftDirty) draft = null; if (!$('#app').hidden) renderAll(); });
   Cloud.on('status', s => {
