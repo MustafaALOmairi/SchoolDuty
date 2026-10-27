@@ -1398,6 +1398,7 @@ const Cloud = (() => {
   let school = null; // {id, name, active}
   function setSchool(id) {
     SID = id;
+    if (/schools\.html$/.test(location.pathname)) return; // صفحة المدارس ما تتبع مدرسة
     try { const u = new URL(location.href); u.searchParams.set('s', id); history.replaceState(null, '', u); } catch (e) {}
   }
   const pageUrl = (page, extra) => { const u = new URL(page, location.href); if (SID) u.searchParams.set('s', SID); Object.entries(extra || {}).forEach(([k, v]) => u.searchParams.set(k, v)); return u.href; };
@@ -1872,11 +1873,8 @@ const Cloud = (() => {
   }
   async function start() {
     try {
-      if (!Cloud.schoolId) {
-        const list = await Cloud.listSchools();
-        if (list.length === 1) Cloud.setSchool(list[0].id);
-        else return pick(T('اختر المدرسة'), list.length ? '' : T('ما فيه مدارس مسجلة بعد.'), list);
-      }
+      // الرابط الأساسي بدون رمز مدرسة يفتح صفحة المدارس
+      if (!Cloud.schoolId) return location.replace('schools.html');
       const sc = await Cloud.loadSchool();
       if (!sc) return pick(T('المدرسة غير موجودة'), T('تأكد من الرابط اللي وصلك من المدرسة.'), []);
       if (!sc.active) return pick(T('موقع المدرسة موقوف'), T('موقع هذه المدرسة موقوف حالياً.'), []);
