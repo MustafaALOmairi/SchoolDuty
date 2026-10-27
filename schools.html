@@ -1,0 +1,1822 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>إدارة المدارس</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<script>try{var L=localStorage.getItem('school-bus-lang');if(L==='en'){document.documentElement.lang='en';document.documentElement.dir='ltr';}}catch(e){}</script>
+<style>
+/* نظام مناوبات الحافلات – مدرسة فدى
+   الثيم الأصلي: كحلي متدرج (#2c3e50 ← #4a6491)، أزرار ملونة دائرية، خلفية زرقاء فاتحة. */
+:root{
+  --bg:#e9eef8; --bg-grad:linear-gradient(135deg,#e0e5f0,#f0f5ff); --surface:#ffffff; --surface-2:#f0f5ff; --ink:#333; --muted:#6c7a92; --line:#e0e5f0;
+  --bus:#4a6491; --bus-ink:#ffffff; --bus-soft:#eef2ff;
+  --night:#2c3e50; --night-2:#4a6491; --night-ink:#ffffff;
+  --navy-grad:linear-gradient(90deg,#2c3e50,#4a6491); --band-grad:linear-gradient(90deg,#4a6491,#2c3e50); --th-grad:linear-gradient(135deg,#e0e5f0,#d0d5e0);
+  --green:#27ae60; --green-soft:#e0ffe0; --red:#e74c3c; --red-soft:#fde6e3; --blue:#3498db; --blue-soft:#e3f0fb; --amber:#e67e22; --amber-soft:#fdf0dc; --purple:#8e44ad;
+  --shadow:0 8px 20px rgba(0,0,0,.1);
+  --r:15px;
+  --f-display:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;
+  --f-body:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#141b26; --bg-grad:linear-gradient(135deg,#121822,#1a2332); --surface:#1c2533; --surface-2:#232e40; --ink:#e8ecf3; --muted:#9aa6bb; --line:#2e3a4f;
+  --bus:#7d9bd3; --bus-ink:#ffffff; --bus-soft:#24314a;
+  --night:#1b2636; --night-2:#34486b; --night-ink:#ffffff;
+  --navy-grad:linear-gradient(90deg,#1b2636,#34486b); --band-grad:linear-gradient(90deg,#34486b,#1b2636); --th-grad:linear-gradient(135deg,#263247,#2d3a52);
+  --green:#3fbf75; --green-soft:#183626; --red:#f0695a; --red-soft:#3b1f1b; --blue:#5aaee8; --blue-soft:#1b2e40; --amber:#f0a43c; --amber-soft:#3a2a12; --purple:#b07acc;
+  --shadow:0 8px 20px rgba(0,0,0,.35); color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#141b26; --bg-grad:linear-gradient(135deg,#121822,#1a2332); --surface:#1c2533; --surface-2:#232e40; --ink:#e8ecf3; --muted:#9aa6bb; --line:#2e3a4f;
+  --bus:#7d9bd3; --bus-ink:#ffffff; --bus-soft:#24314a;
+  --night:#1b2636; --night-2:#34486b; --night-ink:#ffffff;
+  --navy-grad:linear-gradient(90deg,#1b2636,#34486b); --band-grad:linear-gradient(90deg,#34486b,#1b2636); --th-grad:linear-gradient(135deg,#263247,#2d3a52);
+  --green:#3fbf75; --green-soft:#183626; --red:#f0695a; --red-soft:#3b1f1b; --blue:#5aaee8; --blue-soft:#1b2e40; --amber:#f0a43c; --amber-soft:#3a2a12; --purple:#b07acc;
+  --shadow:0 8px 20px rgba(0,0,0,.35); color-scheme:dark}
+
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);background-image:var(--bg-grad);background-attachment:fixed;color:var(--ink);font:15px/1.6 var(--f-body)}
+h1,h2,h3{font-family:var(--f-display);line-height:1.3;margin:0;text-wrap:balance}
+a{color:inherit}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--bus);outline-offset:2px}
+.num{font-variant-numeric:tabular-nums;direction:ltr;unicode-bidi:isolate}
+.muted{color:var(--muted)}
+.hide,[hidden]{display:none!important}
+
+/* شريط الطريق */
+.road{height:14px;background:var(--night);position:relative}
+.road::after{content:"";position:absolute;inset:6px 0 auto;height:2px;
+  background:repeating-linear-gradient(90deg,var(--bus) 0 28px,transparent 28px 52px)}
+
+/* أزرار */
+.btn{display:inline-flex;align-items:center;gap:8px;border:1px solid transparent;border-radius:10px;padding:9px 16px;
+  cursor:pointer;font-weight:600;background:var(--surface-2);color:var(--ink);border-color:var(--line);transition:transform .12s,background .12s;white-space:nowrap;text-decoration:none}
+.btn:hover{transform:translateY(-1px)}
+.btn.primary{background:var(--bus);color:var(--bus-ink);border-color:var(--bus)}
+.btn.dark{background:var(--night);color:var(--night-ink);border-color:var(--night)}
+.btn.green{background:var(--green);color:#fff;border-color:var(--green)}
+.btn.danger{background:var(--red);color:#fff;border-color:var(--red)}
+.btn.ghost{background:transparent}
+.btn.sm{padding:5px 10px;font-size:13px;border-radius:8px}
+.btn.icon{padding:7px 9px}
+.btn[disabled]{opacity:.5;cursor:not-allowed;transform:none}
+
+/* بطاقات وشارات */
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow)}
+.chip{display:inline-flex;align-items:center;gap:6px;padding:2px 10px;border-radius:999px;font-size:12.5px;font-weight:600;background:var(--surface-2);border:1px solid var(--line)}
+.chip.going{background:var(--bus-soft);border-color:transparent;color:var(--ink)}
+.chip.school{background:var(--blue-soft);border-color:transparent;color:var(--blue)}
+.chip.ok{background:var(--green-soft);color:var(--green);border-color:transparent}
+.chip.warn{background:var(--amber-soft);color:var(--amber);border-color:transparent}
+.chip.bad{background:var(--red-soft);color:var(--red);border-color:transparent}
+/* لوحة رقم الحافلة */
+.plate{display:inline-flex;align-items:stretch;border:2px solid var(--ink);border-radius:6px;overflow:hidden;font:700 13px/1 var(--f-display);background:#fff;color:#111;direction:ltr}
+.plate b{background:var(--bus);color:var(--bus-ink);padding:4px 6px;font-size:11px}
+.plate span{padding:4px 8px;font-variant-numeric:tabular-nums}
+.plate.empty{border-style:dashed;border-color:var(--muted);color:var(--muted);background:transparent}
+
+/* جداول */
+.table-wrap{overflow-x:auto;border-radius:var(--r)}
+table.data{width:100%;border-collapse:collapse;min-width:760px}
+table.data th{font:600 13px var(--f-display);color:var(--muted);text-align:start;padding:12px 14px;background:var(--surface-2);border-bottom:1px solid var(--line);white-space:nowrap}
+table.data td{padding:11px 14px;border-bottom:1px solid var(--line);vertical-align:middle}
+table.data tr:last-child td{border-bottom:0}
+table.data tr.done td{background:var(--green-soft)}
+table.data tr.weekend td{background:var(--surface-2);color:var(--muted)}
+table.data tbody tr:hover td{background:color-mix(in srgb,var(--bus-soft) 45%,transparent)}
+
+/* نماذج */
+label.f{display:flex;flex-direction:column;gap:5px;font-size:13px;font-weight:600;color:var(--muted)}
+.input,select.input,textarea.input{width:100%;padding:9px 12px;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--ink);font-weight:400;font-size:14.5px}
+.input:focus{outline:none;border-color:var(--bus);box-shadow:0 0 0 3px color-mix(in srgb,var(--bus) 30%,transparent)}
+.grid-form{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px}
+.check{display:inline-flex;align-items:center;gap:8px;font-weight:500;color:var(--ink);cursor:pointer}
+.check input{width:18px;height:18px;accent-color:var(--bus)}
+
+/* نوافذ وتنبيهات */
+dialog{border:0;border-radius:18px;padding:0;background:var(--surface);color:var(--ink);box-shadow:0 20px 60px rgba(0,0,0,.35);width:min(620px,calc(100vw - 32px))}
+dialog::backdrop{background:rgba(11,14,19,.55)}
+.dlg-head{display:flex;justify-content:space-between;align-items:center;padding:18px 22px;border-bottom:1px solid var(--line)}
+.dlg-body{padding:20px 22px;display:flex;flex-direction:column;gap:14px}
+.dlg-foot{display:flex;gap:10px;justify-content:flex-start;padding:14px 22px;border-top:1px solid var(--line);background:var(--surface-2);border-radius:0 0 18px 18px}
+.toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:var(--night);color:var(--night-ink);padding:11px 22px;border-radius:12px;font-weight:600;z-index:100;box-shadow:var(--shadow);border-inline-start:5px solid var(--bus)}
+.toast.err{border-color:var(--red)}
+.empty-state{padding:28px;text-align:center;color:var(--muted)}
+
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+
+/* ===== الصفحة العامة ===== */
+.pub-head{background:var(--night);color:var(--night-ink)}
+.pub-head .in{max-width:1180px;margin:auto;padding:22px max(16px,env(safe-area-inset-right)) 26px max(16px,env(safe-area-inset-left));display:flex;gap:18px;align-items:center;flex-wrap:wrap}
+.logo-disc{width:76px;height:76px;border-radius:50%;background:#fff;display:grid;place-items:center;flex:none;border:3px solid var(--bus);overflow:hidden}
+.logo-disc img{width:86%}
+.pub-head h1{font-size:clamp(20px,3vw,30px);font-weight:700}
+.pub-head .sub{color:color-mix(in srgb,var(--night-ink) 70%,transparent);font-size:14px}
+.pub-head .tools{margin-inline-start:auto;display:flex;gap:8px;flex-wrap:wrap}
+.pub-head .btn:not(.primary){background:var(--night-2);border-color:var(--night-2);color:var(--night-ink)}
+.page{max-width:1180px;margin:auto;padding:28px max(16px,env(safe-area-inset-right)) 40px max(16px,env(safe-area-inset-left));display:flex;flex-direction:column;gap:30px}
+.sec-title{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+.sec-title h2{font-size:21px}
+.today-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:18px}
+.duty-card{padding:0;overflow:hidden}
+.duty-card .top{display:flex;align-items:center;gap:10px;padding:14px 18px;border-bottom:1px solid var(--line)}
+.duty-card .top i{width:34px;height:34px;border-radius:10px;display:grid;place-items:center}
+.duty-card.going .top i{background:var(--bus);color:var(--bus-ink)}
+.duty-card.school .top i{background:var(--blue);color:#fff}
+.duty-card h3{font-size:17px}
+.driver-line{display:flex;gap:14px;align-items:center;padding:16px 18px;flex-wrap:wrap}
+.driver-line + .driver-line{border-top:1px dashed var(--line)}
+.driver-line .who{flex:1;min-width:160px}
+.driver-line .who strong{font:600 17px var(--f-display);display:block}
+.driver-line .act{display:flex;gap:6px}
+.dir-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:14px}
+.dir-card{padding:16px;display:flex;flex-direction:column;gap:8px}
+.dir-card .row{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.week-nav{display:flex;gap:6px;margin-inline-start:auto}
+.pub-foot{text-align:center;color:var(--muted);font-size:13px;padding:10px 16px 30px}
+
+/* ===== لوحة التحكم ===== */
+.admin{display:grid;grid-template-columns:250px 1fr;min-height:100vh}
+.side{background:var(--night);color:var(--night-ink);display:flex;flex-direction:column;gap:6px;padding:20px 14px;position:sticky;top:0;height:100vh;overflow-y:auto}
+.side .brand{display:flex;gap:10px;align-items:center;padding:0 6px 16px;border-bottom:1px solid var(--night-2);margin-bottom:10px}
+.side .brand .logo-disc{width:46px;height:46px;border-width:2px}
+.side .brand b{font:600 14px var(--f-display);display:block}
+.side .brand small{color:color-mix(in srgb,var(--night-ink) 60%,transparent);font-size:12px}
+.nav-btn{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:10px;background:none;border:0;color:color-mix(in srgb,var(--night-ink) 78%,transparent);cursor:pointer;text-align:start;font-weight:500}
+.nav-btn i{width:20px;text-align:center}
+.nav-btn:hover{background:var(--night-2);color:var(--night-ink)}
+.nav-btn.on{background:var(--bus);color:var(--bus-ink);font-weight:700}
+.nav-btn .badge{margin-inline-start:auto;background:var(--red);color:#fff;border-radius:999px;font-size:11px;padding:0 7px}
+.side .spacer{flex:1}
+.main{min-width:0;display:flex;flex-direction:column}
+.topbar{display:flex;align-items:center;gap:10px;padding:16px max(16px,env(safe-area-inset-right)) 16px max(16px,env(safe-area-inset-left));background:var(--surface);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5;flex-wrap:wrap}
+.topbar h1{font-size:20px}
+.topbar .tools{margin-inline-start:auto;display:flex;gap:8px;flex-wrap:wrap}
+.menu-btn{display:none}
+.content{padding:24px max(16px,env(safe-area-inset-right)) 40px max(16px,env(safe-area-inset-left));display:flex;flex-direction:column;gap:22px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px}
+.stat{padding:16px 18px;display:flex;flex-direction:column;gap:4px}
+.stat .k{font-size:13px;color:var(--muted);font-weight:600;display:flex;gap:8px;align-items:center}
+.stat .v{font:700 30px var(--f-display);font-variant-numeric:tabular-nums}
+.stat.alert .v{color:var(--red)}
+.two{display:grid;grid-template-columns:1.2fr 1fr;gap:18px}
+.panel{padding:18px 20px;display:flex;flex-direction:column;gap:14px;min-width:0}
+.panel-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.panel-head h2{font-size:17px}
+.panel-head .tools{margin-inline-start:auto;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.alert-row{display:flex;gap:10px;align-items:center;padding:10px 12px;border-radius:10px;background:var(--surface-2)}
+.alert-row i{width:18px}
+.bars{display:flex;flex-direction:column;gap:9px}
+.bar{display:grid;grid-template-columns:150px 1fr 34px;gap:10px;align-items:center;font-size:13.5px}
+.bar .track{height:10px;background:var(--surface-2);border-radius:99px;overflow:hidden;border:1px solid var(--line)}
+.bar .fill{height:100%;background:var(--bus);border-radius:99px}
+.bar .n{font-variant-numeric:tabular-nums;font-weight:700;text-align:end}
+.log{display:flex;flex-direction:column;gap:2px;font-size:13.5px;max-height:280px;overflow:auto}
+.log div{display:flex;gap:10px;padding:6px 0;border-bottom:1px dashed var(--line)}
+.log time{color:var(--muted);flex:none;font-variant-numeric:tabular-nums}
+.type-band{display:flex;align-items:center;gap:10px;padding:12px 18px;font:600 16px var(--f-display);border-radius:var(--r) var(--r) 0 0}
+.type-band.going{background:var(--bus);color:var(--bus-ink)}
+.type-band.school{background:var(--blue);color:#fff}
+.login{position:fixed;inset:0;background:var(--night);display:grid;place-items:center;z-index:50;padding:16px}
+.login .box{background:var(--surface);border-radius:20px;padding:30px;width:min(380px,100%);display:flex;flex-direction:column;gap:16px;text-align:center;align-items:center}
+.print-head{display:none}
+
+@media (max-width:980px){
+  .two{grid-template-columns:1fr}
+}
+@media (max-width:820px){
+  .admin{grid-template-columns:1fr}
+  .side{position:fixed;inset:0 0 0 auto;width:260px;z-index:40;transform:translateX(100%);transition:transform .2s}
+  .side.open{transform:none;box-shadow:-10px 0 40px rgba(0,0,0,.4)}
+  .menu-btn{display:inline-flex}
+  .bar{grid-template-columns:110px 1fr 30px}
+}
+
+@media print{
+  @page{size:A4 landscape;margin:10mm}
+  body{background:#fff;color:#000;font-size:12px}
+  .side,.topbar,.no-print,.toast,dialog,.pub-head .tools{display:none!important}
+  .admin{display:block}
+  .content{padding:0}
+  .card{box-shadow:none;border-color:#999}
+  .print-head{display:flex;align-items:center;gap:14px;border-bottom:3px solid #000;padding-bottom:8px;margin-bottom:10px}
+  .print-head img{width:70px}
+  .print-head h2{font-size:18px}
+  table.data{min-width:0}
+  table.data th,table.data td{padding:6px 8px;border:1px solid #888;color:#000}
+  .type-band,.plate b,table.data tr.done td{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .sign{display:flex!important;justify-content:space-between;margin-top:30px;font-weight:600}
+  .panel{break-inside:avoid}
+}
+.sign{display:none}
+
+/* ===== لمسات الثيم الأصلي ===== */
+.road{display:none}
+.btn{border-radius:50px;padding:10px 20px;box-shadow:0 5px 15px rgba(0,0,0,.12);transition:transform .25s,box-shadow .25s}
+.btn:hover{transform:translateY(-3px);box-shadow:0 10px 20px rgba(0,0,0,.2)}
+.btn.sm{border-radius:50px;box-shadow:none}
+.btn.sm:hover{transform:translateY(-1px);box-shadow:none}
+.btn.ghost,.btn.icon{box-shadow:none}
+.btn.primary{background:linear-gradient(135deg,#4a6491,#2c3e50);color:#fff;border:0}
+.btn.green{background:linear-gradient(135deg,#27ae60,#2ecc71);border:0}
+.btn.danger{background:linear-gradient(135deg,#e74c3c,#c0392b);border:0}
+.btn.purple{background:linear-gradient(135deg,#9b59b6,#8e44ad);color:#fff;border:0}
+.btn.orange{background:linear-gradient(135deg,#f39c12,#e67e22);color:#fff;border:0}
+.btn.blue{background:linear-gradient(135deg,#3498db,#2980b9);color:#fff;border:0}
+.btn.teal{background:linear-gradient(135deg,#1abc9c,#16a085);color:#fff;border:0}
+.btn.dark{background:var(--navy-grad);border:0}
+
+/* الهيدر كما في التصميم الأصلي */
+.pub-head{background:var(--navy-grad);position:relative;overflow:hidden;max-width:1400px;margin:20px auto 0;border-radius:15px;box-shadow:0 8px 20px rgba(0,0,0,.15)}
+@media (min-width:1440px){.pub-head{margin-top:20px}}
+@media (max-width:1439px){.pub-head{margin:16px max(16px,env(safe-area-inset-right)) 0 max(16px,env(safe-area-inset-left))}}
+.pub-head::before{content:"";position:absolute;inset:0;pointer-events:none;
+  background:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" preserveAspectRatio="none"><polygon points="0,100 100,0 100,100" fill="rgba(255,255,255,0.05)"/></svg>') center/cover}
+.pub-head .in{flex-direction:column;justify-content:center;text-align:center;padding:30px 20px 26px;position:relative}
+.pub-head .logo-disc{width:110px;height:110px;border:3px solid #fff;box-shadow:0 5px 15px rgba(0,0,0,.3);transition:transform .3s}
+.pub-head .logo-disc:hover{transform:scale(1.05) rotate(5deg)}
+.pub-head h1{font-size:clamp(22px,3.2vw,34px);text-shadow:1px 1px 3px rgba(0,0,0,.3)}
+.pub-head .sub{color:rgba(255,255,255,.85);font-size:17px}
+.pub-head .tools{margin:0;justify-content:center}
+.pub-head .btn:not(.primary){background:rgba(255,255,255,.15);border:0;color:#fff;box-shadow:none}
+.pub-head .btn.primary{background:#fff;color:#2c3e50}
+.logo-disc{border-color:#fff}
+.sec-title h2{color:var(--ink)}
+
+/* البطاقات والجداول */
+.card{border:0}
+.duty-card .top,.type-band{background:var(--band-grad);color:#fff;border:0}
+.duty-card .top h3{color:#fff}
+.duty-card .top .muted{color:rgba(255,255,255,.8)!important}
+.duty-card.going .top i,.duty-card.school .top i{background:rgba(255,255,255,.18);color:#fff}
+.type-band.going,.type-band.school{background:var(--band-grad);color:#fff;justify-content:center;font-size:20px;padding:18px}
+table.data{text-align:center}
+table.data th{background:var(--th-grad);color:var(--ink);font-weight:700;font-size:14.5px;text-align:center;border:1px solid var(--line)}
+table.data td{border:1px solid var(--line)}
+table.data tbody tr:nth-child(even) td{background:color-mix(in srgb,var(--surface-2) 60%,var(--surface))}
+table.data tbody tr:hover td{background:var(--bus-soft)}
+table.data tr.done td{background:var(--green-soft)!important}
+.plate{border-color:var(--night)}
+.plate b{background:var(--navy-grad);color:#fff}
+.chip.going{background:var(--bus-soft);color:var(--bus)}
+.bar .fill{background:linear-gradient(90deg,#4a6491,#2c3e50)}
+.stat{position:relative;overflow:hidden}
+.stat::before{content:"";position:absolute;inset:0 0 auto;height:5px;background:var(--band-grad)}
+.stat .v{color:var(--night-2)}
+:root[data-theme="dark"] .stat .v{color:var(--bus)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .stat .v{color:var(--bus)}}
+.stat.alert .v{color:var(--red)}
+.toast{top:20px;bottom:auto;left:auto;right:20px;transform:none;background:linear-gradient(135deg,#27ae60,#2ecc71);color:#fff;border:0;border-radius:10px}
+.toast.err{background:linear-gradient(135deg,#e74c3c,#c0392b)}
+
+/* لوحة التحكم */
+.side{background:linear-gradient(180deg,#2c3e50,#4a6491)}
+.nav-btn{color:rgba(255,255,255,.85);border-radius:50px}
+.nav-btn:hover{background:rgba(255,255,255,.12);color:#fff}
+.nav-btn.on{background:#fff;color:#2c3e50}
+.side .brand{border-color:rgba(255,255,255,.15)}
+.topbar{background:var(--surface);box-shadow:0 4px 12px rgba(0,0,0,.05)}
+.login{background:linear-gradient(135deg,#2c3e50,#4a6491)}
+.input:focus{border-color:#4a6491;box-shadow:0 0 0 3px rgba(74,100,145,.2)}
+.check input{accent-color:#4a6491}
+:focus-visible{outline-color:#4a6491}
+
+@media print{
+  body{background:#fff!important}
+  .type-band,.duty-card .top,table.data th,.plate b{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  table.data tr.done td{background:#e0ffe0!important}
+}
+section[data-panel="notify"]{display:flex;flex-direction:column;gap:22px}
+
+
+/* ===== قائمة الدور ===== */
+.rot-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px;max-height:560px;overflow:auto}
+.rot-list li{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:12px;background:var(--surface-2);border:1px solid var(--line)}
+.rot-list li.next{border-color:var(--green);box-shadow:0 0 0 2px color-mix(in srgb,var(--green) 25%,transparent)}
+.rot-list li.off{opacity:.55}
+.rot-list .pos{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;background:var(--band-grad);color:#fff;font-weight:700;font-size:13px;flex:none;font-variant-numeric:tabular-nums}
+.rot-list .nm{flex:1;min-width:0;display:flex;flex-direction:column}
+.rot-list .nm strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rot-list .nm small{color:var(--muted);font-size:12px}
+.rot-list .mv{display:flex;gap:4px}
+.chip.sub{background:var(--amber-soft);color:var(--amber);border-color:transparent}
+
+/* ===== زر اللغة ===== */
+.lang-btn{font-weight:800;min-width:42px;justify-content:center;font-family:var(--f-display)}
+.lang-float{position:fixed;top:14px;inset-inline-end:14px;z-index:60;background:#fff;color:#2c3e50}
+body:has(#app:not([hidden])) .lang-float{display:none}
+
+/* ===== الاتجاه من اليسار لليمين (الإنجليزي) ===== */
+[dir="ltr"] .flip-ltr{transform:scaleX(-1)}
+[dir="ltr"] body{font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif}
+@media (max-width:820px){
+  [dir="ltr"] .side{inset:0 auto 0 0;transform:translateX(-100%)}
+  [dir="ltr"] .side.open{transform:none;box-shadow:10px 0 40px rgba(0,0,0,.4)}
+}
+[dir="ltr"] .toast{right:auto;left:20px}
+@media print{.lang-btn{display:none!important}}
+
+/* ===== إظهار كلمة المرور ===== */
+.pw-wrap{position:relative;display:block}
+.pw-wrap .input{padding-inline-end:46px}
+.pw-eye{position:absolute;inset-inline-end:6px;top:50%;transform:translateY(-50%);width:36px;height:36px;border:0;border-radius:50%;background:transparent;color:var(--muted);cursor:pointer;display:grid;place-items:center;font-size:16px}
+.pw-eye:hover{background:var(--surface-2);color:var(--ink)}
+
+/* ===== التقويم الشهري ===== */
+.cal{padding:0;overflow:hidden}
+.cal-head,.cal-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr))}
+.cal-head{background:var(--band-grad);color:#fff;font:700 14px var(--f-display);text-align:center}
+.cal-head span{padding:11px 4px}
+.cal-head .short{display:none}
+.cal-day{position:relative;min-height:96px;padding:8px 9px;border:0;border-inline-start:1px solid var(--line);border-top:1px solid var(--line);background:var(--surface);text-align:start;display:flex;flex-direction:column;gap:4px;font:inherit;color:inherit;min-width:0}
+.cal-grid .cal-day:nth-child(7n+1){border-inline-start:0}
+button.cal-day{cursor:pointer;transition:background .15s}
+button.cal-day:hover{background:var(--bus-soft)}
+.cal-day .n{font:700 15px var(--f-display);font-variant-numeric:tabular-nums}
+.cal-day.other{background:color-mix(in srgb,var(--surface-2) 55%,var(--surface))}
+.cal-day.other .n,.cal-day.other .ln{opacity:.45}
+.cal-day.off{background:repeating-linear-gradient(135deg,var(--surface-2) 0 8px,color-mix(in srgb,var(--surface-2) 60%,var(--line)) 8px 9px);color:var(--muted);cursor:default}
+.cal-day.off .n{opacity:.6}
+.cal-day.today{background:var(--navy-grad);color:#fff;box-shadow:inset 0 0 0 3px #f2b705,0 6px 18px rgba(44,62,80,.35);z-index:1}
+button.cal-day.today:hover{background:var(--navy-grad);filter:brightness(1.12)}
+.cal-day.today .n{background:#f2b705;color:#2c3e50;border-radius:999px;min-width:30px;height:30px;display:inline-grid;place-items:center;align-self:flex-start;padding:0 7px;font-size:16px}
+.cal-day.today .ln b,.cal-day.today .empty,.cal-day.today .more{color:#fff}
+.cal-day.today .ln i{color:#9fd3ff}
+.cal-day.today .cal-dot{box-shadow:0 0 0 2px #fff}
+.cal-day .today-tag{display:none}
+.cal-day.today .today-tag{display:inline-block;position:absolute;top:8px;inset-inline-end:8px;background:#f2b705;color:#2c3e50;font:800 11px var(--f-display);padding:2px 8px;border-radius:999px}
+.cal-day.today.off{background:repeating-linear-gradient(135deg,#34486b 0 8px,#2c3e50 8px 9px)}
+@media (prefers-reduced-motion:no-preference){.cal-day.today .n{animation:todayPulse 2.4s ease-in-out infinite}}
+@keyframes todayPulse{0%,100%{box-shadow:0 0 0 0 rgba(242,183,5,.7)}50%{box-shadow:0 0 0 7px rgba(242,183,5,0)}}
+.cal-day .ln{display:flex;align-items:center;gap:5px;font-size:12.5px;line-height:1.3;min-width:0}
+.cal-day .ln b{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.cal-day .ln i{font-size:10px;color:var(--blue);width:9px;flex:none}
+.cal-dot{width:9px;height:9px;border-radius:50%;flex:none;background:var(--muted)}
+.cal-day .dots{display:none;gap:3px;flex-wrap:wrap;margin-top:auto}
+.cal-day .more{font-size:11px;color:var(--muted)}
+.cal-day .empty{font-size:11.5px;color:var(--muted)}
+.cal-legend{display:flex;gap:14px;flex-wrap:wrap;margin-top:12px;font-size:13px;color:var(--muted);align-items:center}
+.cal-legend span{display:inline-flex;align-items:center;gap:6px}
+@media (max-width:700px){
+  .cal-head .full{display:none}.cal-head .short{display:inline}
+  .cal-head span{padding:9px 0;font-size:12px}
+  .cal-day{min-height:62px;padding:5px 4px;align-items:center}
+  .cal-day .ln,.cal-day .more,.cal-day .empty{display:none}
+  .cal-day .dots{display:flex;justify-content:center;margin-top:auto}
+  .cal-day .n{font-size:13px}
+  .cal-day.today .n{min-width:24px;height:24px;font-size:13px}
+  .cal-day.today .today-tag{display:none}
+}
+
+/* ===== نافذة / لوحة تفاصيل اليوم ===== */
+.sheet-back{position:fixed;inset:0;background:rgba(11,14,19,.5);z-index:80;animation:fadeIn .18s}
+.sheet{position:fixed;z-index:81;background:var(--surface);color:var(--ink);box-shadow:0 20px 60px rgba(0,0,0,.35);display:flex;flex-direction:column;
+  top:50%;left:50%;transform:translate(-50%,-50%);width:min(760px,calc(100vw - 32px));max-height:min(86vh,720px);border-radius:18px;animation:popIn .18s}
+.sheet-grip{display:none}
+.sheet-head{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;padding:18px 22px 12px;border-bottom:1px solid var(--line)}
+.sheet-head h3{font-size:19px}
+.sheet-body{padding:16px 22px;overflow:auto;display:flex;flex-direction:column;gap:14px}
+.sheet-foot{display:flex;justify-content:space-between;gap:10px;padding:12px 22px;border-top:1px solid var(--line);background:var(--surface-2);border-radius:0 0 18px 18px}
+.sh-cols{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.sh-col{border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.sh-col h4{margin:0;padding:10px 14px;background:var(--band-grad);color:#fff;font:600 15px var(--f-display);display:flex;align-items:center;gap:8px}
+.sh-col ol{list-style:none;margin:0;padding:6px 0;counter-reset:n}
+.sh-col li{counter-increment:n;display:flex;gap:10px;align-items:flex-start;padding:9px 14px}
+.sh-col li+li{border-top:1px dashed var(--line)}
+.sh-col li::before{content:counter(n);flex:none;width:24px;height:24px;border-radius:50%;background:var(--bus-soft);color:var(--bus);font:700 12.5px var(--f-display);display:grid;place-items:center;margin-top:1px}
+.sh-col li .who{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px}
+.sh-col li .who strong{font:600 15.5px var(--f-display)}
+.sh-col li .meta{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.sh-col .none{padding:16px 14px;color:var(--muted);font-size:14px}
+.sh-dest{display:flex;gap:8px;flex-wrap:wrap;align-items:center;padding:10px 14px;border-radius:12px;background:var(--surface-2);font-weight:600}
+@keyframes fadeIn{from{opacity:0}}
+@keyframes popIn{from{opacity:0;transform:translate(-50%,-46%)}}
+@keyframes slideUp{from{transform:translateY(100%)}}
+@media (max-width:640px){
+  .sheet{top:auto;left:0;right:0;bottom:0;transform:none;width:100%;max-height:88vh;border-radius:20px 20px 0 0;animation:slideUp .22s ease-out;padding-bottom:env(safe-area-inset-bottom)}
+  .sheet.dragging{transition:none}
+  .sheet.snap{transition:transform .2s}
+  .sheet-grip{display:block;padding:8px 0 2px;cursor:grab;touch-action:none}
+  .sheet-grip span{display:block;width:44px;height:5px;border-radius:9px;background:var(--line);margin:auto}
+  .sheet-head{padding:6px 18px 10px;touch-action:none}
+  .sheet-body{padding:14px 16px}
+  .sheet-foot{border-radius:0;padding:10px 16px calc(10px + env(safe-area-inset-bottom))}
+  .sh-cols{grid-template-columns:1fr}
+}
+@media (prefers-reduced-motion:reduce){.sheet,.sheet-back{animation:none}}
+@media print{.sheet,.sheet-back{display:none!important}}
+.cal-day.off.hol{background:repeating-linear-gradient(135deg,var(--amber-soft) 0 8px,color-mix(in srgb,var(--amber-soft) 70%,var(--amber)) 8px 9px);color:var(--amber)}
+.cal-day .hol-name{font-size:11.5px;font-weight:700;line-height:1.3;overflow:hidden;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical}
+.cal-day .hol-name i{font-size:9px}
+@media (max-width:700px){.cal-day .hol-name{display:none}}
+
+/* ===== صفحة بديل المناوبة ===== */
+.bd-wrap{max-width:560px;margin:auto;padding:24px 16px 40px}
+.bd-card{padding:0;overflow:hidden}
+.bd-head{display:flex;gap:14px;align-items:center;padding:20px;background:var(--navy-grad);color:#fff}
+.bd-head .logo-disc{width:64px;height:64px;border:3px solid #fff}
+.bd-head h1{font-size:22px}
+.bd-head .muted{color:rgba(255,255,255,.85)}
+.bd-body{padding:20px;display:flex;flex-direction:column;gap:16px}
+.bd-hi{margin:0;font:600 18px var(--f-display)}
+.bd-day{display:flex;flex-direction:column;gap:8px;padding:14px 16px;border-radius:14px;background:var(--surface-2);border:1px solid var(--line)}
+.bd-day>strong{font:700 19px var(--f-display)}
+.bd-duty{display:flex;gap:10px;align-items:center}
+.bd-duty>i{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;background:var(--band-grad);color:#fff;flex:none}
+.bd-current{display:flex;gap:12px;align-items:center;padding:14px 16px;border-radius:14px;background:var(--green-soft)}
+.bd-current i{font-size:22px;color:var(--green)}
+.bd-current div{display:flex;flex-direction:column}
+.bd-current strong{font:700 18px var(--f-display)}
+.bd-form{display:flex;flex-direction:column;gap:14px}
+.bd-form h2{font-size:17px}
+.bd-seg{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.bd-seg button{padding:12px 8px;border-radius:12px;border:2px solid var(--line);background:var(--surface);cursor:pointer;font-weight:700;display:flex;gap:8px;align-items:center;justify-content:center}
+.bd-seg button.on{border-color:var(--bus);background:var(--bus-soft);color:var(--bus)}
+.bd-form .input{font-size:16px;padding:12px 14px}
+.bd-actions{display:flex;gap:10px;flex-wrap:wrap}
+.bd-actions .btn{flex:1;justify-content:center;padding:13px 18px;font-size:16px}
+.bd-msg{text-align:center;padding:10px 6px;display:flex;flex-direction:column;align-items:center;gap:8px}
+.bd-msg>i{font-size:40px}
+.bd-msg h2{font-size:19px}
+.bd-msg p{margin:0}
+.bd-lang{margin-inline-start:auto;background:rgba(255,255,255,.18)!important;color:#fff!important;border:0!important;box-shadow:none!important}
+
+/* ===== صفحة المدارس ===== */
+.sc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(420px,1fr));gap:16px}
+.sc-card{padding:16px 18px;display:flex;flex-direction:column;gap:12px;min-width:0}
+.sc-card.off{opacity:.7}
+.sc-top{display:flex;gap:12px;align-items:center}
+.sc-top .logo-disc{width:54px;height:54px;border:2px solid var(--line)}
+.sc-top h3{font-size:17px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sc-stats{display:flex;gap:16px;flex-wrap:wrap;font-size:13.5px;color:var(--muted)}
+.sc-stats b{color:var(--ink)}
+.sc-admins{display:flex;gap:6px;flex-wrap:wrap}
+.sc-link{display:grid;grid-template-columns:auto 1fr auto;gap:8px;align-items:center;padding:8px 10px;border-radius:10px;background:var(--surface-2);font-size:13px}
+.sc-link code{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12.5px;direction:ltr;text-align:left}
+.sc-act{display:flex;gap:4px}
+.sc-foot{display:flex;gap:8px;flex-wrap:wrap;border-top:1px dashed var(--line);padding-top:12px}
+.sc-new{margin-top:16px;padding:16px;border-radius:14px;background:var(--green-soft);display:flex;flex-direction:column;gap:10px}
+.sc-new h3{font-size:17px}
+@media (max-width:520px){.sc-grid{grid-template-columns:1fr}.sc-link{grid-template-columns:1fr}.sc-act{justify-content:flex-end}}
+
+</style>
+</head>
+<body data-title="إدارة المدارس">
+<header class="pub-head">
+  <div class="in">
+    <div class="logo-disc"><img class="brand-logo" alt=""></div>
+    <div>
+      <h1>إدارة المدارس</h1>
+      <div class="sub">كل مدرسة لها موقع ورابط خاص، وبياناتها منفصلة عن غيرها</div>
+    </div>
+    <div class="tools">
+      <button class="btn icon lang-btn" data-lang-toggle title="English / عربي" aria-label="English / عربي">EN</button>
+      <button class="btn icon" id="themeBtn" title="تبديل الوضع الليلي" aria-label="تبديل الوضع الليلي"><i class="fa-solid fa-circle-half-stroke"></i></button>
+      <a class="btn" id="myAdmin" href="admin.html" hidden><i class="fa-solid fa-gauge-high"></i> لوحة مدرستي</a>
+      <button class="btn" id="outBtn" hidden><i class="fa-solid fa-right-from-bracket"></i> خروج</button>
+    </div>
+  </div>
+</header>
+
+<main class="page">
+  <section class="card panel" id="scState" hidden style="text-align:center;align-items:center"></section>
+
+  <section class="card panel" id="scLogin" hidden style="max-width:420px;margin:auto;width:100%">
+    <h2>دخول المدير العام</h2>
+    <form id="scLoginForm" style="display:flex;flex-direction:column;gap:14px">
+      <label class="f">الإيميل<input type="email" class="input num" id="scEmail" required autocomplete="username"></label>
+      <label class="f">كلمة المرور<input type="password" class="input" id="scPass" required autocomplete="current-password"></label>
+      <button class="btn primary" style="justify-content:center"><i class="fa-solid fa-right-to-bracket"></i> دخول</button>
+    </form>
+  </section>
+
+  <div id="scApp" hidden style="display:flex;flex-direction:column;gap:22px">
+    <section class="card panel">
+      <div class="panel-head"><h2><i class="fa-solid fa-plus"></i> إضافة مدرسة جديدة</h2></div>
+      <form id="newForm" class="grid-form">
+        <label class="f">اسم المدرسة<input class="input" id="nName" required placeholder="مثال: مدرسة النور للتعليم الأساسي"></label>
+        <label class="f">رمز المدرسة في الرابط<input class="input num" id="nSlug" required pattern="[a-z0-9][a-z0-9\-]{1,29}" placeholder="alnoor" autocapitalize="off" spellcheck="false"></label>
+        <label class="f">شعار المدرسة (اختياري)<input type="file" class="input" id="nLogo" accept="image/*"></label>
+        <label class="f">وجهات الذهاب (افصل بفاصلة)<input class="input" id="nDest" placeholder="مثال: المدينة، السوق"></label>
+        <div class="f" style="grid-column:1/-1"><span>أيام العطلة الأسبوعية</span><div id="nWeekend" style="display:flex;gap:16px;flex-wrap:wrap"></div></div>
+        <div class="muted" id="nPreview" style="grid-column:1/-1;font-size:13px"></div>
+        <div><button class="btn primary"><i class="fa-solid fa-wand-magic-sparkles"></i> إنشاء الموقع</button></div>
+      </form>
+      <div id="newResult"></div>
+    </section>
+
+    <section>
+      <div class="sec-title"><h2>المدارس</h2><span class="chip" id="scCount"></span>
+        <input class="input" id="scSearch" placeholder="بحث بالاسم أو الرمز" style="max-width:260px;margin-inline-start:auto" aria-label="بحث"></div>
+      <div class="sc-grid" id="scList"></div>
+    </section>
+  </div>
+</main>
+<footer class="pub-foot">نظام إدارة مناوبات الحافلات</footer>
+
+<dialog id="delDlg" style="width:min(460px,calc(100vw - 32px))">
+  <form method="dialog">
+    <div class="dlg-body" style="padding-top:26px">
+      <h3>حذف المدرسة نهائياً</h3>
+      <p class="muted" id="delText" style="margin:0"></p>
+      <label class="f"><span id="delHint"></span><input class="input num" id="delConfirm" autocomplete="off" autocapitalize="off"></label>
+    </div>
+    <div class="dlg-foot"><button class="btn danger" value="yes" id="delYes" disabled>حذف نهائي</button><button class="btn ghost" value="no">إلغاء</button></div>
+  </form>
+</dialog>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script src="config.js"></script>
+<script>
+/* الترجمة: عربي / English
+   النصوص العربية هي المفاتيح، والقاموس EN يعطي المقابل الإنجليزي.
+   اللغة تُحفظ في متصفح كل مستخدم. */
+const I18N = (() => {
+  const KEY = 'school-bus-lang';
+  let lang = 'ar';
+  try { if (localStorage.getItem(KEY) === 'en') lang = 'en'; } catch (e) {}
+  const EN = {
+"مدير": "Admin",
+"مشرف": "Supervisor",
+"اكتب إيميلك أولاً ثم اضغط \"نسيت كلمة المرور\"": "Type your email first, then press \"Forgot password\"",
+"أرسلنا رابط تغيير كلمة المرور إلى إيميلك": "We sent a password reset link to your email",
+"اكتب كلمة المرور الجديدة": "Enter your new password",
+"كلمتا المرور غير متطابقتين": "Passwords do not match",
+"تم تغيير كلمة المرور": "Password changed",
+"اختر ملف صورة (PNG أو JPG)": "Choose an image file (PNG or JPG)",
+"أهلاً بك. ابدأ بإضافة السائقين": "Welcome! Start by adding drivers",
+"تم إعداد النظام": "System is set up",
+"ذهاب": "Trip",
+"مدرسة": "School",
+"سائق بديل مؤقت": "Temporary substitute driver",
+"بديل عن {name}": "Substitute for {name}",
+"سائق محذوف": "Deleted driver",
+"من قائمة الدور": "From the rotation list",
+"إرسال تذكير واتساب": "Send WhatsApp reminder",
+"تذكير واتساب": "WhatsApp reminder",
+"منتهية": "Expired",
+"انتهت": "Ended",
+"{n} يوم": "{n} days",
+"حتى": "until",
+"تأكيد": "Confirm",
+"السائقون النشطون": "Active drivers",
+"مناوبات هذا الأسبوع": "Duties this week",
+"أيام ينقصها سائق هذا الأسبوع": "Days missing a driver this week",
+"نسبة التنفيذ هذا الأسبوع": "Completion rate this week",
+"وثائق تحتاج تجديد": "Documents to renew",
+"منفذة": "Done",
+"تأكيد التنفيذ": "Mark as done",
+"اليوم عطلة نهاية الأسبوع": "Today is a weekend",
+"لا توجد مناوبة لليوم.": "No duty for today.",
+"التوزيع بالدور": "Rotation",
+"لديه مناوبة يوم {day} {date} وهو في إجازة": "Has a duty on {day} {date} while on leave",
+"انتهت فترة قائمة الدور. مدّدها من صفحة التوزيع بالدور": "The rotation period has ended. Extend it from the Rotation page",
+"قائمة الدور تنتهي بعد {n} يوم. مدّدها من صفحة التوزيع بالدور": "The rotation ends in {n} days. Extend it from the Rotation page",
+"فتح": "Open",
+"لا توجد تنبيهات": "No alerts",
+"لا توجد عمليات بعد": "No activity yet",
+"جدول المناوبات من {from} إلى {to}": "Duty schedule from {from} to {to}",
+"اليوم": "Today",
+"لم يُعيّن سائق": "No driver assigned",
+"تعيين": "Assign",
+"في إجازة": "On leave",
+"تعديل": "Edit",
+"حذف": "Delete",
+"مناوبة الذهاب إلى ({dests})": "Trip duty to ({dests})",
+"المناوبة اليومية في (المدرسة)": "Daily duty at (School)",
+"التاريخ": "Date",
+"السائق": "Driver",
+"الحافلة": "Bus",
+"المنطقة": "Area",
+"الهاتف": "Phone",
+"الوجهة": "Destination",
+"ملاحظات": "Notes",
+"لا توجد أيام عمل في هذه الفترة": "No working days in this period",
+"اختر السائق": "Choose a driver",
+"ينوب عنه {name}": "Covered by {name}",
+"لديه مناوبة في هذا اليوم": "already has a duty this day",
+"حافلة": "Bus",
+"هذا اليوم عطلة نهاية الأسبوع.": "This day is a weekend.",
+"السائق مسجل في إجازة في هذا التاريخ.": "The driver is on leave on this date.",
+"سينفّذها البديل {name} نيابة عن السائق.": "Substitute {name} will cover it for the driver.",
+"السائق لديه مناوبة أخرى في نفس اليوم.": "The driver has another duty on the same day.",
+"قائمة الدور تتعدل تلقائياً بعد الحفظ.": "The rotation list will adjust automatically after saving.",
+"تعديل مناوبة": "Edit duty",
+"مناوبة جديدة": "New duty",
+"تم حفظ التعديل": "Changes saved",
+"تمت إضافة المناوبة": "Duty added",
+"دور السائق ينتقل لليوم التالي وتتأخر القائمة.": "The driver's turn moves to the next day and the list shifts.",
+"حذف المناوبة": "Delete duty",
+"حذف مناوبة {name} يوم {day} {date}؟": "Delete {name}'s duty on {day} {date}?",
+"تم حذف المناوبة": "Duty deleted",
+"حذف السائق": "Delete driver",
+"حذف {name}{extra}؟ يمكنك بدلاً من ذلك جعله غير نشط.": "Delete {name}{extra}? You can make them inactive instead.",
+" وحذف {n} مناوبة مسجلة له": " and their {n} recorded duties",
+"وحذف {n} مناوبة مسجلة له": " and their {n} recorded duties",
+"تم حذف السائق": "Driver deleted",
+"حذف البديل": "Delete substitute",
+"حذف {name} كبديل؟ ترجع المناوبات باسم السائق الأصلي.": "Remove {name} as substitute? Duties go back to the original driver.",
+"تم حذف البديل": "Substitute deleted",
+"القائمة تبدأ يوم {day} {date}": "The list starts on {day} {date}",
+"هذا اليوم عطلة، التوزيع يبدأ من أول يوم عمل بعده": "this is a weekend, distribution starts on the next working day",
+"{n} سائق": "{n} drivers",
+"الدور القادم بعد {date}": "next turn after {date}",
+"لأعلى": "Move up",
+"لأسفل": "Move down",
+"اجعله أول القائمة": "Move to top",
+"لا يوجد سائقون نشطون. أضف السائقين أولاً.": "No active drivers. Add drivers first.",
+"القائمة منشورة من {from} حتى {to}": "List published from {from} to {to}",
+"التعديل التلقائي شغّال": "auto-adjust is on",
+"انتهت الفترة": "period ended",
+"تنتهي بعد {n} يوم": "ends in {n} days",
+"تغييرات غير منشورة": "Unpublished changes",
+"لم تُنشر قائمة بعد. رتّب السائقين واختر تاريخ البداية، ثم اضغط معاينة التوزيع.": "No list published yet. Order the drivers, pick the start date, then press Preview.",
+"حدد فترة صحيحة": "Choose a valid period",
+"حدد عدد السائقين في اليوم": "Set the number of drivers per day",
+"لا يوجد سائقون نشطون": "No active drivers",
+"يدوي": "manual",
+"معاينة التوزيع": "Preview distribution",
+"من {from} إلى {to}": "From {from} to {to}",
+"مناوبات جديدة: {a} · تُحذف: {d} · بدون تغيير: {k}": "New duties: {a} · Removed: {d} · Unchanged: {k}",
+"الدور القادم بعد هذه الفترة: {name}": "Next turn after this period: {name}",
+"لا يوجد سائق متاح في: {list}": "No driver available on: {list}",
+"مناوبة الذهاب": "Trip duty",
+"المناوبة في المدرسة": "School duty",
+"اعتماد ونشر القائمة": "Approve & publish list",
+"إلغاء": "Cancel",
+"تم نشر القائمة": "List published",
+"{n} مناوبة": "{n} duties",
+"لا يوجد رقم هاتف": "No phone number",
+"أُرسل {t}": "Sent {t}",
+"لم يُرسل": "Not sent",
+"إعادة الإرسال": "Resend",
+"إرسال": "Send",
+"إضافة رقم": "Add number",
+"لا توجد مناوبات في هذا اليوم.": "No duties on this day.",
+"إرسال للجميع بالتتابع ({n} متبقي)": "Send to all one by one ({n} left)",
+"تم إرسال كل التذكيرات": "All reminders sent",
+"لا يوجد رقم": "No number",
+"لا توجد مناوبات في هذا الأسبوع": "No duties this week",
+"تم نسخ النص، ألصقه في قروب واتساب": "Text copied, paste it in the WhatsApp group",
+"حدد النص وانسخه يدوياً": "Select the text and copy it manually",
+"نشط": "Active",
+"غير نشط": "Inactive",
+"واتساب": "WhatsApp",
+"لا يوجد سائق مطابق": "No matching driver",
+"تعديل بيانات السائق": "Edit driver",
+"سائق جديد": "New driver",
+"تم حفظ بيانات السائق": "Driver saved",
+"قادمة": "Upcoming",
+"جارية": "Ongoing",
+"لا توجد إجازات مسجلة": "No leaves recorded",
+"تاريخ النهاية قبل تاريخ البداية": "End date is before start date",
+"تم تسجيل الإجازة": "Leave recorded",
+"{name} لديه {n} مناوبة خلال الإجازة.": "{name} has {n} duties during the leave.",
+"إلغاء تعيينها": "Unassign them",
+"إعادة توزيعها تلقائياً": "Reassign automatically",
+"تعيين سائق بديل": "Assign a substitute",
+"تم إلغاء التعيين": "Unassigned",
+"تمت إعادة توزيع {n} مناوبة": "{n} duties reassigned",
+"نفس حافلة السائق ({n})": "Same as driver's bus ({n})",
+"نفس حافلة السائق": "Same as driver's bus",
+"ينوب عن {name} من {from} إلى {to} ({n} يوم عمل). مناوبات {name} في هذه الفترة: {m}": "Covers {name} from {from} to {to} ({n} working days). {name}'s duties in this period: {m}",
+"لا يوجد حالياً": "none yet",
+"لا يوجد سائقون بدلاء": "No substitute drivers",
+"هذا السائق عنده بديل ({name}) في نفس الفترة": "This driver already has a substitute ({name}) in this period",
+"تم حفظ البديل": "Substitute saved",
+"مناوبات نفّذها البديل": "Duties covered by a substitute",
+"تم حفظ الإعدادات": "Settings saved",
+"تم حفظ النسخة الاحتياطية": "Backup saved",
+"استيراد نسخة": "Import backup",
+"ستُستبدل البيانات الحالية بـ {d} سائق و{n} مناوبة من الملف.": "Current data will be replaced with {d} drivers and {n} duties from the file.",
+"استيراد": "Import",
+"تم استيراد البيانات": "Data imported",
+"الملف غير صالح. اختر نسخة احتياطية من هذا النظام": "Invalid file. Choose a backup from this system",
+"النوع": "Type",
+"البديل": "Substitute",
+"نعم": "Yes",
+"لا": "No",
+"حذف جميع المناوبات": "Delete all duties",
+"سيتم حذف {n} مناوبة. بيانات السائقين تبقى كما هي.": "{n} duties will be deleted. Driver data stays as is.",
+"حذف الكل": "Delete all",
+"تم حذف جميع المناوبات": "All duties deleted",
+"تم تغيير الشعار": "Logo changed",
+"تمت إزالة الشعار": "Logo removed",
+"أنت": "You",
+"الصلاحية": "Role",
+"إزالة": "Remove",
+"لا يوجد مستخدمون": "No users",
+"تمت إضافة {name}": "{name} added",
+"تم تغيير الصلاحية": "Role changed",
+"إزالة المستخدم": "Remove user",
+"إزالة {name}؟ لن يقدر يدخل لوحة التحكم بعد الآن.": "Remove {name}? They will no longer be able to sign in.",
+"تمت الإزالة": "Removed",
+"الحساب {email} غير مضاف للنظام. اطلب من مدير النظام إضافتك.": "The account {email} is not added to the system. Ask the system admin to add you.",
+"رقم الحافلة": "Bus number",
+"اتصال": "Call",
+"عطلة نهاية الأسبوع": "Weekend",
+"لا توجد مناوبة مسجلة لهذا اليوم": "No duty recorded for today",
+"إلى ({dests})": "To ({dests})",
+"من {date}": "From {date}",
+"ينوب عنه {name} حتى {date}": "Covered by {name} until {date}",
+"لا يوجد سائق مطابق للبحث": "No driver matches your search",
+"لم يتم ربط النظام بقاعدة البيانات بعد. راجع دليل الإعداد.": "The system is not connected to the database yet. See the setup guide.",
+"مدرستك": "Your school",
+"{label} منتهية منذ {n} يوم": "{label} expired {n} days ago",
+"{label} تنتهي بعد {n} يوم": "{label} expires in {n} days",
+"رقم الحافلة غير مسجل": "Bus number not recorded",
+"لا تملك صلاحية لهذا الإجراء": "You don't have permission for this action",
+"قاعدة البيانات تحتاج تحديث: شغّل ملف supabase.sql مرة ثانية": "The database needs an update: run supabase.sql again",
+"تعذّر الاتصال بقاعدة البيانات": "Could not connect to the database",
+"جارٍ الحفظ…": "Saving…",
+"تم الحفظ": "Saved",
+"أرسلنا رابط تأكيد إلى إيميلك. افتحه، ثم ارجع هنا وادخل بنفس الإيميل وكلمة المرور لإكمال الإعداد": "We sent a confirmation link to your email. Open it, then come back and sign in with the same email and password to finish setup",
+"الإيميل أو كلمة المرور غير صحيحة": "Incorrect email or password",
+"لم يتم تأكيد الإيميل بعد. افتح رابط التأكيد اللي وصلك": "Email not confirmed yet. Open the confirmation link you received",
+"هذا الإيميل مسجل مسبقاً": "This email is already registered",
+"كلمة المرور ضعيفة، استخدم 6 أحرف أو أكثر": "Weak password, use 6 or more characters",
+"صيغة الإيميل غير صحيحة": "Invalid email format",
+"محاولات كثيرة، انتظر قليلاً ثم حاول مرة أخرى": "Too many attempts, wait a moment and try again",
+"لا يوجد اتصال بالإنترنت": "No internet connection",
+"حدث خطأ، حاول مرة أخرى": "Something went wrong, try again",
+"رخصة القيادة": "Driving licence",
+"تأمين الحافلة": "Bus insurance",
+"الرخصة": "Licence",
+"التأمين": "Insurance",
+"لوحة التحكم": "Dashboard",
+"مناوبات الحافلات": "Bus Duties",
+"الرئيسية": "Home",
+"جدول المناوبات": "Duty schedule",
+"السائقون والحافلات": "Drivers & buses",
+"الإجازات والغياب": "Leaves & absence",
+"السائق البديل": "Substitute driver",
+"تنبيهات واتساب": "WhatsApp reminders",
+"التقارير": "Reports",
+"الإعدادات": "Settings",
+"المستخدمون": "Users",
+"English / عربي": "English / عربي",
+"معاينة الشعار": "Logo preview",
+"إعداد نظام المناوبات": "Duty system setup",
+"خطوة واحدة وتبدأ. تقدر تغيّر كل هذا لاحقاً من الإعدادات.": "One step and you're ready. You can change all of this later in Settings.",
+"اسم المدرسة": "School name",
+"مثال: مدرسة النور للتعليم الأساسي": "e.g. Al Noor Basic Education School",
+"شعار المدرسة (اختياري)": "School logo (optional)",
+"وجهات الذهاب (افصل بينها بفاصلة)": "Trip destinations (separate with commas)",
+"مثال: المدينة، السوق، المستشفى": "e.g. City, Market, Hospital",
+"أيام العطلة الأسبوعية": "Weekly days off",
+"اسمك (مدير النظام)": "Your name (system admin)",
+"إيميلك": "Your email",
+"كلمة المرور": "Password",
+"أضف 4 سائقين تجريبيين لأجرّب النظام": "Add 4 sample drivers to try the system",
+"بدء استخدام النظام": "Start using the system",
+"العودة للصفحة الرئيسية": "Back to home page",
+"لم يتم ربط قاعدة البيانات بعد": "Database not connected yet",
+"افتح الملف config.js وضع رابط مشروع Supabase والمفتاح العام كما في دليل الإعداد، ثم ارفع التعديل.": "Open config.js, add your Supabase project URL and public key as in the setup guide, then upload the change.",
+"شعار المدرسة": "School logo",
+"دخول لوحة التحكم": "Dashboard sign in",
+"الإيميل": "Email",
+"دخول": "Sign in",
+"نسيت كلمة المرور؟": "Forgot password?",
+"الصفحة العامة": "Public page",
+"حسابك غير مفعّل": "Your account is not active",
+"تسجيل الخروج": "Sign out",
+"خروج": "Sign out",
+"القائمة": "Menu",
+"تبديل الوضع الليلي": "Toggle dark mode",
+"مناوبة اليوم": "Today's duty",
+"عرض الجدول": "View schedule",
+"تنبيهات": "Alerts",
+"عدالة التوزيع هذا الشهر": "Fairness this month",
+"عدد المناوبات لكل سائق": "Duties per driver",
+"آخر العمليات": "Recent activity",
+"نوع المناوبة": "Duty type",
+"كل المناوبات": "All duties",
+"الفترة": "Period",
+"أسبوع": "Week",
+"شهر": "Month",
+"فترة مخصصة": "Custom period",
+"من": "From",
+"إلى": "To",
+"الحالي": "Current",
+"طباعة": "Print",
+"إضافة": "Add",
+"مشرف النقل المدرسي: ................": "Transport supervisor: ................",
+"مدير المدرسة: ................": "School principal: ................",
+"ترتيب قائمة الدور": "Rotation order",
+"رتّب السائقين بالأسهم. النظام يمشي على القائمة بالترتيب يوماً بعد يوم، والأسبوع التالي يكمل من حيث وقف.": "Order the drivers with the arrows. The system goes through the list in order day by day, and the next week continues where it stopped.",
+"إعداد التوزيع بالدور": "Rotation settings",
+"تاريخ بداية القائمة": "List start date",
+"توزيع حتى تاريخ": "Distribute until",
+"سائقو الذهاب في اليوم": "Trip drivers per day",
+"سائقو المدرسة في اليوم": "School drivers per day",
+"أسبوعين": "2 weeks",
+"4 أسابيع": "4 weeks",
+"8 أسابيع": "8 weeks",
+"تعديل القائمة تلقائياً عند أي تغيير (إضافة سائق ليوم، حذف، إجازة)": "Adjust the list automatically on any change (adding a driver to a day, deleting, leave)",
+"توزيع الوجهات بالتناوب": "Rotate destinations",
+"استبدال المناوبات اليدوية الموجودة في الفترة": "Replace existing manual duties in the period",
+"كيف يشتغل التوزيع بالدور؟": "How does the rotation work?",
+"كل يوم عمل ياخذ السائق التالي في القائمة، وأيام العطلة تُتخطّى.": "Each working day takes the next driver in the list; days off are skipped.",
+"لو أضفت سائقاً لنفس اليوم يدوياً، يُحسب دوره، واليوم التالي ياخذه اللي بعده.": "If you manually add a driver to a day, their turn counts, and the next day goes to the one after.",
+"لو حذفت سائقاً من يوم، ينتقل دوره لليوم التالي وتتأخر القائمة يوماً.": "If you remove a driver from a day, their turn moves to the next day and the list shifts by one day.",
+"السائق في إجازة يُتخطّى ويرجع دوره أول ما يكون متاحاً. لو عنده بديل، البديل ينفّذ دوره.": "A driver on leave is skipped and gets their turn back once available. If they have a substitute, the substitute covers their turn.",
+"كل سائق ياخذ دوراً واحداً في كل لفّة للقائمة، فالتوزيع يبقى عادلاً.": "Every driver gets one turn per round of the list, so it stays fair.",
+"تذكير السائقين بمناوباتهم": "Remind drivers of their duties",
+"يوم العمل التالي": "Next working day",
+"تاريخ المناوبات": "Duty date",
+"اضغط \"إرسال\" ويفتح واتساب برسالة جاهزة للسائق، وبعدها اضغط إرسال داخل واتساب. النظام يسجّل من وصله التذكير.": "Press \"Send\" and WhatsApp opens with a ready message for the driver, then press send in WhatsApp. The system records who was reminded.",
+"إرسال للجميع بالتتابع": "Send to all one by one",
+"رسالة لمجموعة السائقين": "Message for the drivers' group",
+"المدة": "Duration",
+"يوم واحد": "One day",
+"الأسبوع كامل": "Whole week",
+"انسخ الجدول وألصقه في قروب واتساب السائقين، أو افتح واتساب واختر القروب.": "Copy the schedule and paste it in the drivers' WhatsApp group, or open WhatsApp and pick the group.",
+"نص الرسالة": "Message text",
+"نسخ النص": "Copy text",
+"فتح واتساب واختيار القروب": "Open WhatsApp and pick the group",
+"جدول الأسبوع لكل سائق": "Weekly schedule per driver",
+"رسالة واحدة لكل سائق فيها كل مناوباته في الأسبوع.": "One message per driver with all their duties this week.",
+"بحث...": "Search...",
+"بحث": "Search",
+"الاسم": "Name",
+"هاتف آخر": "Other phone",
+"السعة": "Capacity",
+"الوثائق": "Documents",
+"الحالة": "Status",
+"تسجيل إجازة أو غياب": "Record leave or absence",
+"السبب": "Reason",
+"مرضية، اعتيادية، صيانة الحافلة...": "Sick, annual, bus maintenance...",
+"تسجيل": "Record",
+"إضافة سائق بديل (نائب مؤقت)": "Add a substitute driver (temporary cover)",
+"شخص جديد يغطي مناوبات سائق لعدد محدد من الأيام. دور السائق في القائمة يبقى كما هو، والبديل هو اللي يظهر في الجدول وتوصله التذكيرات.": "A new person covers a driver's duties for a set number of days. The driver keeps their place in the rotation, and the substitute appears in the schedule and receives the reminders.",
+"السائق الأصلي": "Original driver",
+"اسم البديل": "Substitute name",
+"هاتف البديل": "Substitute phone",
+"من تاريخ": "From date",
+"عدد أيام النيابة (أيام عمل)": "Number of days (working days)",
+"إلى تاريخ": "To date",
+"حفظ البديل": "Save substitute",
+"ينوب عن": "Covers for",
+"أيام العمل": "Working days",
+"تقرير المناوبات لكل سائق": "Duty report per driver",
+"الذهاب": "Trip",
+"المدرسة": "School",
+"المجموع": "Total",
+"المنفذة": "Done",
+"نسبة التنفيذ": "Completion",
+"أيام الإجازة": "Leave days",
+"إضافة مستخدم": "Add user",
+"كلمة مرور مؤقتة": "Temporary password",
+"المشرف يدير المناوبات والسائقين والإجازات والتنبيهات. المدير يقدر كذلك يغيّر الإعدادات ويضيف المستخدمين. أرسل للمستخدم إيميله وكلمة المرور المؤقتة، ويقدر يغيّرها بعد الدخول بالضغط على اسمه في القائمة.": "Supervisors manage duties, drivers, leaves and reminders. Admins can also change settings and add users. Send the user their email and temporary password; they can change it after signing in by clicking their name in the menu.",
+"إعدادات عامة": "General settings",
+"تغيير الشعار": "Change logo",
+"إزالة الشعار": "Remove logo",
+"وجهات الذهاب (افصل بفاصلة)": "Trip destinations (comma separated)",
+"تنبيه انتهاء الوثائق قبل (يوم)": "Document expiry alert before (days)",
+"نص رسالة التذكير": "Reminder message text",
+"معاينة": "Preview",
+"حفظ الإعدادات": "Save settings",
+"النسخ الاحتياطي والبيانات": "Backup & data",
+"البيانات محفوظة في قاعدة بيانات المدرسة على Supabase، وتظهر لكل المستخدمين مباشرة. النسخة الاحتياطية ملف تحتفظ به عندك للطوارئ.": "Data is stored in the school's Supabase database and shows to all users instantly. A backup is a file you keep for emergencies.",
+"حفظ نسخة احتياطية": "Save backup",
+"تصدير المناوبات Excel": "Export duties to Excel",
+"إغلاق": "Close",
+"تم تنفيذ المناوبة": "Duty completed",
+"حفظ": "Save",
+"المنطقة (الحارة)": "Area (neighbourhood)",
+"رقم الهاتف": "Phone number",
+"رقم هاتف آخر": "Other phone number",
+"مثال: 7": "e.g. 7",
+"رقم اللوحة": "Plate number",
+"مثال: 12345 أ ب": "e.g. 12345 AB",
+"سعة الحافلة (طالب)": "Bus capacity (students)",
+"انتهاء رخصة القيادة": "Driving licence expiry",
+"انتهاء تأمين الحافلة": "Bus insurance expiry",
+"سائق نشط (يدخل في التوزيع)": "Active driver (included in rotation)",
+"تغيير كلمة المرور": "Change password",
+"كلمة المرور الجديدة": "New password",
+"تأكيد كلمة المرور": "Confirm password",
+"نظام مناوبات الحافلات المدرسية": "School Bus Duty System",
+"دخول الإدارة": "Staff sign in",
+"أهلاً بك في نظام مناوبات الحافلات": "Welcome to the bus duty system",
+"لم يتم إعداد النظام بعد. ادخل لوحة التحكم واكتب اسم مدرستك وارفع شعارها لتبدأ.": "The system isn't set up yet. Open the dashboard, enter your school's name and upload its logo to begin.",
+"إعداد النظام": "Set up system",
+"جدول الأسبوع": "Weekly schedule",
+"السابق": "Previous",
+"هذا الأسبوع": "This week",
+"التالي": "Next",
+"دليل السائقين": "Driver directory",
+"ابحث بالاسم أو المنطقة أو رقم الحافلة": "Search by name, area or bus number",
+"بحث في السائقين": "Search drivers",
+"نظام إدارة مناوبات الحافلات –": "Bus duty management system –",
+"اليوم|day": "Day",
+"خارج هذه القائمة": "not in this list",
+"إرجاعه للقائمة": "Return to list",
+"إخراجه من هذه القائمة": "Remove from this list",
+"غير مستخدمة (0 في اليوم)": "Not used (0 per day)",
+"القائمتين تبدآن بنفس السائق ({name}). نفس السائق ما ياخذ مناوبتين في يوم واحد، فالأفضل تبدأ قائمة المدرسة بسائق مختلف.": "Both lists start with the same driver ({name}). A driver can't take two duties on one day, so it's better to start the school list with a different driver.",
+"الدور القادم في {list}: {name}": "Next in {list}: {name}",
+"تم حفظ طريقة فتح واتساب لهذا الجهاز": "WhatsApp open method saved for this device",
+"قائمة مناوبات الذهاب": "Trip duty list",
+"رتّب بالأسهم، واضغط": "Order with the arrows, and press",
+"لإخراج سائق من هذه القائمة.": "to remove a driver from this list.",
+"قائمة المناوبات في المدرسة": "School duty list",
+"لكل نوع مناوبة قائمة خاصة: الذهاب تمشي على ترتيبها، والمدرسة على ترتيبها.": "Each duty type has its own list: trips follow their order, and school follows its order.",
+"نفس السائق ما ياخذ الذهاب والمدرسة في نفس اليوم. لو صار، دوره في المدرسة يتأجل لأول يوم متاح.": "A driver never gets both a trip and a school duty on the same day. If that would happen, their school turn moves to the first available day.",
+"طريقة فتح واتساب على هذا الجهاز": "How WhatsApp opens on this device",
+"تلقائي (الجوال: التطبيق، الكمبيوتر: واتساب ويب)": "Automatic (phone: app, computer: WhatsApp Web)",
+"واتساب ويب (web.whatsapp.com)": "WhatsApp Web (web.whatsapp.com)",
+"تطبيق واتساب على الكمبيوتر": "WhatsApp desktop app",
+"رابط api.whatsapp.com": "api.whatsapp.com link",
+"رابط wa.me": "wa.me link",
+"إظهار كلمة المرور": "Show password",
+"إخفاء كلمة المرور": "Hide password",
+"لا توجد مناوبة": "No duty",
+"اضغط على أي يوم لعرض التفاصيل": "Tap any day to see details",
+"جدول الشهر": "Monthly schedule",
+"هذا الشهر": "This month",
+"اليوم السابق": "Previous day",
+"اليوم التالي": "Next day",
+"لديه مناوبة يوم {day} {date} وهو {off}": "Has a duty on {day} {date}, which is a day off ({off})",
+"هذا اليوم لا يظهر في جدول المناوبات.": "This day does not appear in the duty schedule.",
+"لا توجد إجازات رسمية مسجلة": "No official holidays recorded",
+"تم حفظ الإجازة. انتبه: فيه {n} مناوبة يدوية في هذه الأيام": "Holiday saved. Note: there are {n} manual duties on these days",
+"تم حفظ الإجازة": "Holiday saved",
+"حذف الإجازة": "Delete holiday",
+"حذف إجازة {name}؟ ترجع أيامها أيام عمل عادية.": "Delete the {name} holiday? Its days become normal working days.",
+"تم حذف الإجازة": "Holiday deleted",
+"إجازة رسمية": "Official holiday",
+"إجازة رسمية: {name}": "Official holiday: {name}",
+"إجازة": "Holiday",
+"الإجازات الرسمية والعطل": "Official holidays & breaks",
+"مثل الأعياد واليوم الوطني وإجازة منتصف الفصل. هذه الأيام تتظلل في التقويم، والتوزيع بالدور يتخطاها ويكمل القائمة بعدها.": "Such as Eid, National Day and mid-term break. These days are shaded in the calendar, and the rotation skips them and continues after.",
+"اسم الإجازة": "Holiday name",
+"مثال: إجازة عيد الفطر": "e.g. Eid Al-Fitr holiday",
+"إضافة الإجازة": "Add holiday",
+"الإجازة": "Holiday",
+"الكلمات اللي يستبدلها النظام: {الاسم} {المدرسة} {النوع} {اليوم} {التاريخ} {الوجهة} {الحافلة} {رابط_البديل}": "Placeholders the system replaces: {الاسم} name · {المدرسة} school · {النوع} type · {اليوم} day · {التاريخ} date · {الوجهة} destination · {الحافلة} bus · {رابط_البديل} substitute link",
+"وضع بديلاً عنه يوم {day} {date}: {name}": "set a substitute for {day} {date}: {name}",
+"من السائق": "by driver",
+"الإدارة سجّلت لك بديلاً لهذا اليوم ({name}). لأي تغيير تواصل مع المشرف.": "Management already set a substitute for you on this day ({name}). Contact the supervisor for any change.",
+"الرابط غير صحيح": "Invalid link",
+"افتح الرابط كامل من رسالة واتساب.": "Open the full link from the WhatsApp message.",
+"جارٍ التحميل…": "Loading…",
+"ما قدرنا نفتح المناوبة": "We couldn't open this duty",
+"أهلاً {name}": "Hello {name}",
+"مناوبتك يوم": "Your duty on",
+"تم إلغاء البديل": "Substitute cancelled",
+"تم تسجيل {name} بديلاً عنك": "{name} is now your substitute",
+"المناوبة رجعت باسمك.": "The duty is back under your name.",
+"المشرف وصله تنبيه. تقدر ترجع لنفس الرابط إذا تبي تغيّر البديل أو تلغيه.": "The supervisor has been notified. Come back to the same link to change or cancel the substitute.",
+"انتهى يوم هذه المناوبة": "This duty day has passed",
+"عندك بديل من الإدارة": "You have a substitute from management",
+"البديل الحالي": "Current substitute",
+"تغيير البديل": "Change substitute",
+"إلغاء البديل": "Cancel substitute",
+"عنده مناوبة في نفس اليوم": "has a duty the same day",
+"مين بينوب عنك؟": "Who will cover for you?",
+"زميل من السائقين": "A fellow driver",
+"شخص آخر": "Someone else",
+"اختر الزميل": "Choose the colleague",
+"رقم هاتف البديل": "Substitute's phone",
+"ملاحظة للمشرف (اختياري)": "Note for the supervisor (optional)",
+"تأكيد البديل": "Confirm substitute",
+"رجوع": "Back",
+"إلغاء البديل؟ المناوبة ترجع باسمك.": "Cancel the substitute? The duty goes back under your name.",
+"الرابط غير صالح، أو المناوبة انحذفت من الجدول. تواصل مع مشرف النقل.": "The link is invalid, or the duty was removed. Contact the transport supervisor.",
+"انتهى يوم هذه المناوبة، ما تقدر تغيّر البديل.": "This duty day has passed; the substitute can't be changed.",
+"اكتب رقم هاتف صحيح للبديل.": "Enter a valid phone number for the substitute.",
+"اكتب اسم البديل.": "Enter the substitute's name.",
+"اختر زميلاً من القائمة.": "Choose a colleague from the list.",
+"ما فيه بديل مسجّل منك لهذا اليوم.": "You have no substitute set for this day.",
+"النظام يحتاج تحديث من الإدارة. تواصل مع مشرف النقل.": "The system needs an update by management. Contact the transport supervisor.",
+"بديل المناوبة": "Duty substitute",
+"رابط البديل غير مفعّل، والرسائل تطلع بدونه. شغّل ملف supabase.sql الجديد في Supabase من SQL Editor، وبعدها حدّث هذه الصفحة.": "The substitute link is not active, so messages go out without it. Run the new supabase.sql file in Supabase (SQL Editor), then refresh this page.",
+"رمز المدرسة: حروف إنجليزية صغيرة وأرقام و - فقط (2 إلى 30 حرف)": "School code: lowercase English letters, numbers and - only (2 to 30 characters)",
+"موقع المدرسة موقوف": "School site is suspended",
+"حسابك تابع لمدرسة ثانية": "Your account belongs to another school",
+"موقع هذه المدرسة موقوف حالياً. تواصل مع إدارة النظام.": "This school's site is currently suspended. Contact the system administrator.",
+"الحساب {email} مسجّل في مدرسة ثانية ({school}).": "The account {email} is registered with another school ({school}).",
+"صفحة الدخول": "Sign-in page",
+"تم تفعيل حسابك. أهلاً بك": "Your account is activated. Welcome",
+"أنت داخل بحساب مفعّل. لتفعيل رابط الدعوة بإيميل ثاني سجّل خروج أولاً.": "You're signed in with an active account. To use the invite with another email, sign out first.",
+"اختر المدرسة": "Choose a school",
+"ما فيه مدارس مسجلة بعد.": "No schools registered yet.",
+"المدرسة غير موجودة": "School not found",
+"تأكد من الرابط اللي وصلك من المدرسة.": "Check the link you received from the school.",
+"موقع هذه المدرسة موقوف حالياً.": "This school's site is currently suspended.",
+"تم النسخ": "Copied",
+"انسخ الرابط:": "Copy the link:",
+"نسخ": "Copy",
+"إرسال واتساب": "Send via WhatsApp",
+"{n} مدرسة": "{n} schools",
+"فعّال": "Active",
+"موقوف": "Suspended",
+"سائق": "drivers",
+"مستخدم": "users",
+"آخر نشاط": "Last activity",
+"بانتظار تفعيل المدير": "Waiting for admin activation",
+"رابط دعوة المدير": "Admin invite link",
+"رابط دعوة جديد": "New invite link",
+"إنشاء رابط دعوة": "Create invite link",
+"إيقاف": "Suspend",
+"تشغيل": "Activate",
+"لا توجد مدارس": "No schools",
+"هذه الصفحة للمدير العام فقط": "This page is for the system administrator only",
+"حسابك ما عنده صلاحية إدارة المدارس.": "Your account can't manage schools.",
+"قاعدة البيانات تحتاج تحديث": "The database needs an update",
+"شغّل ملف supabase.sql الجديد في Supabase من SQL Editor، وبعدها حدّث الصفحة.": "Run the new supabase.sql in Supabase (SQL Editor), then refresh the page.",
+"رابط المدرسة: {url}": "School link: {url}",
+"تم إنشاء موقع {name}": "Site created for {name}",
+"أرسل رابط الدعوة لمدير المدرسة. يفتحه ويسجّل بإيميله وكلمة مروره، والرابط يشتغل مرة وحدة.": "Send the invite link to the school's admin. They open it and register with their email and password. The link works once.",
+"تم إنشاء الموقع": "Site created",
+"تم إنشاء رابط دعوة جديد، والرابط القديم انلغى": "New invite link created; the old one no longer works",
+"تم إيقاف الموقع": "Site suspended",
+"تم تشغيل الموقع": "Site activated",
+"سيتم حذف {name} وكل بياناتها: السائقين والمناوبات والمستخدمين. ما يمكن التراجع.": "{name} and all its data (drivers, duties, users) will be deleted. This can't be undone.",
+"للتأكيد اكتب رمز المدرسة: {id}": "To confirm, type the school code: {id}",
+"تم حذف المدرسة": "School deleted",
+"هذا الرمز مستخدم لمدرسة ثانية، اختر رمزاً آخر": "This code is used by another school, choose another",
+"اكتب اسم المدرسة": "Enter the school name",
+"رابط الدعوة غير صحيح. اطلب رابطاً جديداً من إدارة النظام.": "Invalid invite link. Ask the system administrator for a new one.",
+"رابط الدعوة مستخدم من قبل. ادخل بحسابك من صفحة الدخول.": "This invite link was already used. Sign in from the sign-in page.",
+"هذا الإيميل مسجّل في مدرسة ثانية ({school}). استخدم إيميل ثاني.": "This email is registered with another school ({school}). Use another email.",
+"إدارة المدارس": "Schools management",
+"رمز المدرسة في الرابط (حروف إنجليزية صغيرة وأرقام)": "School code in the link (lowercase English letters and numbers)",
+"افتح مدرستك": "Open your school",
+"تفعيل حساب المدير": "Activate admin account",
+"اكتب اسمك، والإيميل وكلمة المرور اللي بتدخل فيها لوحة التحكم.": "Enter your name, and the email and password you'll use to sign in to the dashboard.",
+"اسمك": "Your name",
+"تفعيل الحساب": "Activate account",
+"المدارس": "Schools",
+"كل مدرسة لها موقع ورابط خاص، وبياناتها منفصلة عن غيرها": "Each school has its own site and link, with data kept separate",
+"لوحة مدرستي": "My school's dashboard",
+"دخول المدير العام": "System administrator sign in",
+"إضافة مدرسة جديدة": "Add a new school",
+"رمز المدرسة في الرابط": "School code in the link",
+"مثال: المدينة، السوق": "e.g. City, Market",
+"إنشاء الموقع": "Create site",
+"بحث بالاسم أو الرمز": "Search by name or code",
+"نظام إدارة مناوبات الحافلات": "Bus duty management system",
+"حذف المدرسة نهائياً": "Delete school permanently",
+"حذف نهائي": "Delete permanently"
+};
+  const fill = (s, v) => v ? String(s).replace(/\{(\w+)\}/g, (m, k) => k in v ? v[k] : m) : s;
+  // مفتاح بالشكل 'نص|سياق' يُعرض عربياً بالجزء الأول فقط
+  const t = (s, v) => fill(lang === 'en' && EN[s] != null ? EN[s] : String(s).split('|')[0], v);
+  const ATTRS = ['placeholder', 'title', 'aria-label', 'alt'];
+  let bound = null;
+  const listeners = [];
+
+  // يحفظ النصوص الثابتة في الصفحة مرة واحدة (قبل أي رسم ديناميكي)
+  function scan() {
+    bound = [];
+    const w = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, {
+      acceptNode: n => n.parentElement && !n.parentElement.closest('script,style,[data-no-i18n]') && n.nodeValue.trim() ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT
+    });
+    for (let n; (n = w.nextNode());) {
+      const v = n.nodeValue, key = (n.parentElement.dataset.i18n || v.trim()).replace(/\s+/g, ' ');
+      if (key in EN) bound.push({ n, key, pre: v.match(/^\s*/)[0], post: v.match(/\s*$/)[0] });
+    }
+    document.querySelectorAll('[placeholder],[title],[aria-label],[alt]').forEach(el => ATTRS.forEach(a => {
+      const v = el.getAttribute(a); if (v && v.trim() in EN) bound.push({ el, a, key: v.trim() });
+    }));
+  }
+  function apply() {
+    const h = document.documentElement;
+    h.lang = lang; h.dir = lang === 'en' ? 'ltr' : 'rtl';
+    if (!bound) scan();
+    bound.forEach(b => {
+      if (b.n) b.n.nodeValue = b.pre + t(b.key) + b.post;
+      else b.el.setAttribute(b.a, t(b.key));
+    });
+    document.querySelectorAll('[data-lang-toggle]').forEach(b => b.textContent = lang === 'en' ? 'ع' : 'EN');
+  }
+  function set(l) {
+    lang = l === 'en' ? 'en' : 'ar';
+    try { localStorage.setItem(KEY, lang); } catch (e) {}
+    apply(); listeners.forEach(f => f(lang));
+  }
+  document.addEventListener('click', e => { if (e.target.closest('[data-lang-toggle]')) set(lang === 'en' ? 'ar' : 'en'); });
+  return { t, apply, set, get lang() { return lang; }, onChange: f => listeners.push(f), EN };
+})();
+const T = I18N.t;
+
+</script>
+<script>
+/* طبقة البيانات المشتركة بين الصفحة العامة ولوحة التحكم.
+   البيانات تُحفظ في Supabase عبر Cloud، وهذا الجزء يحمل الأدوات المشتركة. */
+const Store = (() => {
+  const KEY = 'school-bus-duty-v1';
+  const DAYS_AR = ['الأحد','الإثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'];
+  const DAYS_EN = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  const en = () => I18N.lang === 'en';
+
+  const SAMPLE_DRIVERS = [
+    ['سائق مثال 1','الحي الأول','90000001','','1'],
+    ['سائق مثال 2','الحي الثاني','90000002','','2'],
+    ['سائق مثال 3','الحي الثالث','90000003','','3'],
+    ['سائق مثال 4','الحي الرابع','90000004','','4']
+  ];
+  // شعار افتراضي: حافلة مدرسية
+  const DEFAULT_LOGO = 'data:image/svg+xml;utf8,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" fill="#fff"/><rect x="18" y="24" width="64" height="44" rx="8" fill="#f2b705" stroke="#2c3e50" stroke-width="3"/><rect x="25" y="31" width="14" height="12" rx="2" fill="#dfe8f5" stroke="#2c3e50" stroke-width="2"/><rect x="43" y="31" width="14" height="12" rx="2" fill="#dfe8f5" stroke="#2c3e50" stroke-width="2"/><rect x="61" y="31" width="14" height="12" rx="2" fill="#dfe8f5" stroke="#2c3e50" stroke-width="2"/><rect x="18" y="50" width="64" height="5" fill="#2c3e50"/><circle cx="33" cy="70" r="7" fill="#2c3e50"/><circle cx="67" cy="70" r="7" fill="#2c3e50"/><circle cx="33" cy="70" r="2.5" fill="#fff"/><circle cx="67" cy="70" r="2.5" fill="#fff"/></svg>');
+
+  const uid = () => Math.random().toString(36).slice(2, 10);
+  // تشفير بسيط للرمز السري (حماية أساسية فقط، ليس أماناً حقيقياً)
+  const hash = s => { let h = 5381; for (const c of String(s)) h = ((h << 5) + h + c.charCodeAt(0)) | 0; return 'h' + (h >>> 0).toString(36); };
+
+  // إعدادات التوزيع بالدور
+  const ROTATION_DEFAULT = { order: [], start: '', until: '', goingPerDay: 1, schoolPerDay: 1, rotateDest: true, autoAdjust: true };
+
+  function seed() {
+    return {
+      v: 1,
+      settings: {
+        school: '',
+        logo: '',
+        setupDone: false,
+        destinations: [],
+        weekend: [5, 6],
+        goingPerDay: 1,
+        schoolPerDay: 1,
+        alertDays: 30,
+        pin: ''
+      },
+      rotation: { ...ROTATION_DEFAULT, order: [] },
+      drivers: [],
+      duties: [],   // {id,type:'going'|'school',date,driverId,dest,note,done,auto}
+      leaves: [],   // {id,driverId,from,to,reason}
+      subs: [],     // {id,driverId,name,phone,busNo,from,to,note,source} سائق بديل مؤقت
+      duty_tokens: [], // {id: رقم المناوبة, token} لرابط البديل
+      log: []       // {t,msg}
+    };
+  }
+
+  let db;
+  function load() {
+    db = seed();
+    return db;
+  }
+  function save() { if (typeof Cloud !== 'undefined') Cloud.save(); }
+  function log(msg) { db.log.unshift({ t: new Date().toISOString(), msg }); db.log = db.log.slice(0, 200); }
+
+  // ===== أدوات التاريخ =====
+  const iso = d => { const x = new Date(d); return `${x.getFullYear()}-${String(x.getMonth() + 1).padStart(2, '0')}-${String(x.getDate()).padStart(2, '0')}`; };
+  const parse = s => new Date(s + 'T00:00');
+  const today = () => iso(new Date());
+  const addDays = (s, n) => { const d = parse(s); d.setDate(d.getDate() + n); return iso(d); };
+  // نسخ عربية ثابتة لرسائل السائقين، ونسخ تتبع لغة الواجهة
+  const dayNameAr = s => s ? DAYS_AR[parse(s).getDay()] : '';
+  const dayName = s => s ? (en() ? DAYS_EN : DAYS_AR)[parse(s).getDay()] : '';
+  const fmtAr = s => s ? parse(s).toLocaleDateString('ar-OM-u-nu-latn', { day: 'numeric', month: 'long', year: 'numeric' }) : '';
+  const fmt = s => s ? (en() ? parse(s).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }) : fmtAr(s)) : '';
+  const fmtShort = s => s ? parse(s).toLocaleDateString('en-GB') : '';
+  const hijri = s => { try { return parse(s).toLocaleDateString(en() ? 'en-u-ca-islamic-umalqura-nu-latn' : 'ar-SA-u-ca-islamic-umalqura-nu-latn', { day: 'numeric', month: 'long', year: 'numeric' }); } catch (e) { return ''; } };
+  const weekStart = s => { const d = parse(s); d.setDate(d.getDate() - d.getDay()); return iso(d); }; // الأحد
+  const daysUntil = s => Math.round((parse(s) - parse(today())) / 864e5);
+  const range = (from, to) => { const out = []; for (let d = from; d <= to; d = addDays(d, 1)) out.push(d); return out; };
+
+  // ===== أدوات البيانات =====
+  const driver = id => db.drivers.find(d => d.id === id);
+  // الإجازة الرسمية في يوم معيّن (إن وجدت)
+  const holidayOn = s => (db.settings.holidays || []).find(h => h.from <= s && s <= (h.to || h.from));
+  // يوم عطلة: العطلة الأسبوعية أو إجازة رسمية. التوزيع والجداول تتخطاه
+  const isWeekend = s => db.settings.weekend.includes(parse(s).getDay()) || !!holidayOn(s);
+  // نص يوضح سبب العطلة
+  const offLabel = s => { const h = holidayOn(s); return h ? T('إجازة رسمية: {name}', { name: h.name || T('إجازة') }) : T('عطلة نهاية الأسبوع'); };
+  const onLeave = (driverId, s) => db.leaves.some(l => l.driverId === driverId && l.from <= s && s <= l.to);
+  // البديل المؤقت لسائق في يوم معيّن
+  const subFor = (driverId, s) => (db.subs || []).find(x => x.driverId === driverId && x.from <= s && s <= x.to);
+  // السائق متاح للدور: نشط، وليس في إجازة أو عنده بديل يغطيه
+  const available = (driverId, s) => { const d = driver(driverId); return !!d && d.active && (!onLeave(driverId, s) || !!subFor(driverId, s)); };
+  // من سينفّذ المناوبة فعلياً (السائق أو البديل)
+  function who(duty) {
+    const d = driver(duty.driverId), sub = duty.date ? subFor(duty.driverId, duty.date) : null;
+    if (sub) return { name: sub.name, phone: sub.phone || '', phone2: '', busNo: sub.busNo || (d ? d.busNo : ''), area: d ? d.area : '', sub, orig: d };
+    return d ? { name: d.name, phone: d.phone || '', phone2: d.phone2 || '', busNo: d.busNo || '', area: d.area || '', sub: null, orig: d } : null;
+  }
+  const dutiesOn = (s, type) => db.duties.filter(x => x.date === s && (!type || x.type === type));
+  const typeNameAr = t => t === 'going' ? 'مناوبة الذهاب' : 'المناوبة في المدرسة';
+  const typeName = t => T(typeNameAr(t));
+  // تنظيف رقم الهاتف لصيغة دولية بدون + (عُمان 968 للأرقام المحلية)
+  const intlPhone = p => {
+    let n = String(p || '').replace(/[٠-٩]/g, c => '٠١٢٣٤٥٦٧٨٩'.indexOf(c)).replace(/\D/g, '');
+    if (n.startsWith('00')) n = n.slice(2);
+    if (n.length === 9 && n.startsWith('0')) n = n.slice(1);
+    if (n.length === 8) n = '968' + n;
+    return n;
+  };
+  // طريقة فتح واتساب (تُحفظ لكل جهاز): auto | web | app | api | wame
+  const WA_KEY = 'school-bus-wa';
+  const waMode = () => { try { return localStorage.getItem(WA_KEY) || 'auto'; } catch (e) { return 'auto'; } };
+  const setWaMode = m => { try { localStorage.setItem(WA_KEY, m); } catch (e) {} };
+  const isMobile = () => /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
+  function waLink(p, msg) {
+    const n = intlPhone(p), t = encodeURIComponent(msg || ''), q = (n ? `phone=${n}&` : '') + `text=${t}`;
+    let m = waMode(); if (m === 'auto') m = isMobile() ? 'api' : 'web';
+    if (m === 'web') return `https://web.whatsapp.com/send?${q}`;
+    if (m === 'app') return `whatsapp://send?${q}`;
+    if (m === 'wame') return `https://wa.me/${n}?text=${t}`;
+    return `https://api.whatsapp.com/send?${q}`;
+  }
+  const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+
+  const sampleDrivers = () => SAMPLE_DRIVERS.map(([name, area, phone, phone2, busNo]) => ({
+    id: uid(), name, area, phone, phone2, busNo, plate: '', capacity: '', licenseExp: '', insuranceExp: '', active: true, notes: 'بيانات تجريبية، عدّلها أو احذفها'
+  }));
+  const logo = () => (db && db.settings.logo) || DEFAULT_LOGO;
+  const schoolName = () => (db && db.settings.school) || T('مدرستك');
+  // تطبيق اسم المدرسة وشعارها على الصفحة
+  function brand() {
+    document.querySelectorAll('img.brand-logo').forEach(i => { if (i.getAttribute('src') !== logo()) i.src = logo(); });
+    document.querySelectorAll('[data-school]').forEach(el => el.textContent = schoolName());
+    let fav = document.getElementById('favicon');
+    if (!fav) { fav = document.createElement('link'); fav.id = 'favicon'; fav.rel = 'icon'; document.head.appendChild(fav); }
+    fav.href = logo();
+    const base = T(document.body.dataset.title || 'مناوبات الحافلات');
+    document.title = db.settings.school ? `${base} – ${db.settings.school}` : base;
+    // روابط الصفحات تحمل رمز المدرسة
+    if (typeof Cloud !== 'undefined' && Cloud.schoolId) document.querySelectorAll('a[href]').forEach(a => {
+      const m = (a.getAttribute('href') || '').match(/^(index|admin)\.html(?:\?.*)?$/); if (m) a.setAttribute('href', `${m[1]}.html?s=${encodeURIComponent(Cloud.schoolId)}`);
+    });
+  }
+  // تصغير صورة الشعار قبل حفظها
+  function readLogo(file) {
+    return new Promise((res, rej) => {
+      if (!file || !file.type.startsWith('image/')) return rej(new Error('type'));
+      const r = new FileReader();
+      r.onerror = rej;
+      r.onload = () => {
+        const img = new Image();
+        img.onerror = rej;
+        img.onload = () => {
+          const max = 256, k = Math.min(1, max / Math.max(img.width, img.height));
+          const c = document.createElement('canvas'); c.width = Math.round(img.width * k); c.height = Math.round(img.height * k);
+          const x = c.getContext('2d'); x.fillStyle = '#fff'; x.fillRect(0, 0, c.width, c.height); x.drawImage(img, 0, 0, c.width, c.height);
+          res(c.toDataURL('image/jpeg', 0.88));
+        };
+        img.src = r.result;
+      };
+      r.readAsDataURL(file);
+    });
+  }
+
+  // رسائل واتساب للسائقين تبقى بالعربي دائماً
+  const DEFAULT_TEMPLATE = 'السلام عليكم {الاسم}،\nتذكير من {المدرسة}: لديك {النوع} يوم {اليوم} {التاريخ}{الوجهة}.{رابط_البديل}\nشاكرين تعاونكم.';
+  // رابط البديل الخاص بالمناوبة (رمز عشوائي لكل مناوبة، يُنشأ عند أول حاجة)
+  let tokenSave = null;
+  function badilLink(duty) {
+    if (typeof Cloud === 'undefined' || !Cloud.tokensReady || !duty || !duty.id || duty.date < today()) return '';
+    db.duty_tokens = db.duty_tokens || [];
+    let t = db.duty_tokens.find(x => x.id === duty.id);
+    if (!t) {
+      const a = new Uint8Array(9); crypto.getRandomValues(a);
+      t = { id: duty.id, token: Array.from(a, b => 'abcdefghjkmnpqrstuvwxyz23456789'[b % 31]).join('') };
+      db.duty_tokens.push(t);
+      clearTimeout(tokenSave); tokenSave = setTimeout(save, 300);
+    }
+    return new URL('badil.html', location.href).href.split('?')[0] + '?c=' + t.token;
+  }
+  const badilLine = duty => { const u = badilLink(duty); return u ? `\nإذا ما تقدر تحضر، حط بديلك من هنا:\n${u}` : ''; };
+  function fillTemplate(tpl, duty) {
+    const w = who(duty) || {};
+    const map = {
+      '{الاسم}': w.name || '', '{المدرسة}': db.settings.school || '',
+      '{النوع}': typeNameAr(duty.type) + (w.sub && w.orig ? ` (نيابة عن ${w.orig.name})` : ''),
+      '{اليوم}': dayNameAr(duty.date), '{التاريخ}': fmtAr(duty.date), '{الحافلة}': w.busNo || '',
+      '{الوجهة}': duty.type === 'going' && duty.dest ? ` – الوجهة: ${duty.dest}` : '',
+      '{رابط_البديل}': badilLine(duty)
+    };
+    // القوالب القديمة اللي ما فيها رابط البديل: يُضاف في آخر الرسالة
+    if (!tpl.includes('{رابط_البديل}')) tpl += '{رابط_البديل}';
+    return tpl.replace(/\{[^}]+\}/g, k => k in map ? map[k] : k);
+  }
+  const reminderText = duty => fillTemplate(db.settings.template || DEFAULT_TEMPLATE, duty);
+  const dutyLine = x => `${typeNameAr(x.type)}${x.type === 'going' && x.dest ? ' (' + x.dest + ')' : ''}`;
+  // رسالة أسبوعية لسائق واحد، أو لبديل (subId) عن مناوباته في فترة النيابة
+  function weekText(driverId, from, to, subId) {
+    const sub = subId ? (db.subs || []).find(x => x.id === subId) : null;
+    const d = driver(driverId);
+    const list = db.duties.filter(x => x.driverId === driverId && x.date >= from && x.date <= to &&
+      (sub ? (x.date >= sub.from && x.date <= sub.to) : !subFor(driverId, x.date))).sort((a, b) => a.date.localeCompare(b.date));
+    const name = sub ? sub.name : d ? d.name : '';
+    return `السلام عليكم ${name}،\nمناوباتك من ${fmtShort(from)} إلى ${fmtShort(to)} – ${db.settings.school || ''}${sub && d ? ` (نيابة عن ${d.name})` : ''}:\n` +
+      list.map(x => { const u = badilLink(x); return `- ${dayNameAr(x.date)} ${fmtShort(x.date)}: ${dutyLine(x)}` + (u ? `\n  البديل: ${u}` : ''); }).join('\n') +
+      (list.some(x => badilLink(x)) ? '\nإذا ما تقدر تحضر يوماً، افتح رابط البديل لذاك اليوم.' : '') + '\nشاكرين تعاونكم.';
+  }
+  // رسالة جماعية لمجموعة السائقين
+  function groupText(from, to) {
+    const days = range(from, to).filter(d => !isWeekend(d));
+    const name = x => { const w = who(x); return w ? w.name + (w.busNo ? ` (حافلة ${w.busNo})` : '') + (w.sub && w.orig ? ` – بديل عن ${w.orig.name}` : '') : ''; };
+    let out = `جدول مناوبات الحافلات – ${db.settings.school || ''}\n`;
+    days.forEach(day => {
+      const g = dutiesOn(day, 'going'), s = dutiesOn(day, 'school');
+      if (!g.length && !s.length) return;
+      out += `\n*${dayNameAr(day)} ${fmtShort(day)}*\n`;
+      g.forEach(x => out += `- الذهاب: ${name(x)}${x.dest ? ' – ' + x.dest : ''}\n`);
+      s.forEach(x => out += `- المدرسة: ${name(x)}\n`);
+    });
+    return out.trim();
+  }
+
+  // تنبيهات الوثائق والبيانات الناقصة
+  function alerts() {
+    const out = [], lim = db.settings.alertDays;
+    db.drivers.filter(d => d.active).forEach(d => {
+      [['licenseExp', 'رخصة القيادة'], ['insuranceExp', 'تأمين الحافلة']].forEach(([k, label]) => {
+        if (!d[k]) return;
+        const n = daysUntil(d[k]);
+        if (n < 0) out.push({ level: 'bad', driver: d, text: T('{label} منتهية منذ {n} يوم', { label: T(label), n: -n }) });
+        else if (n <= lim) out.push({ level: 'warn', driver: d, text: T('{label} تنتهي بعد {n} يوم', { label: T(label), n }) });
+      });
+      if (!d.busNo) out.push({ level: 'info', driver: d, text: T('رقم الحافلة غير مسجل') });
+    });
+    return out;
+  }
+
+  // يُطلق عند تغيّر البيانات في تبويب آخر
+  function onChange() {}
+
+  // الثيم
+  const THEME_KEY = 'school-bus-theme';
+  function applyTheme() { try { const t = localStorage.getItem(THEME_KEY); if (t) document.documentElement.dataset.theme = t; } catch (e) {} }
+  function toggleTheme() {
+    const cur = document.documentElement.dataset.theme || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+    const next = cur === 'dark' ? 'light' : 'dark';
+    document.documentElement.dataset.theme = next;
+    try { localStorage.setItem(THEME_KEY, next); } catch (e) {}
+  }
+  applyTheme();
+
+  function toast(msg, err) {
+    let t = document.querySelector('.toast');
+    if (!t) { t = document.createElement('div'); t.className = 'toast'; t.setAttribute('role', 'status'); document.body.appendChild(t); }
+    t.textContent = msg; t.classList.toggle('err', !!err); t.hidden = false;
+    clearTimeout(t._h); t._h = setTimeout(() => t.hidden = true, 2800);
+  }
+
+  load();
+  return {
+    get db() { return db; }, set db(v) { db = v; }, KEY, load, save, log, seed, uid, hash, ROTATION_DEFAULT,
+    iso, parse, today, addDays, dayName, dayNameAr, fmt, fmtAr, fmtShort, hijri, weekStart, daysUntil, range,
+    driver, isWeekend, holidayOn, offLabel, onLeave, subFor, available, who, dutiesOn, typeName, typeNameAr, intlPhone, waLink, badilLink, waMode, setWaMode, esc, reminderText, alerts,
+    onChange, toggleTheme, toast, get DAYS() { return en() ? DAYS_EN : DAYS_AR; }, DEFAULT_TEMPLATE, fillTemplate, weekText, groupText, sampleDrivers, logo, schoolName, brand, readLogo
+  };
+})();
+
+</script>
+<script>
+/* الربط مع Supabase: الدخول، المزامنة اللحظية، وحفظ التغييرات.
+   الواجهة تعدّل البيانات في الذاكرة (Store.db) ثم تستدعي الحفظ،
+   وهذا الملف يقارنها بآخر نسخة من قاعدة البيانات ويكتب الصفوف اللي تغيّرت فقط. */
+const Cloud = (() => {
+  const URL_ = String(window.SUPABASE_URL || '').trim().replace(/\/+$/, '');
+  const KEY_ = String(window.SUPABASE_ANON_KEY || '').trim();
+  const configured = /^https:\/\/[^/]+\.supabase\.co$/.test(URL_) && KEY_.length > 20 && !/ضع/.test(KEY_);
+  const sb = configured && window.supabase ? window.supabase.createClient(URL_, KEY_) : null;
+  const S = () => Store;
+
+  // رمز المدرسة من الرابط: index.html?s=fida
+  const validSlug = v => /^[a-z0-9][a-z0-9-]{1,29}$/.test(v || '');
+  let SID = (new URLSearchParams(location.search).get('s') || '').trim().toLowerCase();
+  if (!validSlug(SID)) SID = '';
+  let school = null; // {id, name, active}
+  function setSchool(id) {
+    SID = id;
+    try { const u = new URL(location.href); u.searchParams.set('s', id); history.replaceState(null, '', u); } catch (e) {}
+  }
+  const pageUrl = (page, extra) => { const u = new URL(page, location.href); if (SID) u.searchParams.set('s', SID); Object.entries(extra || {}).forEach(([k, v]) => u.searchParams.set(k, v)); return u.href; };
+
+  // أسماء الأعمدة في قاعدة البيانات
+  const COLS = {
+    drivers: ['id', 'name', 'area', 'phone', 'phone2', 'busNo', 'plate', 'capacity', 'licenseExp', 'insuranceExp', 'active', 'notes'],
+    duties: ['id', 'type', 'date', 'driverId', 'dest', 'note', 'done', 'remindedAt', 'auto'],
+    leaves: ['id', 'driverId', 'from', 'to', 'reason'],
+    subs: ['id', 'driverId', 'name', 'phone', 'busNo', 'from', 'to', 'note', 'source'],
+    duty_tokens: ['id', 'token'],
+    log: ['id', 't', 'msg', 'by']
+  };
+  const MAP = {
+    drivers: { busNo: 'bus_no', licenseExp: 'license_exp', insuranceExp: 'insurance_exp' },
+    duties: { driverId: 'driver_id', remindedAt: 'reminded_at' },
+    leaves: { driverId: 'driver_id', from: 'date_from', to: 'date_to' },
+    subs: { driverId: 'driver_id', busNo: 'bus_no', from: 'date_from', to: 'date_to' },
+    duty_tokens: {},
+    log: { by: 'by_name' }
+  };
+  const toRow = (t, o) => { const r = { school_id: SID }; COLS[t].forEach(k => { const v = o[k]; r[MAP[t][k] || k] = v === undefined || v === '' ? null : v; }); return r; };
+  const fromRow = (t, r) => { const o = {}; COLS[t].forEach(k => { const v = r[MAP[t][k] || k]; o[k] = v === null || v === undefined ? (k === 'active' || k === 'done' || k === 'auto' ? false : '') : v; }); return o; };
+  const stable = v => Array.isArray(v) ? '[' + v.map(stable).join(',') + ']'
+    : v && typeof v === 'object' ? '{' + Object.keys(v).sort().map(k => JSON.stringify(k) + ':' + stable(v[k])).join(',') + '}'
+    : JSON.stringify(v === undefined ? null : v);
+  const clean = o => JSON.parse(JSON.stringify(o));
+  const windowStart = () => S().addDays(S().today(), -365);
+
+  let shadow = { settings: null, rotation: null, drivers: {}, duties: {}, leaves: {}, subs: {}, duty_tokens: {} };
+  let tokensReady = false;
+  let profile = null, users = [], settingsLoaded = false, setupInProgress = false, channel = null, poll = null, mode = null;
+  const listeners = { change: [], status: [], recovery: [] };
+  const emit = (k, v) => listeners[k].forEach(f => f(v));
+  const on = (k, f) => listeners[k].push(f);
+  let changeTimer = null;
+  const changed = () => { clearTimeout(changeTimer); changeTimer = setTimeout(() => emit('change'), 30); };
+
+  function mergeList(list, docs) {
+    const byId = new Map(list.map(x => [x.id, x])), out = [];
+    docs.forEach(d => {
+      const cur = byId.get(d.id);
+      if (cur) { Object.keys(cur).forEach(k => { if (!(k in d)) delete cur[k]; }); Object.assign(cur, d); out.push(cur); }
+      else out.push(d);
+    });
+    list.length = 0; list.push(...out);
+  }
+  function applySettings(data) {
+    const db = S().db; settingsLoaded = true;
+    if (data) { Object.assign(db.settings, data); db.settings.setupDone = true; shadow.settings = stable(data); }
+    else { db.settings.setupDone = false; shadow.settings = null; }
+  }
+  function applyRotation(data) {
+    S().db.rotation = Object.assign({}, S().ROTATION_DEFAULT, { order: [] }, data || {});
+    shadow.rotation = data ? stable(data) : null;
+  }
+  const fail = e => {
+    console.error(e);
+    const m = String((e && e.message) || '');
+    const msg = e && (e.code === '42501' || /row-level security|permission/i.test(m)) ? T('لا تملك صلاحية لهذا الإجراء')
+      : /school_id|schools|subs|auto|public_subs|schema cache|does not exist/i.test(m) ? T('قاعدة البيانات تحتاج تحديث: شغّل ملف supabase.sql مرة ثانية')
+      : T('تعذّر الاتصال بقاعدة البيانات');
+    emit('status', { level: 'bad', text: msg });
+  };
+  const must = ({ data, error }) => { if (error) throw error; return data; };
+
+  /* ===== القراءة ===== */
+  async function fetchAll(build) {
+    let out = [], from = 0;
+    for (;;) { const rows = must(await build().range(from, from + 999)); out = out.concat(rows); if (rows.length < 1000) return out; from += 1000; }
+  }
+  async function loadSchool() {
+    school = SID ? must(await sb.from('schools').select('id,name,active').eq('id', SID).maybeSingle()) : null;
+    return school;
+  }
+  async function listSchools() { return must(await sb.from('schools').select('id,name,active').eq('active', true).order('name')); }
+  async function loadSettings() {
+    const rows = must(await sb.from('settings').select('id,data').eq('school_id', SID).in('id', ['main', 'rotation']));
+    const main = rows.find(r => r.id === 'main'), rot = rows.find(r => r.id === 'rotation');
+    applySettings(main ? main.data : null);
+    applyRotation(rot ? rot.data : null);
+  }
+  async function loadTable(t) {
+    const rows = await fetchAll(() => { let q = sb.from(t).select('*').eq('school_id', SID); if (t === 'duties') q = q.gte('date', mode === 'public' ? S().addDays(S().today(), -60) : windowStart()); return q.order('id'); });
+    const docs = rows.map(r => fromRow(t, r));
+    if (mode === 'staff') shadow[t] = Object.fromEntries(docs.map(d => [d.id, stable(toRow(t, d))]));
+    mergeList(S().db[t], docs);
+  }
+  async function loadPublicDrivers() {
+    const rows = await fetchAll(() => sb.from('public_drivers').select('*').eq('school_id', SID).order('id'));
+    mergeList(S().db.drivers, rows.map(r => ({ id: r.id, name: r.name || '', area: r.area || '', busNo: r.bus_no || '', active: !!r.active })));
+  }
+  async function loadPublicSubs() {
+    const rows = await fetchAll(() => sb.from('public_subs').select('*').eq('school_id', SID).order('id'));
+    mergeList(S().db.subs, rows.map(r => ({ id: r.id, driverId: r.driver_id || '', name: r.name || '', busNo: r.bus_no || '', from: r.date_from || '', to: r.date_to || '', phone: '', note: '' })));
+  }
+  async function loadLog() {
+    const rows = must(await sb.from('log').select('*').eq('school_id', SID).order('t', { ascending: false }).limit(60));
+    S().db.log = [...S().db.log.filter(l => !l.id), ...rows.map(r => fromRow('log', r))];
+  }
+  async function loadUsers() { users = must(await sb.from('profiles').select('*').eq('school_id', SID).order('name')); changed(); }
+
+  const pending = new Set(); let reloadTimer = null;
+  function reload(what) {
+    what.forEach(w => pending.add(w));
+    clearTimeout(reloadTimer);
+    reloadTimer = setTimeout(async () => {
+      const list = [...pending]; pending.clear();
+      try {
+        for (const w of list) {
+          if (w === 'settings') await loadSettings();
+          else if (w === 'public_drivers') await loadPublicDrivers();
+          else if (w === 'public_subs') await loadPublicSubs().catch(() => {});
+          else if (w === 'log') await loadLog();
+          else if (w === 'profiles') { if (profile && profile.role === 'admin') await loadUsers(); }
+          else await loadTable(w);
+        }
+        changed();
+      } catch (e) { fail(e); }
+    }, 250);
+  }
+  function stop() {
+    if (channel) { sb.removeChannel(channel); channel = null; }
+    clearInterval(poll); poll = null; mode = null;
+  }
+  function listen(tables, map) {
+    channel = sb.channel('changes-' + Date.now());
+    tables.forEach(t => channel.on('postgres_changes', { event: '*', schema: 'public', table: t, filter: 'school_id=eq.' + SID }, () => reload(map[t] || [t])));
+    channel.subscribe();
+  }
+  async function subscribePublic() {
+    stop(); mode = 'public';
+    if (!SID) return;
+    try { await Promise.all([loadSchool(), loadSettings(), loadPublicDrivers(), loadTable('duties'), loadPublicSubs().catch(() => {})]); changed(); } catch (e) { fail(e); }
+    listen(['settings', 'duties', 'subs'], { duties: ['duties', 'public_drivers'], subs: ['public_subs'] });
+    poll = setInterval(() => { if (!document.hidden) reload(['settings', 'public_drivers', 'duties', 'public_subs']); }, 120000);
+  }
+  async function subscribeStaff() {
+    stop(); mode = 'staff';
+    try {
+      await Promise.all([loadSettings(), loadTable('drivers'), loadTable('duties'), loadTable('leaves'), loadTable('subs'), loadLog(),
+        loadTable('duty_tokens').then(() => { tokensReady = true; }, () => { tokensReady = false; })]);
+      if (profile.role === 'admin') await loadUsers();
+      changed();
+    } catch (e) { fail(e); }
+    listen(['settings', 'drivers', 'duties', 'leaves', 'subs', 'log', 'profiles'], {});
+    poll = setInterval(() => { if (!document.hidden) reload(['settings', 'drivers', 'duties', 'leaves', 'subs', 'log']); }, 120000);
+  }
+
+  /* ===== الحفظ ===== */
+  let saving = Promise.resolve();
+  function save() { if (!profile) return; saving = saving.then(write).catch(e => { fail(e); reload(['settings', 'drivers', 'duties', 'leaves', 'subs']); }); }
+  async function write() {
+    const db = S().db, jobs = [];
+    if (profile.role === 'admin' && db.settings.setupDone) {
+      const st = clean(db.settings); delete st.setupDone; delete st.pin;
+      if (stable(st) !== shadow.settings) { shadow.settings = stable(st); jobs.push(() => sb.from('settings').upsert({ school_id: SID, id: 'main', data: st }, { onConflict: 'school_id,id' })); }
+    }
+    if (db.settings.setupDone && db.rotation) {
+      const rt = clean(db.rotation);
+      if (stable(rt) !== shadow.rotation) { shadow.rotation = stable(rt); jobs.push(() => sb.from('settings').upsert({ school_id: SID, id: 'rotation', data: rt }, { onConflict: 'school_id,id' })); }
+    }
+    // رموز المناوبات المحذوفة تنحذف معها
+    if (tokensReady) { const ids = new Set(db.duties.map(x => x.id)); db.duty_tokens = (db.duty_tokens || []).filter(x => ids.has(x.id)); }
+    ['drivers', 'duties', 'leaves', 'subs'].concat(tokensReady ? ['duty_tokens'] : []).forEach(t => {
+      const up = [], seen = new Set();
+      db[t].forEach(x => {
+        if (!x.id) x.id = S().uid();
+        seen.add(x.id);
+        const row = toRow(t, x), j = stable(row);
+        if (shadow[t][x.id] !== j) { up.push(row); shadow[t][x.id] = j; }
+      });
+      const del = Object.keys(shadow[t]).filter(id => !seen.has(id));
+      del.forEach(id => delete shadow[t][id]);
+      for (let i = 0; i < up.length; i += 500) { const part = up.slice(i, i + 500); jobs.push(() => sb.from(t).upsert(part)); }
+      for (let i = 0; i < del.length; i += 200) { const part = del.slice(i, i + 200); jobs.push(() => sb.from(t).delete().in('id', part)); }
+    });
+    const logs = db.log.filter(l => !l.id).map(l => { l.id = S().uid(); return toRow('log', { id: l.id, t: l.t, msg: l.msg, by: profile.name || '' }); });
+    if (logs.length) jobs.push(() => sb.from('log').insert(logs));
+    if (!jobs.length) return;
+    emit('status', { level: 'warn', text: T('جارٍ الحفظ…') });
+    for (const j of jobs) must(await j());
+    emit('status', { level: 'ok', text: T('تم الحفظ') });
+  }
+
+  /* ===== الدخول والحسابات ===== */
+  function errText(e) {
+    const m = String((e && (e.message || e.code)) || '');
+    if (e && e.code === 'confirm_email') return T('أرسلنا رابط تأكيد إلى إيميلك. افتحه، ثم ارجع هنا وادخل بنفس الإيميل وكلمة المرور لإكمال الإعداد');
+    if (/Invalid login credentials/i.test(m)) return T('الإيميل أو كلمة المرور غير صحيحة');
+    if (/Email not confirmed/i.test(m)) return T('لم يتم تأكيد الإيميل بعد. افتح رابط التأكيد اللي وصلك');
+    if (/already registered|already exists/i.test(m)) return T('هذا الإيميل مسجل مسبقاً');
+    if (/at least 6|Password should/i.test(m)) return T('كلمة المرور ضعيفة، استخدم 6 أحرف أو أكثر');
+    if (/invalid.*email|email.*invalid/i.test(m)) return T('صيغة الإيميل غير صحيحة');
+    if (/rate limit|too many/i.test(m)) return T('محاولات كثيرة، انتظر قليلاً ثم حاول مرة أخرى');
+    if (/Failed to fetch|NetworkError|network/i.test(m)) return T('لا يوجد اتصال بالإنترنت');
+    if ((e && e.code === '42501') || /row-level security/i.test(m)) return T('لا تملك صلاحية لهذا الإجراء');
+    return T('حدث خطأ، حاول مرة أخرى');
+  }
+
+  let currentUser = null;
+  function watchAuth(fn) {
+    let lastUid;
+    sb.auth.onAuthStateChange((event, session) => {
+      currentUser = session ? session.user : null;
+      if (event === 'PASSWORD_RECOVERY') setTimeout(() => emit('recovery'), 0);
+      const uid = currentUser ? currentUser.id : null;
+      if (uid === lastUid) return;
+      lastUid = uid;
+      setTimeout(() => handle(fn), 0); // لا نستدعي Supabase داخل هذا الحدث مباشرة
+    });
+  }
+  let lastFn = null;
+  async function handle(fn) {
+    lastFn = fn;
+    if (setupInProgress) return;
+    stop(); profile = null; users = [];
+    if (!currentUser) return fn({ state: 'out' });
+    try {
+      const p = must(await sb.from('profiles').select('*').eq('id', currentUser.id).maybeSingle());
+      if (!p) return fn({ state: 'inactive', email: currentUser.email });
+      // الحساب تابع لمدرسة ثانية غير اللي في الرابط
+      if (SID && p.school_id !== SID) return fn({ state: 'other', email: currentUser.email, school: p.school_id });
+      if (!SID) setSchool(p.school_id);
+      await loadSchool();
+      if (school && !school.active) return fn({ state: 'disabled', email: currentUser.email });
+      p.isSuper = !!must(await sb.from('super_admins').select('user_id').eq('user_id', currentUser.id).maybeSingle());
+      profile = p;
+      await subscribeStaff();
+      fn({ state: 'staff', profile });
+    } catch (e) { fail(e); fn({ state: 'inactive', email: currentUser.email }); }
+  }
+  async function signIn(email, password) { must(await sb.auth.signInWithPassword({ email: email.trim(), password })); }
+  async function signOut() { await sb.auth.signOut(); }
+  async function resetPassword(email) { must(await sb.auth.resetPasswordForEmail(email.trim(), { redirectTo: pageUrl(location.pathname.split('/').pop() || 'admin.html') })); }
+  async function updatePassword(password) { must(await sb.auth.updateUser({ password })); }
+  // قاعدة بيانات فاضية؟ (أول تشغيل للنظام)
+  async function canBootstrap() { return !!must(await sb.rpc('can_bootstrap')); }
+  // تسجيل حساب جديد أو الدخول لو الإيميل مسجل
+  async function signUpOrIn(email, password) {
+    let session = must(await sb.auth.getSession()).session;
+    if (session) return session;
+    const r = await sb.auth.signUp({ email: email.trim(), password });
+    if (r.error && /already registered|already exists/i.test(r.error.message || '')) session = must(await sb.auth.signInWithPassword({ email: email.trim(), password })).session;
+    else session = must(r).session;
+    if (!session) throw Object.assign(new Error('confirm'), { code: 'confirm_email' });
+    currentUser = session.user;
+    return session;
+  }
+
+  // الإعداد لأول مرة: أول مدرسة + حساب مديرها (يصير المدير العام)
+  async function setup({ slug, name, email, password, settings, drivers }) {
+    setupInProgress = true;
+    try {
+      await signUpOrIn(email, password);
+      const st = clean(settings); delete st.setupDone; delete st.pin;
+      const r = must(await sb.rpc('bootstrap', { p_slug: slug, p_settings: st, p_name: name }));
+      if (!r || !r.ok) throw Object.assign(new Error(r && r.error), { code: 'bootstrap_' + (r && r.error) });
+      setSchool(slug);
+    } finally { setupInProgress = false; }
+    await handle(lastFn);
+    (drivers || []).forEach(d => S().db.drivers.push(d));
+    if ((drivers || []).length) save();
+    return profile;
+  }
+
+  // مدير المدرسة يفعّل حسابه من رابط الدعوة
+  async function acceptInvite({ token, name, email, password }) {
+    setupInProgress = true;
+    let r;
+    try {
+      await signUpOrIn(email, password);
+      r = must(await sb.rpc('accept_invite', { p_token: token, p_name: name }));
+      if (r && r.ok) setSchool(r.school);
+    } finally { setupInProgress = false; }
+    if (r && r.ok) await handle(lastFn);
+    return r;
+  }
+
+  // المدير يضيف مستخدماً بدون الخروج من حسابه (اتصال مؤقت منفصل)
+  async function addUser({ name, email, password, role }) {
+    const tmp = window.supabase.createClient(URL_, KEY_, { auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false, storageKey: 'tmp-' + Date.now() } });
+    const data = must(await tmp.auth.signUp({ email: email.trim(), password }));
+    const uid = data.user && data.user.id;
+    if (!uid) throw new Error('signup');
+    must(await sb.from('profiles').insert({ id: uid, school_id: SID, name, email: email.trim(), role }));
+    await loadUsers();
+  }
+  // دوال البديل من الرابط (بدون تسجيل دخول)
+  async function rpc(fn, args) { return must(await sb.rpc(fn, args)); }
+  async function setRole(uid, role) { must(await sb.from('profiles').update({ role }).eq('id', uid)); await loadUsers(); }
+  async function removeUser(uid) { must(await sb.from('profiles').delete().eq('id', uid)); await loadUsers(); }
+
+  return {
+    configured, get ready() { return !!sb; }, on, save, watchAuth, signIn, signOut, resetPassword, updatePassword, setup, canBootstrap, acceptInvite,
+    get schoolId() { return SID; }, get school() { return school; }, setSchool, validSlug, pageUrl, loadSchool, listSchools, isSuper: () => !!profile && !!profile.isSuper,
+    addUser, setRole, removeUser, subscribePublic, errText, rpc, get tokensReady() { return tokensReady; },
+    get signedIn() { return !!currentUser; }, get settingsLoaded() { return settingsLoaded; },
+    get profile() { return profile; }, get users() { return users; }, isAdmin: () => !!profile && profile.role === 'admin'
+  };
+})();
+
+
+</script>
+<script>
+(() => {
+  const S = Store, $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
+  let schools = [], newLogo = '', loaded = false;
+  const base = () => new URL('.', location.href.split('?')[0]).href;
+  const links = (id, invite) => ({
+    pub: `${base()}index.html?s=${encodeURIComponent(id)}`,
+    admin: `${base()}admin.html?s=${encodeURIComponent(id)}`,
+    invite: invite ? `${base()}admin.html?s=${encodeURIComponent(id)}&invite=${encodeURIComponent(invite)}` : ''
+  });
+  const show = id => ['scState', 'scLogin', 'scApp'].forEach(x => $('#' + x).hidden = x !== id);
+  function state(icon, title, text, extra = '') { $('#scState').innerHTML = `<i class="fa-solid ${icon}" style="font-size:40px;color:var(--bus)"></i><h2>${title}</h2>${text ? `<p class="muted" style="margin:0">${text}</p>` : ''}${extra}`; show('scState'); }
+  async function copy(text) {
+    try { await navigator.clipboard.writeText(text); S.toast(T('تم النسخ')); }
+    catch (_) { window.prompt(T('انسخ الرابط:'), text); }
+  }
+  const linkRow = (label, url, icon, wa) => `<div class="sc-link"><span class="muted"><i class="fa-solid ${icon}"></i> ${label}</span><code class="num">${S.esc(url)}</code>
+    <span class="sc-act"><button type="button" class="btn sm" data-copy="${S.esc(url)}"><i class="fa-solid fa-copy"></i> ${T('نسخ')}</button>
+    <a class="btn sm" href="${S.esc(url)}" target="_blank" rel="noopener"><i class="fa-solid fa-arrow-up-right-from-square"></i></a>
+    ${wa ? `<a class="btn sm green" href="${S.esc(S.waLink('', wa))}" target="_blank" rel="noopener" title="${T('إرسال واتساب')}"><i class="fa-brands fa-whatsapp"></i></a>` : ''}</span></div>`;
+  const inviteMsg = (name, url) => `السلام عليكم،\nتم تجهيز نظام مناوبات الحافلات لـ ${name}.\nفعّل حساب المدير من هذا الرابط (يُستخدم مرة واحدة):\n${url}`;
+
+  /* ===== القائمة ===== */
+  function render() {
+    S.brand();
+    const q = $('#scSearch').value.trim().toLowerCase();
+    const list = schools.filter(s => !q || (s.name + ' ' + s.id).toLowerCase().includes(q));
+    $('#scCount').textContent = T('{n} مدرسة', { n: schools.length });
+    $('#scList').innerHTML = list.map(s => {
+      const L = links(s.id, s.invite), admins = s.admins || [];
+      const last = s.last_activity ? new Date(s.last_activity).toLocaleString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—';
+      return `<article class="card sc-card${s.active ? '' : ' off'}">
+        <div class="sc-top"><div class="logo-disc"><img alt="" src="${S.esc(s.logo || S.logo())}"></div>
+          <div style="min-width:0;flex:1"><h3>${S.esc(s.name)}</h3><span class="muted num">?s=${S.esc(s.id)}</span></div>
+          ${s.active ? `<span class="chip ok">${T('فعّال')}</span>` : `<span class="chip bad">${T('موقوف')}</span>`}</div>
+        <div class="sc-stats"><span><b>${s.drivers}</b> ${T('سائق')}</span><span><b>${s.users}</b> ${T('مستخدم')}</span><span>${T('آخر نشاط')}: <b class="num">${last}</b></span></div>
+        <div class="sc-admins">${admins.length ? admins.map(a => `<span class="chip"><i class="fa-solid fa-user-shield"></i> ${S.esc(a.name || a.email)} <small class="muted num">${S.esc(a.email || '')}</small></span>`).join(' ') : `<span class="chip warn"><i class="fa-solid fa-hourglass-half"></i> ${T('بانتظار تفعيل المدير')}</span>`}</div>
+        ${linkRow(T('الصفحة العامة'), L.pub, 'fa-globe')}
+        ${linkRow(T('لوحة التحكم'), L.admin, 'fa-gauge-high')}
+        ${L.invite ? linkRow(T('رابط دعوة المدير'), L.invite, 'fa-envelope-open-text', inviteMsg(s.name, L.invite)) : ''}
+        <div class="sc-foot">
+          <button class="btn sm" data-invite="${S.esc(s.id)}"><i class="fa-solid fa-user-plus"></i> ${s.invite ? T('رابط دعوة جديد') : T('إنشاء رابط دعوة')}</button>
+          <button class="btn sm" data-toggle="${S.esc(s.id)}"><i class="fa-solid ${s.active ? 'fa-pause' : 'fa-play'}"></i> ${s.active ? T('إيقاف') : T('تشغيل')}</button>
+          <button class="btn sm" data-del="${S.esc(s.id)}" style="margin-inline-start:auto"><i class="fa-solid fa-trash" style="color:var(--red)"></i> ${T('حذف')}</button>
+        </div></article>`;
+    }).join('') || `<div class="empty-state card">${T('لا توجد مدارس')}</div>`;
+  }
+  async function load() {
+    try {
+      const r = await Cloud.rpc('schools_overview');
+      if (!r || !r.ok) return state('fa-lock', T('هذه الصفحة للمدير العام فقط'), T('حسابك ما عنده صلاحية إدارة المدارس.'));
+      schools = r.schools || []; loaded = true; show('scApp'); render();
+    } catch (e) { console.error(e); state('fa-database', T('قاعدة البيانات تحتاج تحديث'), T('شغّل ملف supabase.sql الجديد في Supabase من SQL Editor، وبعدها حدّث الصفحة.')); }
+  }
+
+  /* ===== إضافة مدرسة ===== */
+  const weekend = sel => { $('#nWeekend').innerHTML = S.DAYS.map((d, i) => `<label class="check"><input type="checkbox" value="${i}" ${sel.includes(i) ? 'checked' : ''}> ${d}</label>`).join(''); };
+  weekend([5, 6]);
+  $('#nSlug').oninput = () => { const v = $('#nSlug').value.trim().toLowerCase(); $('#nPreview').textContent = v ? T('رابط المدرسة: {url}', { url: links(v).pub }) : ''; };
+  $('#nLogo').onchange = async e => { try { newLogo = await S.readLogo(e.target.files[0]); } catch (_) { newLogo = ''; e.target.value = ''; S.toast(T('اختر ملف صورة (PNG أو JPG)'), true); } };
+  const ERR = { slug: 'رمز المدرسة: حروف إنجليزية صغيرة وأرقام و - فقط (2 إلى 30 حرف)', taken: 'هذا الرمز مستخدم لمدرسة ثانية، اختر رمزاً آخر', name: 'اكتب اسم المدرسة', denied: 'لا تملك صلاحية لهذا الإجراء' };
+  $('#newForm').onsubmit = async e => {
+    e.preventDefault();
+    const slug = $('#nSlug').value.trim().toLowerCase(), name = $('#nName').value.trim();
+    if (!Cloud.validSlug(slug)) return S.toast(T(ERR.slug), true);
+    const st = { school: name, logo: newLogo, destinations: $('#nDest').value.split(/[,،]/).map(s => s.trim()).filter(Boolean), weekend: $$('#nWeekend input:checked').map(i => +i.value), goingPerDay: 1, schoolPerDay: 1, alertDays: 30 };
+    const b = e.submitter; if (b) b.disabled = true;
+    try {
+      const r = await Cloud.rpc('create_school', { p_slug: slug, p_settings: st });
+      if (!r || !r.ok) S.toast(T(ERR[r && r.error] || 'حدث خطأ، حاول مرة أخرى'), true);
+      else {
+        const L = links(slug, r.invite);
+        $('#newResult').innerHTML = `<div class="sc-new"><h3><i class="fa-solid fa-circle-check" style="color:var(--green)"></i> ${T('تم إنشاء موقع {name}', { name: S.esc(name) })}</h3>
+          <p class="muted" style="margin:0">${T('أرسل رابط الدعوة لمدير المدرسة. يفتحه ويسجّل بإيميله وكلمة مروره، والرابط يشتغل مرة وحدة.')}</p>
+          ${linkRow(T('رابط دعوة المدير'), L.invite, 'fa-envelope-open-text', inviteMsg(name, L.invite))}
+          ${linkRow(T('الصفحة العامة'), L.pub, 'fa-globe')}</div>`;
+        $('#newForm').reset(); newLogo = ''; weekend([5, 6]); $('#nPreview').textContent = '';
+        S.toast(T('تم إنشاء الموقع')); await load();
+      }
+    } catch (err) { console.error(err); S.toast(Cloud.errText(err), true); }
+    if (b) b.disabled = false;
+  };
+
+  /* ===== أزرار المدارس ===== */
+  document.addEventListener('click', async e => {
+    const c = e.target.closest('[data-copy]'); if (c) return copy(c.dataset.copy);
+    const inv = e.target.closest('[data-invite]'), tog = e.target.closest('[data-toggle]'), del = e.target.closest('[data-del]');
+    try {
+      if (inv) { const r = await Cloud.rpc('new_invite', { p_slug: inv.dataset.invite }); if (r && r.ok) { S.toast(T('تم إنشاء رابط دعوة جديد، والرابط القديم انلغى')); await load(); } }
+      else if (tog) { const s = schools.find(x => x.id === tog.dataset.toggle); if (s) { await Cloud.rpc('set_school_active', { p_slug: s.id, p_active: !s.active }); S.toast(s.active ? T('تم إيقاف الموقع') : T('تم تشغيل الموقع')); await load(); } }
+      else if (del) {
+        const s = schools.find(x => x.id === del.dataset.del); if (!s) return;
+        const d = $('#delDlg');
+        $('#delText').textContent = T('سيتم حذف {name} وكل بياناتها: السائقين والمناوبات والمستخدمين. ما يمكن التراجع.', { name: s.name });
+        $('#delHint').textContent = T('للتأكيد اكتب رمز المدرسة: {id}', { id: s.id });
+        $('#delConfirm').value = ''; $('#delYes').disabled = true; d.returnValue = ''; d.showModal();
+        $('#delConfirm').oninput = () => { $('#delYes').disabled = $('#delConfirm').value.trim() !== s.id; };
+        d.addEventListener('close', async () => {
+          if (d.returnValue !== 'yes') return;
+          const r = await Cloud.rpc('delete_school', { p_slug: s.id });
+          S.toast(r && r.ok ? T('تم حذف المدرسة') : T('حدث خطأ، حاول مرة أخرى'), !(r && r.ok)); await load();
+        }, { once: true });
+      }
+    } catch (err) { console.error(err); S.toast(Cloud.errText(err), true); }
+  });
+  $('#scSearch').oninput = render;
+  $('#themeBtn').onclick = S.toggleTheme;
+  $('#outBtn').onclick = () => Cloud.signOut();
+  $('#scLoginForm').onsubmit = async e => {
+    e.preventDefault(); const b = e.submitter; if (b) b.disabled = true;
+    try { await Cloud.signIn($('#scEmail').value, $('#scPass').value); $('#scPass').value = ''; } catch (err) { S.toast(Cloud.errText(err), true); }
+    if (b) b.disabled = false;
+  };
+  I18N.apply();
+  I18N.onChange(() => { weekend($$('#nWeekend input:checked').map(i => +i.value)); if (loaded) render(); });
+  S.brand();
+  if (!Cloud.ready) state('fa-plug-circle-xmark', T('لم يتم ربط قاعدة البيانات بعد'), '');
+  else Cloud.watchAuth(st => {
+    $('#outBtn').hidden = st.state === 'out';
+    if (st.state === 'out') return show('scLogin');
+    if (st.state === 'staff') { $('#myAdmin').hidden = false; $('#myAdmin').href = Cloud.pageUrl('admin.html'); return load(); }
+    load();
+  });
+})();
+
+</script>
+</body>
+</html>

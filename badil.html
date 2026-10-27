@@ -445,6 +445,24 @@ button.cal-day.today:hover{background:var(--navy-grad);filter:brightness(1.12)}
 .bd-msg p{margin:0}
 .bd-lang{margin-inline-start:auto;background:rgba(255,255,255,.18)!important;color:#fff!important;border:0!important;box-shadow:none!important}
 
+/* ===== صفحة المدارس ===== */
+.sc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(420px,1fr));gap:16px}
+.sc-card{padding:16px 18px;display:flex;flex-direction:column;gap:12px;min-width:0}
+.sc-card.off{opacity:.7}
+.sc-top{display:flex;gap:12px;align-items:center}
+.sc-top .logo-disc{width:54px;height:54px;border:2px solid var(--line)}
+.sc-top h3{font-size:17px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sc-stats{display:flex;gap:16px;flex-wrap:wrap;font-size:13.5px;color:var(--muted)}
+.sc-stats b{color:var(--ink)}
+.sc-admins{display:flex;gap:6px;flex-wrap:wrap}
+.sc-link{display:grid;grid-template-columns:auto 1fr auto;gap:8px;align-items:center;padding:8px 10px;border-radius:10px;background:var(--surface-2);font-size:13px}
+.sc-link code{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12.5px;direction:ltr;text-align:left}
+.sc-act{display:flex;gap:4px}
+.sc-foot{display:flex;gap:8px;flex-wrap:wrap;border-top:1px dashed var(--line);padding-top:12px}
+.sc-new{margin-top:16px;padding:16px;border-radius:14px;background:var(--green-soft);display:flex;flex-direction:column;gap:10px}
+.sc-new h3{font-size:17px}
+@media (max-width:520px){.sc-grid{grid-template-columns:1fr}.sc-link{grid-template-columns:1fr}.sc-act{justify-content:flex-end}}
+
 </style>
 </head>
 <body data-title="بديل المناوبة">
@@ -924,7 +942,76 @@ const I18N = (() => {
 "اختر زميلاً من القائمة.": "Choose a colleague from the list.",
 "ما فيه بديل مسجّل منك لهذا اليوم.": "You have no substitute set for this day.",
 "النظام يحتاج تحديث من الإدارة. تواصل مع مشرف النقل.": "The system needs an update by management. Contact the transport supervisor.",
-"بديل المناوبة": "Duty substitute"
+"بديل المناوبة": "Duty substitute",
+"رابط البديل غير مفعّل، والرسائل تطلع بدونه. شغّل ملف supabase.sql الجديد في Supabase من SQL Editor، وبعدها حدّث هذه الصفحة.": "The substitute link is not active, so messages go out without it. Run the new supabase.sql file in Supabase (SQL Editor), then refresh this page.",
+"رمز المدرسة: حروف إنجليزية صغيرة وأرقام و - فقط (2 إلى 30 حرف)": "School code: lowercase English letters, numbers and - only (2 to 30 characters)",
+"موقع المدرسة موقوف": "School site is suspended",
+"حسابك تابع لمدرسة ثانية": "Your account belongs to another school",
+"موقع هذه المدرسة موقوف حالياً. تواصل مع إدارة النظام.": "This school's site is currently suspended. Contact the system administrator.",
+"الحساب {email} مسجّل في مدرسة ثانية ({school}).": "The account {email} is registered with another school ({school}).",
+"صفحة الدخول": "Sign-in page",
+"تم تفعيل حسابك. أهلاً بك": "Your account is activated. Welcome",
+"أنت داخل بحساب مفعّل. لتفعيل رابط الدعوة بإيميل ثاني سجّل خروج أولاً.": "You're signed in with an active account. To use the invite with another email, sign out first.",
+"اختر المدرسة": "Choose a school",
+"ما فيه مدارس مسجلة بعد.": "No schools registered yet.",
+"المدرسة غير موجودة": "School not found",
+"تأكد من الرابط اللي وصلك من المدرسة.": "Check the link you received from the school.",
+"موقع هذه المدرسة موقوف حالياً.": "This school's site is currently suspended.",
+"تم النسخ": "Copied",
+"انسخ الرابط:": "Copy the link:",
+"نسخ": "Copy",
+"إرسال واتساب": "Send via WhatsApp",
+"{n} مدرسة": "{n} schools",
+"فعّال": "Active",
+"موقوف": "Suspended",
+"سائق": "drivers",
+"مستخدم": "users",
+"آخر نشاط": "Last activity",
+"بانتظار تفعيل المدير": "Waiting for admin activation",
+"رابط دعوة المدير": "Admin invite link",
+"رابط دعوة جديد": "New invite link",
+"إنشاء رابط دعوة": "Create invite link",
+"إيقاف": "Suspend",
+"تشغيل": "Activate",
+"لا توجد مدارس": "No schools",
+"هذه الصفحة للمدير العام فقط": "This page is for the system administrator only",
+"حسابك ما عنده صلاحية إدارة المدارس.": "Your account can't manage schools.",
+"قاعدة البيانات تحتاج تحديث": "The database needs an update",
+"شغّل ملف supabase.sql الجديد في Supabase من SQL Editor، وبعدها حدّث الصفحة.": "Run the new supabase.sql in Supabase (SQL Editor), then refresh the page.",
+"رابط المدرسة: {url}": "School link: {url}",
+"تم إنشاء موقع {name}": "Site created for {name}",
+"أرسل رابط الدعوة لمدير المدرسة. يفتحه ويسجّل بإيميله وكلمة مروره، والرابط يشتغل مرة وحدة.": "Send the invite link to the school's admin. They open it and register with their email and password. The link works once.",
+"تم إنشاء الموقع": "Site created",
+"تم إنشاء رابط دعوة جديد، والرابط القديم انلغى": "New invite link created; the old one no longer works",
+"تم إيقاف الموقع": "Site suspended",
+"تم تشغيل الموقع": "Site activated",
+"سيتم حذف {name} وكل بياناتها: السائقين والمناوبات والمستخدمين. ما يمكن التراجع.": "{name} and all its data (drivers, duties, users) will be deleted. This can't be undone.",
+"للتأكيد اكتب رمز المدرسة: {id}": "To confirm, type the school code: {id}",
+"تم حذف المدرسة": "School deleted",
+"هذا الرمز مستخدم لمدرسة ثانية، اختر رمزاً آخر": "This code is used by another school, choose another",
+"اكتب اسم المدرسة": "Enter the school name",
+"رابط الدعوة غير صحيح. اطلب رابطاً جديداً من إدارة النظام.": "Invalid invite link. Ask the system administrator for a new one.",
+"رابط الدعوة مستخدم من قبل. ادخل بحسابك من صفحة الدخول.": "This invite link was already used. Sign in from the sign-in page.",
+"هذا الإيميل مسجّل في مدرسة ثانية ({school}). استخدم إيميل ثاني.": "This email is registered with another school ({school}). Use another email.",
+"إدارة المدارس": "Schools management",
+"رمز المدرسة في الرابط (حروف إنجليزية صغيرة وأرقام)": "School code in the link (lowercase English letters and numbers)",
+"افتح مدرستك": "Open your school",
+"تفعيل حساب المدير": "Activate admin account",
+"اكتب اسمك، والإيميل وكلمة المرور اللي بتدخل فيها لوحة التحكم.": "Enter your name, and the email and password you'll use to sign in to the dashboard.",
+"اسمك": "Your name",
+"تفعيل الحساب": "Activate account",
+"المدارس": "Schools",
+"كل مدرسة لها موقع ورابط خاص، وبياناتها منفصلة عن غيرها": "Each school has its own site and link, with data kept separate",
+"لوحة مدرستي": "My school's dashboard",
+"دخول المدير العام": "System administrator sign in",
+"إضافة مدرسة جديدة": "Add a new school",
+"رمز المدرسة في الرابط": "School code in the link",
+"مثال: المدينة، السوق": "e.g. City, Market",
+"إنشاء الموقع": "Create site",
+"بحث بالاسم أو الرمز": "Search by name or code",
+"نظام إدارة مناوبات الحافلات": "Bus duty management system",
+"حذف المدرسة نهائياً": "Delete school permanently",
+"حذف نهائي": "Delete permanently"
 };
   const fill = (s, v) => v ? String(s).replace(/\{(\w+)\}/g, (m, k) => k in v ? v[k] : m) : s;
   // مفتاح بالشكل 'نص|سياق' يُعرض عربياً بالجزء الأول فقط
@@ -1101,6 +1188,10 @@ const Store = (() => {
     fav.href = logo();
     const base = T(document.body.dataset.title || 'مناوبات الحافلات');
     document.title = db.settings.school ? `${base} – ${db.settings.school}` : base;
+    // روابط الصفحات تحمل رمز المدرسة
+    if (typeof Cloud !== 'undefined' && Cloud.schoolId) document.querySelectorAll('a[href]').forEach(a => {
+      const m = (a.getAttribute('href') || '').match(/^(index|admin)\.html(?:\?.*)?$/); if (m) a.setAttribute('href', `${m[1]}.html?s=${encodeURIComponent(Cloud.schoolId)}`);
+    });
   }
   // تصغير صورة الشعار قبل حفظها
   function readLogo(file) {
@@ -1238,6 +1329,17 @@ const Cloud = (() => {
   const sb = configured && window.supabase ? window.supabase.createClient(URL_, KEY_) : null;
   const S = () => Store;
 
+  // رمز المدرسة من الرابط: index.html?s=fida
+  const validSlug = v => /^[a-z0-9][a-z0-9-]{1,29}$/.test(v || '');
+  let SID = (new URLSearchParams(location.search).get('s') || '').trim().toLowerCase();
+  if (!validSlug(SID)) SID = '';
+  let school = null; // {id, name, active}
+  function setSchool(id) {
+    SID = id;
+    try { const u = new URL(location.href); u.searchParams.set('s', id); history.replaceState(null, '', u); } catch (e) {}
+  }
+  const pageUrl = (page, extra) => { const u = new URL(page, location.href); if (SID) u.searchParams.set('s', SID); Object.entries(extra || {}).forEach(([k, v]) => u.searchParams.set(k, v)); return u.href; };
+
   // أسماء الأعمدة في قاعدة البيانات
   const COLS = {
     drivers: ['id', 'name', 'area', 'phone', 'phone2', 'busNo', 'plate', 'capacity', 'licenseExp', 'insuranceExp', 'active', 'notes'],
@@ -1255,7 +1357,7 @@ const Cloud = (() => {
     duty_tokens: {},
     log: { by: 'by_name' }
   };
-  const toRow = (t, o) => { const r = {}; COLS[t].forEach(k => { const v = o[k]; r[MAP[t][k] || k] = v === undefined || v === '' ? null : v; }); return r; };
+  const toRow = (t, o) => { const r = { school_id: SID }; COLS[t].forEach(k => { const v = o[k]; r[MAP[t][k] || k] = v === undefined || v === '' ? null : v; }); return r; };
   const fromRow = (t, r) => { const o = {}; COLS[t].forEach(k => { const v = r[MAP[t][k] || k]; o[k] = v === null || v === undefined ? (k === 'active' || k === 'done' || k === 'auto' ? false : '') : v; }); return o; };
   const stable = v => Array.isArray(v) ? '[' + v.map(stable).join(',') + ']'
     : v && typeof v === 'object' ? '{' + Object.keys(v).sort().map(k => JSON.stringify(k) + ':' + stable(v[k])).join(',') + '}'
@@ -1294,7 +1396,7 @@ const Cloud = (() => {
     console.error(e);
     const m = String((e && e.message) || '');
     const msg = e && (e.code === '42501' || /row-level security|permission/i.test(m)) ? T('لا تملك صلاحية لهذا الإجراء')
-      : /subs|auto|public_subs|schema cache|does not exist/i.test(m) ? T('قاعدة البيانات تحتاج تحديث: شغّل ملف supabase.sql مرة ثانية')
+      : /school_id|schools|subs|auto|public_subs|schema cache|does not exist/i.test(m) ? T('قاعدة البيانات تحتاج تحديث: شغّل ملف supabase.sql مرة ثانية')
       : T('تعذّر الاتصال بقاعدة البيانات');
     emit('status', { level: 'bad', text: msg });
   };
@@ -1305,31 +1407,36 @@ const Cloud = (() => {
     let out = [], from = 0;
     for (;;) { const rows = must(await build().range(from, from + 999)); out = out.concat(rows); if (rows.length < 1000) return out; from += 1000; }
   }
+  async function loadSchool() {
+    school = SID ? must(await sb.from('schools').select('id,name,active').eq('id', SID).maybeSingle()) : null;
+    return school;
+  }
+  async function listSchools() { return must(await sb.from('schools').select('id,name,active').eq('active', true).order('name')); }
   async function loadSettings() {
-    const rows = must(await sb.from('settings').select('id,data').in('id', ['main', 'rotation']));
+    const rows = must(await sb.from('settings').select('id,data').eq('school_id', SID).in('id', ['main', 'rotation']));
     const main = rows.find(r => r.id === 'main'), rot = rows.find(r => r.id === 'rotation');
     applySettings(main ? main.data : null);
     applyRotation(rot ? rot.data : null);
   }
   async function loadTable(t) {
-    const rows = await fetchAll(() => { let q = sb.from(t).select('*'); if (t === 'duties') q = q.gte('date', mode === 'public' ? S().addDays(S().today(), -60) : windowStart()); return q.order('id'); });
+    const rows = await fetchAll(() => { let q = sb.from(t).select('*').eq('school_id', SID); if (t === 'duties') q = q.gte('date', mode === 'public' ? S().addDays(S().today(), -60) : windowStart()); return q.order('id'); });
     const docs = rows.map(r => fromRow(t, r));
     if (mode === 'staff') shadow[t] = Object.fromEntries(docs.map(d => [d.id, stable(toRow(t, d))]));
     mergeList(S().db[t], docs);
   }
   async function loadPublicDrivers() {
-    const rows = await fetchAll(() => sb.from('public_drivers').select('*').order('id'));
+    const rows = await fetchAll(() => sb.from('public_drivers').select('*').eq('school_id', SID).order('id'));
     mergeList(S().db.drivers, rows.map(r => ({ id: r.id, name: r.name || '', area: r.area || '', busNo: r.bus_no || '', active: !!r.active })));
   }
   async function loadPublicSubs() {
-    const rows = await fetchAll(() => sb.from('public_subs').select('*').order('id'));
+    const rows = await fetchAll(() => sb.from('public_subs').select('*').eq('school_id', SID).order('id'));
     mergeList(S().db.subs, rows.map(r => ({ id: r.id, driverId: r.driver_id || '', name: r.name || '', busNo: r.bus_no || '', from: r.date_from || '', to: r.date_to || '', phone: '', note: '' })));
   }
   async function loadLog() {
-    const rows = must(await sb.from('log').select('*').order('t', { ascending: false }).limit(60));
+    const rows = must(await sb.from('log').select('*').eq('school_id', SID).order('t', { ascending: false }).limit(60));
     S().db.log = [...S().db.log.filter(l => !l.id), ...rows.map(r => fromRow('log', r))];
   }
-  async function loadUsers() { users = must(await sb.from('profiles').select('*').order('name')); changed(); }
+  async function loadUsers() { users = must(await sb.from('profiles').select('*').eq('school_id', SID).order('name')); changed(); }
 
   const pending = new Set(); let reloadTimer = null;
   function reload(what) {
@@ -1356,12 +1463,13 @@ const Cloud = (() => {
   }
   function listen(tables, map) {
     channel = sb.channel('changes-' + Date.now());
-    tables.forEach(t => channel.on('postgres_changes', { event: '*', schema: 'public', table: t }, () => reload(map[t] || [t])));
+    tables.forEach(t => channel.on('postgres_changes', { event: '*', schema: 'public', table: t, filter: 'school_id=eq.' + SID }, () => reload(map[t] || [t])));
     channel.subscribe();
   }
   async function subscribePublic() {
     stop(); mode = 'public';
-    try { await Promise.all([loadSettings(), loadPublicDrivers(), loadTable('duties'), loadPublicSubs().catch(() => {})]); changed(); } catch (e) { fail(e); }
+    if (!SID) return;
+    try { await Promise.all([loadSchool(), loadSettings(), loadPublicDrivers(), loadTable('duties'), loadPublicSubs().catch(() => {})]); changed(); } catch (e) { fail(e); }
     listen(['settings', 'duties', 'subs'], { duties: ['duties', 'public_drivers'], subs: ['public_subs'] });
     poll = setInterval(() => { if (!document.hidden) reload(['settings', 'public_drivers', 'duties', 'public_subs']); }, 120000);
   }
@@ -1384,11 +1492,11 @@ const Cloud = (() => {
     const db = S().db, jobs = [];
     if (profile.role === 'admin' && db.settings.setupDone) {
       const st = clean(db.settings); delete st.setupDone; delete st.pin;
-      if (stable(st) !== shadow.settings) { shadow.settings = stable(st); jobs.push(() => sb.from('settings').upsert({ id: 'main', data: st })); }
+      if (stable(st) !== shadow.settings) { shadow.settings = stable(st); jobs.push(() => sb.from('settings').upsert({ school_id: SID, id: 'main', data: st }, { onConflict: 'school_id,id' })); }
     }
     if (db.settings.setupDone && db.rotation) {
       const rt = clean(db.rotation);
-      if (stable(rt) !== shadow.rotation) { shadow.rotation = stable(rt); jobs.push(() => sb.from('settings').upsert({ id: 'rotation', data: rt })); }
+      if (stable(rt) !== shadow.rotation) { shadow.rotation = stable(rt); jobs.push(() => sb.from('settings').upsert({ school_id: SID, id: 'rotation', data: rt }, { onConflict: 'school_id,id' })); }
     }
     // رموز المناوبات المحذوفة تنحذف معها
     if (tokensReady) { const ids = new Set(db.duties.map(x => x.id)); db.duty_tokens = (db.duty_tokens || []).filter(x => ids.has(x.id)); }
@@ -1440,13 +1548,21 @@ const Cloud = (() => {
       setTimeout(() => handle(fn), 0); // لا نستدعي Supabase داخل هذا الحدث مباشرة
     });
   }
+  let lastFn = null;
   async function handle(fn) {
+    lastFn = fn;
     if (setupInProgress) return;
     stop(); profile = null; users = [];
     if (!currentUser) return fn({ state: 'out' });
     try {
       const p = must(await sb.from('profiles').select('*').eq('id', currentUser.id).maybeSingle());
       if (!p) return fn({ state: 'inactive', email: currentUser.email });
+      // الحساب تابع لمدرسة ثانية غير اللي في الرابط
+      if (SID && p.school_id !== SID) return fn({ state: 'other', email: currentUser.email, school: p.school_id });
+      if (!SID) setSchool(p.school_id);
+      await loadSchool();
+      if (school && !school.active) return fn({ state: 'disabled', email: currentUser.email });
+      p.isSuper = !!must(await sb.from('super_admins').select('user_id').eq('user_id', currentUser.id).maybeSingle());
       profile = p;
       await subscribeStaff();
       fn({ state: 'staff', profile });
@@ -1454,34 +1570,49 @@ const Cloud = (() => {
   }
   async function signIn(email, password) { must(await sb.auth.signInWithPassword({ email: email.trim(), password })); }
   async function signOut() { await sb.auth.signOut(); }
-  async function resetPassword(email) { must(await sb.auth.resetPasswordForEmail(email.trim(), { redirectTo: location.href.split('#')[0].split('?')[0] })); }
+  async function resetPassword(email) { must(await sb.auth.resetPasswordForEmail(email.trim(), { redirectTo: pageUrl(location.pathname.split('/').pop() || 'admin.html') })); }
   async function updatePassword(password) { must(await sb.auth.updateUser({ password })); }
-  async function settingsExist() { return !!must(await sb.from('settings').select('id').eq('id', 'main').maybeSingle()); }
+  // قاعدة بيانات فاضية؟ (أول تشغيل للنظام)
+  async function canBootstrap() { return !!must(await sb.rpc('can_bootstrap')); }
+  // تسجيل حساب جديد أو الدخول لو الإيميل مسجل
+  async function signUpOrIn(email, password) {
+    let session = must(await sb.auth.getSession()).session;
+    if (session) return session;
+    const r = await sb.auth.signUp({ email: email.trim(), password });
+    if (r.error && /already registered|already exists/i.test(r.error.message || '')) session = must(await sb.auth.signInWithPassword({ email: email.trim(), password })).session;
+    else session = must(r).session;
+    if (!session) throw Object.assign(new Error('confirm'), { code: 'confirm_email' });
+    currentUser = session.user;
+    return session;
+  }
 
-  // الإعداد لأول مرة: حساب المدير + إعدادات المدرسة
-  async function setup({ name, email, password, settings, drivers }) {
+  // الإعداد لأول مرة: أول مدرسة + حساب مديرها (يصير المدير العام)
+  async function setup({ slug, name, email, password, settings, drivers }) {
     setupInProgress = true;
     try {
-      let session = must(await sb.auth.getSession()).session;
-      if (!session) {
-        const r = await sb.auth.signUp({ email: email.trim(), password });
-        if (r.error && /already registered|already exists/i.test(r.error.message || '')) session = must(await sb.auth.signInWithPassword({ email: email.trim(), password })).session;
-        else session = must(r).session;
-        if (!session) throw Object.assign(new Error('confirm'), { code: 'confirm_email' });
-      }
-      currentUser = session.user;
-      const uid = session.user.id, mail = session.user.email;
-      const mine = must(await sb.from('profiles').select('id').eq('id', uid).maybeSingle());
-      if (!mine) must(await sb.from('profiles').insert({ id: uid, name, email: mail, role: 'admin' }));
+      await signUpOrIn(email, password);
       const st = clean(settings); delete st.setupDone; delete st.pin;
-      must(await sb.from('settings').insert({ id: 'main', data: st }));
-      profile = { id: uid, name, email: mail, role: 'admin' };
-      await subscribeStaff();
-      (drivers || []).forEach(d => S().db.drivers.push(d));
-      S().log(`إعداد النظام لـ ${st.school}`);
-      save();
-      return profile;
+      const r = must(await sb.rpc('bootstrap', { p_slug: slug, p_settings: st, p_name: name }));
+      if (!r || !r.ok) throw Object.assign(new Error(r && r.error), { code: 'bootstrap_' + (r && r.error) });
+      setSchool(slug);
     } finally { setupInProgress = false; }
+    await handle(lastFn);
+    (drivers || []).forEach(d => S().db.drivers.push(d));
+    if ((drivers || []).length) save();
+    return profile;
+  }
+
+  // مدير المدرسة يفعّل حسابه من رابط الدعوة
+  async function acceptInvite({ token, name, email, password }) {
+    setupInProgress = true;
+    let r;
+    try {
+      await signUpOrIn(email, password);
+      r = must(await sb.rpc('accept_invite', { p_token: token, p_name: name }));
+      if (r && r.ok) setSchool(r.school);
+    } finally { setupInProgress = false; }
+    if (r && r.ok) await handle(lastFn);
+    return r;
   }
 
   // المدير يضيف مستخدماً بدون الخروج من حسابه (اتصال مؤقت منفصل)
@@ -1490,7 +1621,7 @@ const Cloud = (() => {
     const data = must(await tmp.auth.signUp({ email: email.trim(), password }));
     const uid = data.user && data.user.id;
     if (!uid) throw new Error('signup');
-    must(await sb.from('profiles').insert({ id: uid, name, email: email.trim(), role }));
+    must(await sb.from('profiles').insert({ id: uid, school_id: SID, name, email: email.trim(), role }));
     await loadUsers();
   }
   // دوال البديل من الرابط (بدون تسجيل دخول)
@@ -1499,7 +1630,8 @@ const Cloud = (() => {
   async function removeUser(uid) { must(await sb.from('profiles').delete().eq('id', uid)); await loadUsers(); }
 
   return {
-    configured, get ready() { return !!sb; }, on, save, watchAuth, signIn, signOut, resetPassword, updatePassword, setup, settingsExist,
+    configured, get ready() { return !!sb; }, on, save, watchAuth, signIn, signOut, resetPassword, updatePassword, setup, canBootstrap, acceptInvite,
+    get schoolId() { return SID; }, get school() { return school; }, setSchool, validSlug, pageUrl, loadSchool, listSchools, isSuper: () => !!profile && !!profile.isSuper,
     addUser, setRole, removeUser, subscribePublic, errText, rpc, get tokensReady() { return tokensReady; },
     get signedIn() { return !!currentUser; }, get settingsLoaded() { return settingsLoaded; },
     get profile() { return profile; }, get users() { return users; }, isAdmin: () => !!profile && profile.role === 'admin'
