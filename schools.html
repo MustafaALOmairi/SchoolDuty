@@ -463,6 +463,33 @@ button.cal-day.today:hover{background:var(--navy-grad);filter:brightness(1.12)}
 .sc-new h3{font-size:17px}
 @media (max-width:520px){.sc-grid{grid-template-columns:1fr}.sc-link{grid-template-columns:1fr}.sc-act{justify-content:flex-end}}
 
+/* ===== الصلاحيات والملاحظات ===== */
+.perm-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:8px}
+.perm-grid label{display:flex;gap:8px;align-items:center;padding:9px 12px;border:1px solid var(--line);border-radius:10px;background:var(--surface-2);cursor:pointer;font-weight:500;color:var(--ink)}
+.perm-grid input{width:18px;height:18px;accent-color:#4a6491}
+section[data-panel="feedback"]:not([hidden]){display:flex}
+.fb-item{padding:14px 16px;display:flex;flex-direction:column;gap:10px;border:1px solid var(--line);border-radius:14px;background:var(--surface)}
+.fb-item.new{border-inline-start:5px solid var(--red)}
+.fb-item.progress{border-inline-start:5px solid var(--amber)}
+.fb-item.closed{opacity:.75}
+.fb-top{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.fb-msg{white-space:pre-wrap;line-height:1.7;font-size:15px}
+.fb-row{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center}
+.chip.kind-complaint{background:var(--red-soft);color:var(--red);border-color:transparent}
+.chip.kind-suggestion{background:var(--green-soft);color:var(--green);border-color:transparent}
+.chip.kind-note{background:var(--blue-soft);color:var(--blue);border-color:transparent}
+@media (max-width:640px){.fb-row{grid-template-columns:1fr}}
+/* نموذج الملاحظات في الصفحة العامة */
+.fb-form{display:flex;flex-direction:column;gap:14px}
+.fb-form .input{font-size:16px}
+.fb-seg{display:flex;gap:8px;flex-wrap:wrap}
+.fb-seg label{flex:1;min-width:110px;display:flex;align-items:center;justify-content:center;gap:6px;padding:11px 10px;border:2px solid var(--line);border-radius:12px;cursor:pointer;font-weight:700;background:var(--surface)}
+.fb-seg input{position:absolute;opacity:0;pointer-events:none}
+.fb-seg label:has(input:checked){border-color:var(--bus);background:var(--bus-soft);color:var(--bus)}
+.fb-seg label:has(input:focus-visible){outline:3px solid var(--bus);outline-offset:2px}
+body.fb-only .page>section:not(#feedbackSec),body.fb-only #schoolContent>section:not(#feedbackSec){display:none!important}
+body.fb-only .page{max-width:640px}
+
 </style>
 </head>
 <body data-title="إدارة المدارس">
@@ -1061,7 +1088,58 @@ const I18N = (() => {
 "بحث بالاسم أو الرمز": "Search by name or code",
 "نظام إدارة مناوبات الحافلات": "Bus duty management system",
 "حذف المدرسة نهائياً": "Delete school permanently",
-"حذف نهائي": "Delete permanently"
+"حذف نهائي": "Delete permanently",
+"{n} ملاحظة أو شكوى جديدة": "{n} new notes or complaints",
+"كل الأقسام": "All sections",
+"بدون أقسام": "No sections",
+"تعديل الأقسام": "Edit sections",
+"اختر قسماً واحداً على الأقل": "Choose at least one section",
+"أقسام {name}": "Sections for {name}",
+"تم حفظ الصلاحيات": "Permissions saved",
+"{n} رسالة": "{n} messages",
+"بدون اسم": "No name",
+"ملاحظة داخلية: وش تم بخصوصها؟": "Internal note: what was done about it?",
+"لا توجد رسائل بهذا التصنيف": "No messages in this filter",
+"ما وصلت أي ملاحظات بعد. أرسل الرابط للسائقين.": "No feedback yet. Send the link to the drivers.",
+"حذف الرسالة": "Delete message",
+"حذف هذه الرسالة نهائياً؟": "Delete this message permanently?",
+"تم الحذف": "Deleted",
+"اكتب رسالتك (3 أحرف على الأقل).": "Write your message (at least 3 characters).",
+"موقع المدرسة غير متاح حالياً.": "The school site is not available right now.",
+"وصلت رسائل كثيرة الحين، حاول بعد شوي.": "Too many messages right now, try again shortly.",
+"شكوى": "Complaint",
+"ملاحظة": "Note",
+"اقتراح": "Suggestion",
+"ولي أمر": "Parent",
+"موظف": "Staff",
+"أخرى": "Other",
+"جديدة": "New",
+"قيد المتابعة": "In progress",
+"مغلقة": "Closed",
+"المناوبات والتوزيع بالدور": "Duties & rotation",
+"الإجازات والسائق البديل": "Leaves & substitutes",
+"الملاحظات والشكاوى": "Feedback & complaints",
+"رابط نموذج الملاحظات": "Feedback form link",
+"أرسل الرابط للسائقين أو أولياء الأمور. يفتحونه من الجوال ويكتبون ملاحظتهم أو شكواهم بدون تسجيل دخول.": "Send the link to drivers or parents. They open it on their phone and write their note or complaint without signing in.",
+"رابط الجوال": "Mobile link",
+"إرسال لقروب السائقين": "Send to drivers' group",
+"إرسال لكل سائق على حدة": "Send to each driver",
+"المفتوحة": "Open",
+"الكل": "All",
+"كل الأنواع": "All types",
+"الأقسام اللي يقدر المشرف يدخلها": "Sections the supervisor can access",
+"المدير يدخل كل الأقسام، ويقدر يغيّر الإعدادات ويضيف المستخدمين. المشرف يدخل الأقسام المحددة له بس. أرسل للمستخدم إيميله وكلمة المرور المؤقتة، ويقدر يغيّرها بعد الدخول بالضغط على اسمه في القائمة.": "Admins access all sections and can change settings and add users. Supervisors only access the sections chosen for them. Send the user their email and temporary password; they can change it after signing in by clicking their name in the menu.",
+"الأقسام": "Sections",
+"صلاحيات المشرف": "Supervisor permissions",
+"اختر الأقسام اللي يقدر يدخلها ويعدّل فيها.": "Choose the sections they can access and edit.",
+"رأيك يهمنا. اكتب ملاحظتك أو شكواك أو اقتراحك بخصوص النقل المدرسي، وتوصل مباشرة لإدارة المدرسة.": "Your opinion matters. Write your note, complaint or suggestion about school transport, and it goes straight to the school's management.",
+"نوع الرسالة": "Message type",
+"الرسالة": "Message",
+"اسمك (اختياري)": "Your name (optional)",
+"رقم هاتفك للتواصل (اختياري)": "Your phone for follow-up (optional)",
+"وصلت رسالتك، شكراً لك": "Your message was received, thank you",
+"إدارة المدرسة بتطّلع عليها.": "The school's management will review it.",
+"إرسال رسالة ثانية": "Send another message"
 };
   const fill = (s, v) => v ? String(s).replace(/\{(\w+)\}/g, (m, k) => k in v ? v[k] : m) : s;
   // مفتاح بالشكل 'نص|سياق' يُعرض عربياً بالجزء الأول فقط
@@ -1150,6 +1228,7 @@ const Store = (() => {
       leaves: [],   // {id,driverId,from,to,reason}
       subs: [],     // {id,driverId,name,phone,busNo,from,to,note,source} سائق بديل مؤقت
       duty_tokens: [], // {id: رقم المناوبة, token} لرابط البديل
+      feedback: [],    // ملاحظات وشكاوى الصفحة العامة
       log: []       // {t,msg}
     };
   }
@@ -1398,6 +1477,7 @@ const Cloud = (() => {
     leaves: ['id', 'driverId', 'from', 'to', 'reason'],
     subs: ['id', 'driverId', 'name', 'phone', 'busNo', 'from', 'to', 'note', 'source'],
     duty_tokens: ['id', 'token'],
+    feedback: ['id', 'kind', 'sender', 'name', 'phone', 'message', 'status', 'reply', 'createdAt'],
     log: ['id', 't', 'msg', 'by']
   };
   const MAP = {
@@ -1406,6 +1486,7 @@ const Cloud = (() => {
     leaves: { driverId: 'driver_id', from: 'date_from', to: 'date_to' },
     subs: { driverId: 'driver_id', busNo: 'bus_no', from: 'date_from', to: 'date_to' },
     duty_tokens: {},
+    feedback: { createdAt: 'created_at' },
     log: { by: 'by_name' }
   };
   const toRow = (t, o) => { const r = { school_id: SID }; COLS[t].forEach(k => { const v = o[k]; r[MAP[t][k] || k] = v === undefined || v === '' ? null : v; }); return r; };
@@ -1416,8 +1497,10 @@ const Cloud = (() => {
   const clean = o => JSON.parse(JSON.stringify(o));
   const windowStart = () => S().addDays(S().today(), -365);
 
-  let shadow = { settings: null, rotation: null, drivers: {}, duties: {}, leaves: {}, subs: {}, duty_tokens: {} };
-  let tokensReady = false;
+  let shadow = { settings: null, rotation: null, drivers: {}, duties: {}, leaves: {}, subs: {}, duty_tokens: {}, feedback: {} };
+  let tokensReady = false, feedbackReady = false;
+  // صلاحية قسم: المدير له كل شي، والمشرف حسب قائمته (بدون قائمة = كل الأقسام)
+  const can = perm => !!profile && (profile.role === 'admin' || !Array.isArray(profile.perms) || profile.perms.includes(perm));
   let profile = null, users = [], settingsLoaded = false, setupInProgress = false, channel = null, poll = null, mode = null;
   const listeners = { change: [], status: [], recovery: [] };
   const emit = (k, v) => listeners[k].forEach(f => f(v));
@@ -1528,12 +1611,13 @@ const Cloud = (() => {
     stop(); mode = 'staff';
     try {
       await Promise.all([loadSettings(), loadTable('drivers'), loadTable('duties'), loadTable('leaves'), loadTable('subs'), loadLog(),
-        loadTable('duty_tokens').then(() => { tokensReady = true; }, () => { tokensReady = false; })]);
+        loadTable('duty_tokens').then(() => { tokensReady = true; }, () => { tokensReady = false; }),
+        can('feedback') ? loadTable('feedback').then(() => { feedbackReady = true; }, () => { feedbackReady = false; }) : (feedbackReady = false)]);
       if (profile.role === 'admin') await loadUsers();
       changed();
     } catch (e) { fail(e); }
-    listen(['settings', 'drivers', 'duties', 'leaves', 'subs', 'log', 'profiles'], {});
-    poll = setInterval(() => { if (!document.hidden) reload(['settings', 'drivers', 'duties', 'leaves', 'subs', 'log']); }, 120000);
+    listen(['settings', 'drivers', 'duties', 'leaves', 'subs', 'log', 'profiles'].concat(feedbackReady ? ['feedback'] : []), {});
+    poll = setInterval(() => { if (!document.hidden) reload(['settings', 'drivers', 'duties', 'leaves', 'subs', 'log'].concat(feedbackReady ? ['feedback'] : [])); }, 120000);
   }
 
   /* ===== الحفظ ===== */
@@ -1551,7 +1635,7 @@ const Cloud = (() => {
     }
     // رموز المناوبات المحذوفة تنحذف معها
     if (tokensReady) { const ids = new Set(db.duties.map(x => x.id)); db.duty_tokens = (db.duty_tokens || []).filter(x => ids.has(x.id)); }
-    ['drivers', 'duties', 'leaves', 'subs'].concat(tokensReady ? ['duty_tokens'] : []).forEach(t => {
+    ['drivers', 'duties', 'leaves', 'subs'].concat(tokensReady ? ['duty_tokens'] : [], feedbackReady ? ['feedback'] : []).forEach(t => {
       const up = [], seen = new Set();
       db[t].forEach(x => {
         if (!x.id) x.id = S().uid();
@@ -1620,7 +1704,12 @@ const Cloud = (() => {
     } catch (e) { fail(e); fn({ state: 'inactive', email: currentUser.email }); }
   }
   async function signIn(email, password) { must(await sb.auth.signInWithPassword({ email: email.trim(), password })); }
-  async function signOut() { await sb.auth.signOut(); }
+  // الخروج: يمسح الدخول من الجهاز مباشرة (بدون انتظار الخادم)، ثم يعيد تحميل الصفحة
+  async function signOut() {
+    try { await Promise.race([sb.auth.signOut({ scope: 'local' }), new Promise(r => setTimeout(r, 3000))]); } catch (e) { console.error(e); }
+    try { Object.keys(localStorage).filter(k => /^sb-.*-auth-token/.test(k)).forEach(k => localStorage.removeItem(k)); } catch (e) {}
+    location.reload();
+  }
   async function resetPassword(email) { must(await sb.auth.resetPasswordForEmail(email.trim(), { redirectTo: pageUrl(location.pathname.split('/').pop() || 'admin.html') })); }
   async function updatePassword(password) { must(await sb.auth.updateUser({ password })); }
   // قاعدة بيانات فاضية؟ (أول تشغيل للنظام)
@@ -1667,23 +1756,24 @@ const Cloud = (() => {
   }
 
   // المدير يضيف مستخدماً بدون الخروج من حسابه (اتصال مؤقت منفصل)
-  async function addUser({ name, email, password, role }) {
+  async function addUser({ name, email, password, role, perms }) {
     const tmp = window.supabase.createClient(URL_, KEY_, { auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false, storageKey: 'tmp-' + Date.now() } });
     const data = must(await tmp.auth.signUp({ email: email.trim(), password }));
     const uid = data.user && data.user.id;
     if (!uid) throw new Error('signup');
-    must(await sb.from('profiles').insert({ id: uid, school_id: SID, name, email: email.trim(), role }));
+    must(await sb.from('profiles').insert({ id: uid, school_id: SID, name, email: email.trim(), role, perms: role === 'admin' ? null : perms }));
     await loadUsers();
   }
   // دوال البديل من الرابط (بدون تسجيل دخول)
   async function rpc(fn, args) { return must(await sb.rpc(fn, args)); }
+  async function setPerms(uid, perms) { must(await sb.from('profiles').update({ perms }).eq('id', uid)); await loadUsers(); }
   async function setRole(uid, role) { must(await sb.from('profiles').update({ role }).eq('id', uid)); await loadUsers(); }
   async function removeUser(uid) { must(await sb.from('profiles').delete().eq('id', uid)); await loadUsers(); }
 
   return {
     configured, get ready() { return !!sb; }, on, save, watchAuth, signIn, signOut, resetPassword, updatePassword, setup, canBootstrap, acceptInvite,
     get schoolId() { return SID; }, get school() { return school; }, setSchool, validSlug, pageUrl, loadSchool, listSchools, isSuper: () => !!profile && !!profile.isSuper,
-    addUser, setRole, removeUser, subscribePublic, errText, rpc, get tokensReady() { return tokensReady; },
+    addUser, setRole, setPerms, can, get feedbackReady() { return feedbackReady; }, removeUser, subscribePublic, errText, rpc, get tokensReady() { return tokensReady; },
     get signedIn() { return !!currentUser; }, get settingsLoaded() { return settingsLoaded; },
     get profile() { return profile; }, get users() { return users; }, isAdmin: () => !!profile && profile.role === 'admin'
   };

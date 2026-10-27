@@ -2164,7 +2164,12 @@ const Cloud = (() => {
     } catch (e) { fail(e); fn({ state: 'inactive', email: currentUser.email }); }
   }
   async function signIn(email, password) { must(await sb.auth.signInWithPassword({ email: email.trim(), password })); }
-  async function signOut() { await sb.auth.signOut(); }
+  // الخروج: يمسح الدخول من الجهاز مباشرة (بدون انتظار الخادم)، ثم يعيد تحميل الصفحة
+  async function signOut() {
+    try { await Promise.race([sb.auth.signOut({ scope: 'local' }), new Promise(r => setTimeout(r, 3000))]); } catch (e) { console.error(e); }
+    try { Object.keys(localStorage).filter(k => /^sb-.*-auth-token/.test(k)).forEach(k => localStorage.removeItem(k)); } catch (e) {}
+    location.reload();
+  }
   async function resetPassword(email) { must(await sb.auth.resetPasswordForEmail(email.trim(), { redirectTo: pageUrl(location.pathname.split('/').pop() || 'admin.html') })); }
   async function updatePassword(password) { must(await sb.auth.updateUser({ password })); }
   // قاعدة بيانات فاضية؟ (أول تشغيل للنظام)
