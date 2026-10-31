@@ -490,6 +490,27 @@ section[data-panel="feedback"]:not([hidden]){display:flex}
 body.fb-only .page>section:not(#feedbackSec),body.fb-only #schoolContent>section:not(#feedbackSec){display:none!important}
 body.fb-only .page{max-width:640px}
 
+.rot-lists{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:18px;margin-top:22px;align-items:start}
+.chip.guard_am{background:#fff4d6;color:#a27000;border-color:transparent}
+.chip.guard_pm{background:#efe7f7;color:#6a4a94;border-color:transparent}
+:root[data-theme="dark"] .chip.guard_am{background:#3a2f12;color:#f2c14e}
+:root[data-theme="dark"] .chip.guard_pm{background:#2d2440;color:#c4a8e8}
+
+.seg-tabs{display:flex;gap:6px;flex-wrap:wrap}
+.seg-tabs button{display:inline-flex;align-items:center;gap:8px;padding:9px 14px;border-radius:50px;border:1px solid var(--line);background:var(--surface-2);cursor:pointer;font-weight:700;color:var(--ink)}
+.seg-tabs button.on{background:var(--navy-grad);color:#fff;border-color:transparent}
+.seg-tabs button.on .chip{background:rgba(255,255,255,.2);color:#fff;border-color:transparent}
+.chip.st-ok{background:var(--green-soft);color:var(--green);border-color:transparent}
+.chip.st-duty{background:var(--blue-soft);color:var(--blue);border-color:transparent}
+.chip.st-leave,.chip.st-off{background:var(--red-soft);color:var(--red);border-color:transparent}
+.chip.st-sub{background:var(--amber-soft);color:var(--amber);border-color:transparent}
+.chip.st-rest{background:var(--surface-2);color:var(--muted)}
+
+.dir-title{font-size:16px;display:flex;align-items:center;gap:8px;margin-top:6px}
+.st-dot{width:8px;height:8px;border-radius:50%;background:currentColor;display:inline-block}
+.cal-day .ln i{font-size:10px;width:9px;flex:none}
+button.cal-day.off{cursor:pointer}
+
 </style>
 </head>
 <body data-title="لوحة التحكم">
@@ -505,7 +526,7 @@ body.fb-only .page{max-width:640px}
     <label class="f">اسم المدرسة<input class="input" id="suSchool" required placeholder="مثال: مدرسة النور للتعليم الأساسي"></label>
     <label class="f">رمز المدرسة في الرابط (حروف إنجليزية صغيرة وأرقام)<input class="input num" id="suSlug" required pattern="[a-z0-9][a-z0-9\-]{1,29}" placeholder="fida" autocapitalize="off" spellcheck="false"></label>
     <label class="f">شعار المدرسة (اختياري)<input type="file" class="input" id="suLogo" accept="image/*"></label>
-    <label class="f">وجهات الذهاب (افصل بينها بفاصلة)<input class="input" id="suDest" placeholder="مثال: المدينة، السوق، المستشفى"></label>
+    <label class="f">وجهات المناوبة الخارجية (افصل بينها بفاصلة)<input class="input" id="suDest" placeholder="مثال: المدينة، السوق، المستشفى"></label>
     <div class="f"><span>أيام العطلة الأسبوعية</span><div id="suWeekend" style="display:flex;gap:14px;flex-wrap:wrap"></div></div>
     <div class="grid-form" id="suAccount">
       <label class="f">اسمك (مدير النظام)<input class="input" id="suName" required></label>
@@ -642,7 +663,7 @@ body.fb-only .page{max-width:640px}
         <div class="card panel no-print">
           <div class="panel-head" style="gap:8px">
             <select class="input" id="fType" style="width:auto" aria-label="نوع المناوبة">
-              <option value="">كل المناوبات</option><option value="going">مناوبة الذهاب</option><option value="school">المناوبة في المدرسة</option>
+              <option value="">كل المناوبات</option><option value="going">المناوبة الخارجية</option><option value="school">المناوبة في المدرسة</option><option value="guard_am">الحراسة الصباحية</option><option value="guard_pm">الحراسة الليلية</option>
             </select>
             <select class="input" id="fMode" style="width:auto" aria-label="الفترة">
               <option value="week">أسبوع</option><option value="month">شهر</option><option value="custom">فترة مخصصة</option>
@@ -670,8 +691,13 @@ body.fb-only .page{max-width:640px}
             <div class="grid-form">
               <label class="f">تاريخ بداية القائمة<input type="date" class="input" id="rStart"></label>
               <label class="f">توزيع حتى تاريخ<input type="date" class="input" id="rUntil"></label>
-              <label class="f">سائقو الذهاب في اليوم<input type="number" min="0" max="10" class="input" id="rGoing"></label>
+              <label class="f">سائقو المناوبة الخارجية في اليوم<input type="number" min="0" max="10" class="input" id="rGoing"></label>
               <label class="f">سائقو المدرسة في اليوم<input type="number" min="0" max="10" class="input" id="rSchool"></label>
+            </div>
+            <div id="rGuardBox" class="grid-form" hidden>
+              <label class="f">حرّاس الحراسة الصباحية في اليوم<input type="number" min="0" max="10" class="input" id="rGuardAm"></label>
+              <label class="f">حرّاس الحراسة الليلية في اليوم<input type="number" min="0" max="10" class="input" id="rGuardPm"></label>
+              <label class="check" style="align-self:end;padding-bottom:10px"><input type="checkbox" id="rGuardOff" checked> الحراسة تشمل أيام العطل والإجازات</label>
             </div>
             <div class="muted" id="rStartHint" style="font-size:13px"></div>
             <div style="display:flex;gap:8px;flex-wrap:wrap">
@@ -688,18 +714,7 @@ body.fb-only .page{max-width:640px}
             <div class="alert-row" id="rStatus" style="flex-wrap:wrap"></div>
             <div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn blue" id="rRun"><i class="fa-solid fa-eye"></i> معاينة التوزيع</button></div>
           </div>
-        <div class="two" style="grid-template-columns:1fr 1fr;align-items:start;margin-top:22px">
-          <div class="card panel" id="rCardGoing">
-            <div class="panel-head"><h2><i class="fa-solid fa-bus"></i> قائمة مناوبات الذهاب</h2><span class="chip" id="rCountGoing"></span></div>
-            <p class="muted" style="margin:0;font-size:13px">رتّب بالأسهم، واضغط <i class="fa-solid fa-eye-slash"></i> لإخراج سائق من هذه القائمة.</p>
-            <ol class="rot-list" data-list="going" id="rListGoing"></ol>
-          </div>
-          <div class="card panel" id="rCardSchool">
-            <div class="panel-head"><h2><i class="fa-solid fa-school"></i> قائمة المناوبات في المدرسة</h2><span class="chip" id="rCountSchool"></span></div>
-            <p class="muted" style="margin:0;font-size:13px">رتّب بالأسهم، واضغط <i class="fa-solid fa-eye-slash"></i> لإخراج سائق من هذه القائمة.</p>
-            <ol class="rot-list" data-list="school" id="rListSchool"></ol>
-          </div>
-        </div>
+        <div class="rot-lists" id="rLists"></div>
         <div class="alert-row" id="rClash" hidden style="margin-top:14px;background:var(--amber-soft);color:var(--amber)"></div>
         <div class="card panel" id="rPreviewCard" hidden style="margin-top:22px">
           <div id="rPreview"></div>
@@ -707,9 +722,9 @@ body.fb-only .page{max-width:640px}
         <div class="card panel" style="margin-top:22px">
           <div class="panel-head"><h2>كيف يشتغل التوزيع بالدور؟</h2></div>
           <ul class="muted" style="margin:0;padding-inline-start:20px;display:flex;flex-direction:column;gap:4px">
-            <li>لكل نوع مناوبة قائمة خاصة: الذهاب تمشي على ترتيبها، والمدرسة على ترتيبها.</li>
+            <li>لكل نوع مناوبة قائمة خاصة: الخارجية، والمدرسة، والحراسة الصباحية، والليلية. كل وحدة تمشي على ترتيبها.</li>
             <li>كل يوم عمل ياخذ السائق التالي في القائمة، وأيام العطلة تُتخطّى.</li>
-            <li>نفس السائق ما ياخذ الذهاب والمدرسة في نفس اليوم. لو صار، دوره في المدرسة يتأجل لأول يوم متاح.</li>
+            <li>نفس الشخص ما ياخذ مناوبتين في نفس اليوم. لو صار، دوره في القائمة الثانية يتأجل لأول يوم متاح.</li>
             <li>لو أضفت سائقاً لنفس اليوم يدوياً، يُحسب دوره، واليوم التالي ياخذه اللي بعده.</li>
             <li>لو حذفت سائقاً من يوم، ينتقل دوره لليوم التالي وتتأخر القائمة يوماً.</li>
             <li>السائق في إجازة يُتخطّى ويرجع دوره أول ما يكون متاحاً. لو عنده بديل، البديل ينفّذ دوره.</li>
@@ -765,15 +780,20 @@ body.fb-only .page{max-width:640px}
       <section data-panel="drivers" hidden>
         <div class="card panel">
           <div class="panel-head">
-            <h2>السائقون والحافلات</h2><span class="chip" id="drvCount"></span>
+            <div class="seg-tabs" id="drvTabs" role="tablist">
+              <button type="button" role="tab" data-kind="driver" class="on"><i class="fa-solid fa-id-card"></i> السائقون <span class="chip" data-kcount="driver"></span></button>
+              <button type="button" role="tab" data-kind="bus_sup"><i class="fa-solid fa-user-tie"></i> مشرفو الحافلات <span class="chip" data-kcount="bus_sup"></span></button>
+              <button type="button" role="tab" data-kind="guard"><i class="fa-solid fa-user-shield"></i> الحرّاس <span class="chip" data-kcount="guard"></span></button>
+            </div>
             <div class="tools">
               <input class="input" id="drvSearch" placeholder="بحث..." style="width:200px" aria-label="بحث">
-              <button class="btn primary" id="addDriver"><i class="fa-solid fa-user-plus"></i> سائق جديد</button>
+              <button class="btn primary" id="addDriver"><i class="fa-solid fa-user-plus"></i> <span id="addDriverLbl">سائق جديد</span></button>
             </div>
           </div>
+          <p class="muted" id="drvHint" style="margin:0;font-size:13px"></p>
           <div class="table-wrap" style="border:1px solid var(--line)">
             <table class="data">
-              <thead><tr><th>الاسم</th><th>المنطقة</th><th>الهاتف</th><th>هاتف آخر</th><th>الحافلة</th><th>السعة</th><th>الوثائق</th><th>الحالة</th><th></th></tr></thead>
+              <thead id="drvHead"></thead>
               <tbody id="drvBody"></tbody>
             </table>
           </div>
@@ -830,14 +850,14 @@ body.fb-only .page{max-width:640px}
       <!-- التقارير -->
       <section data-panel="reports" hidden>
         <div class="card panel">
-          <div class="panel-head"><h2>تقرير المناوبات لكل سائق</h2>
+          <div class="panel-head"><h2>تقرير المناوبات لكل شخص</h2>
             <div class="tools">
               <input type="date" class="input" id="rFrom" style="width:auto" aria-label="من">
               <input type="date" class="input" id="rTo" style="width:auto" aria-label="إلى">
               <button class="btn green no-print" id="rPrint"><i class="fa-solid fa-print"></i> طباعة</button>
             </div></div>
           <div class="table-wrap" style="border:1px solid var(--line)">
-            <table class="data"><thead><tr><th>السائق</th><th>الحافلة</th><th>الذهاب</th><th>المدرسة</th><th>المجموع</th><th>المنفذة</th><th>نسبة التنفيذ</th><th>أيام الإجازة</th></tr></thead>
+            <table class="data"><thead id="repHead"></thead>
             <tbody id="repBody"></tbody></table>
           </div>
         </div>
@@ -899,7 +919,7 @@ body.fb-only .page{max-width:640px}
           </div>
           <form id="setForm" class="grid-form">
             <label class="f">اسم المدرسة<input class="input" id="sSchool" required></label>
-            <label class="f">وجهات الذهاب (افصل بفاصلة)<input class="input" id="sDest"></label>
+            <label class="f">وجهات المناوبة الخارجية (افصل بفاصلة)<input class="input" id="sDest"></label>
             <label class="f">تنبيه انتهاء الوثائق قبل (يوم)<input type="number" min="1" class="input" id="sAlert"></label>
             <label class="f" style="grid-column:1/-1">نص رسالة التذكير
               <textarea class="input" id="sTpl" rows="4"></textarea>
@@ -907,6 +927,9 @@ body.fb-only .page{max-width:640px}
             </label>
             <div class="f" style="grid-column:1/-1">معاينة<div class="alert-row" id="sTplPrev" style="white-space:pre-line;font-weight:400;color:var(--ink)"></div></div>
             <div class="f" style="grid-column:1/-1"><span>أيام العطلة الأسبوعية</span><div id="sWeekend" style="display:flex;gap:16px;flex-wrap:wrap"></div></div>
+            <div class="f" style="grid-column:1/-1"><span><i class="fa-solid fa-eye"></i> ما يظهر في الصفحة العامة</span>
+              <div class="muted" style="font-weight:400;font-size:13px">اختر المناوبات اللي تظهر في التقويم، والأقسام اللي تظهر تحته.</div>
+              <div class="perm-grid" id="sPublic"></div></div>
             <div><button class="btn primary"><i class="fa-solid fa-floppy-disk"></i> حفظ الإعدادات</button></div>
           </form>
         </div>
@@ -948,7 +971,7 @@ body.fb-only .page{max-width:640px}
     <div class="dlg-head"><h3 id="dutyTitle">مناوبة جديدة</h3><button class="btn icon ghost" value="cancel" formnovalidate aria-label="إغلاق"><i class="fa-solid fa-xmark"></i></button></div>
     <div class="dlg-body">
       <div class="grid-form">
-        <label class="f">نوع المناوبة<select class="input" id="dType"><option value="going">مناوبة الذهاب</option><option value="school">المناوبة في المدرسة</option></select></label>
+        <label class="f">نوع المناوبة<select class="input" id="dType"><option value="going">المناوبة الخارجية</option><option value="school">المناوبة في المدرسة</option><option value="guard_am">الحراسة الصباحية</option><option value="guard_pm">الحراسة الليلية</option></select></label>
         <label class="f">التاريخ<input type="date" class="input" id="dDate" required></label>
         <label class="f">السائق<select class="input" id="dDriver" required></select></label>
         <label class="f" id="dDestWrap">الوجهة<select class="input" id="dDest"></select></label>
@@ -971,14 +994,15 @@ body.fb-only .page{max-width:640px}
         <label class="f">المنطقة (الحارة)<input class="input" id="vArea"></label>
         <label class="f">رقم الهاتف<input class="input num" id="vPhone" inputmode="tel"></label>
         <label class="f">رقم هاتف آخر<input class="input num" id="vPhone2" inputmode="tel"></label>
-        <label class="f">رقم الحافلة<input class="input num" id="vBus" placeholder="مثال: 7"></label>
-        <label class="f">رقم اللوحة<input class="input" id="vPlate" placeholder="مثال: 12345 أ ب"></label>
-        <label class="f">سعة الحافلة (طالب)<input type="number" min="0" class="input" id="vCap"></label>
-        <label class="f">انتهاء رخصة القيادة<input type="date" class="input" id="vLic"></label>
-        <label class="f">انتهاء تأمين الحافلة<input type="date" class="input" id="vIns"></label>
+        <label class="f" data-kinds="driver bus_sup">رقم الحافلة<input class="input num" id="vBus" placeholder="مثال: 7"></label>
+        <label class="f" data-kinds="driver">رقم اللوحة<input class="input" id="vPlate" placeholder="مثال: 12345 أ ب"></label>
+        <label class="f" data-kinds="driver">سعة الحافلة (طالب)<input type="number" min="0" class="input" id="vCap"></label>
+        <label class="f" data-kinds="driver">انتهاء رخصة القيادة<input type="date" class="input" id="vLic"></label>
+        <label class="f" data-kinds="driver">انتهاء تأمين الحافلة<input type="date" class="input" id="vIns"></label>
       </div>
       <label class="f">ملاحظات<input class="input" id="vNotes"></label>
-      <label class="check"><input type="checkbox" id="vActive" checked> سائق نشط (يدخل في التوزيع)</label>
+      <p class="muted" id="vBusHint" style="margin:0;font-size:13px" hidden>المشرف ينربط بالحافلة برقمها، ويظهر مع سائقها في الجدول والتقويم.</p>
+      <label class="check"><input type="checkbox" id="vActive" checked> نشط (يدخل في التوزيع)</label>
     </div>
     <div class="dlg-foot"><button class="btn primary" value="save">حفظ</button><button class="btn ghost" value="cancel" formnovalidate>إلغاء</button></div>
   </form>
@@ -1501,7 +1525,7 @@ const I18N = (() => {
 "{n} مدرسة": "{n} schools",
 "فعّال": "Active",
 "موقوف": "Suspended",
-"سائق": "drivers",
+"سائق": "Driver",
 "مستخدم": "users",
 "آخر نشاط": "Last activity",
 "بانتظار تفعيل المدير": "Waiting for admin activation",
@@ -1599,7 +1623,67 @@ const I18N = (() => {
 "رقم هاتفك للتواصل (اختياري)": "Your phone for follow-up (optional)",
 "وصلت رسالتك، شكراً لك": "Your message was received, thank you",
 "إدارة المدرسة بتطّلع عليها.": "The school's management will review it.",
-"إرسال رسالة ثانية": "Send another message"
+"إرسال رسالة ثانية": "Send another message",
+"لم يُعيّن أحد": "No one assigned",
+"المناوبة الخارجية إلى ({dests})": "External duty to ({dests})",
+"الحارس": "Guard",
+"مشرف الحافلة": "Bus supervisor",
+"اختر الحارس": "Choose a guard",
+"لا يوجد حرّاس نشطون. أضفهم من صفحة السائقون والحافلات ← الحرّاس.": "No active guards. Add them from Drivers & buses → Guards.",
+"قائمة {type}": "{type} list",
+"{n} حارس": "{n} guards",
+"ما فيه سائق بهذا الرقم": "No driver with this number",
+"القائمة فاضية. اضغط \"{label}\" للإضافة.": "The list is empty. Press \"{label}\" to add.",
+"تم حفظ البيانات": "Saved",
+"اختر الشخص": "Choose a person",
+"حارس": "Guard",
+"سائق الحافلة": "Bus driver",
+"{n} شخص": "{n} people",
+"غير متاح – ينوب عنه {name}": "Unavailable – covered by {name}",
+"غير متاح – في إجازة": "Unavailable – on leave",
+"مناوب اليوم: {type}": "On duty today: {type}",
+"متاح": "Available",
+"وجهات المناوبة الخارجية (افصل بينها بفاصلة)": "External duty destinations (separate with commas)",
+"المناوبة الخارجية": "External duty",
+"الحراسة الصباحية": "Morning guard",
+"الحراسة الليلية": "Night guard",
+"سائقو المناوبة الخارجية في اليوم": "External duty drivers per day",
+"حرّاس الحراسة الصباحية في اليوم": "Morning guards per day",
+"حرّاس الحراسة الليلية في اليوم": "Night guards per day",
+"الحراسة تشمل أيام العطل والإجازات": "Guard duty includes weekends and holidays",
+"لكل نوع مناوبة قائمة خاصة: الخارجية، والمدرسة، والحراسة الصباحية، والليلية. كل وحدة تمشي على ترتيبها.": "Each duty type has its own list: external, school, morning guard and night guard. Each follows its own order.",
+"نفس الشخص ما ياخذ مناوبتين في نفس اليوم. لو صار، دوره في القائمة الثانية يتأجل لأول يوم متاح.": "The same person never gets two duties on one day. If that would happen, their turn in the other list moves to the first available day.",
+"السائقون": "Drivers",
+"مشرفو الحافلات": "Bus supervisors",
+"الحرّاس": "Guards",
+"تقرير المناوبات لكل شخص": "Duty report per person",
+"وجهات المناوبة الخارجية (افصل بفاصلة)": "External duty destinations (comma separated)",
+"ما يظهر في الصفحة العامة": "What shows on the public page",
+"اختر المناوبات اللي تظهر في التقويم، والأقسام اللي تظهر تحته.": "Choose which duties show in the calendar, and which sections show below it.",
+"المشرف ينربط بالحافلة برقمها، ويظهر مع سائقها في الجدول والتقويم.": "The supervisor is linked to the bus by its number and appears with its driver in the schedule and calendar.",
+"نشط (يدخل في التوزيع)": "Active (included in rotation)",
+"الدليل": "Directory",
+"خارجية": "External",
+"حارس صباحي": "Morning guard",
+"حارس ليلي": "Night guard",
+"مشرف حافلة": "Bus supervisor",
+"مشرف حافلة جديد": "New bus supervisor",
+"حارس جديد": "New guard",
+"تعديل بيانات مشرف الحافلة": "Edit bus supervisor",
+"تعديل بيانات الحارس": "Edit guard",
+"كل مشرف مربوط بحافلة برقمها، ويظهر مع سائق الحافلة في الجدول والتقويم والرسائل.": "Each supervisor is linked to a bus by its number and appears with the bus driver in the schedule, calendar and messages.",
+"الحرّاس لهم قائمتين في التوزيع بالدور: الحراسة الصباحية والليلية.": "Guards have two rotation lists: morning and night guard.",
+"الحالة اليوم": "Status today",
+"قائمتا الحراسة تبدآن بنفس الحارس ({name}). نفس الحارس ما ياخذ الصباحية والليلية في يوم واحد، فالأفضل تبدأ الليلية بحارس مختلف.": "Both guard lists start with the same guard ({name}). A guard can't take both shifts on one day, so it's better to start the night list with a different guard.",
+"التقويم: المناوبة الخارجية": "Calendar: external duty",
+"التقويم: المناوبة في المدرسة": "Calendar: school duty",
+"التقويم: الحراسة الصباحية": "Calendar: morning guard",
+"التقويم: الحراسة الليلية": "Calendar: night guard",
+"اسم مشرف الحافلة مع السائق": "Bus supervisor name with the driver",
+"حالة كل شخص (متاح / غير متاح)": "Each person's status (available / unavailable)",
+"دليل مشرفي الحافلات": "Bus supervisor directory",
+"دليل الحرّاس": "Guard directory",
+"نموذج الملاحظات والشكاوى": "Feedback & complaints form"
 };
   const fill = (s, v) => v ? String(s).replace(/\{(\w+)\}/g, (m, k) => k in v ? v[k] : m) : s;
   // مفتاح بالشكل 'نص|سياق' يُعرض عربياً بالجزء الأول فقط
@@ -1666,7 +1750,18 @@ const Store = (() => {
   const hash = s => { let h = 5381; for (const c of String(s)) h = ((h << 5) + h + c.charCodeAt(0)) | 0; return 'h' + (h >>> 0).toString(36); };
 
   // إعدادات التوزيع بالدور
-  const ROTATION_DEFAULT = { order: [], start: '', until: '', goingPerDay: 1, schoolPerDay: 1, rotateDest: true, autoAdjust: true };
+  const ROTATION_DEFAULT = { order: [], start: '', until: '', goingPerDay: 1, schoolPerDay: 1, guardAmPerDay: 1, guardPmPerDay: 1, guardOffDays: true, rotateDest: true, autoAdjust: true };
+
+  // ===== أنواع المناوبات والأشخاص =====
+  const TYPES = ['going', 'school', 'guard_am', 'guard_pm'];
+  const TYPE_INFO = {
+    going:    { ar: 'المناوبة الخارجية', short: 'خارجية', icon: 'fa-bus', kind: 'driver', color: 'var(--bus)', per: 'goingPerDay' },
+    school:   { ar: 'المناوبة في المدرسة', short: 'مدرسة', icon: 'fa-school', kind: 'driver', color: 'var(--blue)', per: 'schoolPerDay' },
+    guard_am: { ar: 'الحراسة الصباحية', short: 'حارس صباحي', icon: 'fa-sun', kind: 'guard', color: '#e6a100', per: 'guardAmPerDay' },
+    guard_pm: { ar: 'الحراسة الليلية', short: 'حارس ليلي', icon: 'fa-moon', kind: 'guard', color: '#7d5ba6', per: 'guardPmPerDay' }
+  };
+  const KINDS = { driver: 'سائق', bus_sup: 'مشرف حافلة', guard: 'حارس' };
+  const KIND_PLURAL = { driver: 'السائقون', bus_sup: 'مشرفو الحافلات', guard: 'الحرّاس' };
 
   function seed() {
     return {
@@ -1723,6 +1818,15 @@ const Store = (() => {
   const holidayOn = s => (db.settings.holidays || []).find(h => h.from <= s && s <= (h.to || h.from));
   // يوم عطلة: العطلة الأسبوعية أو إجازة رسمية. التوزيع والجداول تتخطاه
   const isWeekend = s => db.settings.weekend.includes(parse(s).getDay()) || !!holidayOn(s);
+  // الحراسة تشمل أيام العطل (حسب إعداد التوزيع بالدور)
+  const offDayType = t => (t === 'guard_am' || t === 'guard_pm') && (db.rotation || {}).guardOffDays !== false;
+  const isOffFor = (s, t) => isWeekend(s) && !offDayType(t);
+  const kindOf = d => (d && d.kind) || 'driver';
+  const people = (kind, all) => db.drivers.filter(d => kindOf(d) === kind && (all || d.active));
+  // مشرف الحافلة المربوط برقم الحافلة
+  const busSup = busNo => busNo ? db.drivers.find(d => kindOf(d) === 'bus_sup' && d.active && String(d.busNo).trim() === String(busNo).trim()) : null;
+  // ما يظهر في الصفحة العامة (من الإعدادات)
+  const showPub = k => ((db.settings.publicShow || {})[k]) !== false;
   // نص يوضح سبب العطلة
   const offLabel = s => { const h = holidayOn(s); return h ? T('إجازة رسمية: {name}', { name: h.name || T('إجازة') }) : T('عطلة نهاية الأسبوع'); };
   const onLeave = (driverId, s) => db.leaves.some(l => l.driverId === driverId && l.from <= s && s <= l.to);
@@ -1737,7 +1841,7 @@ const Store = (() => {
     return d ? { name: d.name, phone: d.phone || '', phone2: d.phone2 || '', busNo: d.busNo || '', area: d.area || '', sub: null, orig: d } : null;
   }
   const dutiesOn = (s, type) => db.duties.filter(x => x.date === s && (!type || x.type === type));
-  const typeNameAr = t => t === 'going' ? 'مناوبة الذهاب' : 'المناوبة في المدرسة';
+  const typeNameAr = t => (TYPE_INFO[t] || TYPE_INFO.going).ar;
   const typeName = t => T(typeNameAr(t));
   // تنظيف رقم الهاتف لصيغة دولية بدون + (عُمان 968 للأرقام المحلية)
   const intlPhone = p => {
@@ -1848,15 +1952,13 @@ const Store = (() => {
   }
   // رسالة جماعية لمجموعة السائقين
   function groupText(from, to) {
-    const days = range(from, to).filter(d => !isWeekend(d));
-    const name = x => { const w = who(x); return w ? w.name + (w.busNo ? ` (حافلة ${w.busNo})` : '') + (w.sub && w.orig ? ` – بديل عن ${w.orig.name}` : '') : ''; };
-    let out = `جدول مناوبات الحافلات – ${db.settings.school || ''}\n`;
-    days.forEach(day => {
-      const g = dutiesOn(day, 'going'), s = dutiesOn(day, 'school');
-      if (!g.length && !s.length) return;
+    const name = x => { const w = who(x); if (!w) return ''; const sup = x.type === 'going' || x.type === 'school' ? busSup(w.busNo) : null; return w.name + (w.busNo ? ` (حافلة ${w.busNo})` : '') + (sup ? ` – المشرف: ${sup.name}` : '') + (w.sub && w.orig ? ` – بديل عن ${w.orig.name}` : ''); };
+    let out = `جدول المناوبات – ${db.settings.school || ''}\n`;
+    range(from, to).forEach(day => {
+      const lists = TYPES.map(t => [t, isOffFor(day, t) ? [] : dutiesOn(day, t)]).filter(([, l]) => l.length);
+      if (!lists.length) return;
       out += `\n*${dayNameAr(day)} ${fmtShort(day)}*\n`;
-      g.forEach(x => out += `- الذهاب: ${name(x)}${x.dest ? ' – ' + x.dest : ''}\n`);
-      s.forEach(x => out += `- المدرسة: ${name(x)}\n`);
+      lists.forEach(([t, l]) => l.forEach(x => out += `- ${TYPE_INFO[t].ar}: ${name(x)}${t === 'going' && x.dest ? ' – ' + x.dest : ''}\n`));
     });
     return out.trim();
   }
@@ -1864,8 +1966,8 @@ const Store = (() => {
   // تنبيهات الوثائق والبيانات الناقصة
   function alerts() {
     const out = [], lim = db.settings.alertDays;
-    db.drivers.filter(d => d.active).forEach(d => {
-      [['licenseExp', 'رخصة القيادة'], ['insuranceExp', 'تأمين الحافلة']].forEach(([k, label]) => {
+    db.drivers.filter(d => d.active && kindOf(d) !== 'guard').forEach(d => {
+      if (kindOf(d) === 'driver') [['licenseExp', 'رخصة القيادة'], ['insuranceExp', 'تأمين الحافلة']].forEach(([k, label]) => {
         if (!d[k]) return;
         const n = daysUntil(d[k]);
         if (n < 0) out.push({ level: 'bad', driver: d, text: T('{label} منتهية منذ {n} يوم', { label: T(label), n: -n }) });
@@ -1874,6 +1976,18 @@ const Store = (() => {
       if (!d.busNo) out.push({ level: 'info', driver: d, text: T('رقم الحافلة غير مسجل') });
     });
     return out;
+  }
+
+  // حالة الشخص في يوم معيّن: متاح / مناوب / في إجازة / عنده بديل
+  function statusOf(d, s) {
+    if (!d.active) return { k: 'off', t: T('غير نشط') };
+    const sub = subFor(d.id, s);
+    if (sub) return { k: 'sub', t: T('غير متاح – ينوب عنه {name}', { name: sub.name }) };
+    if (onLeave(d.id, s)) return { k: 'leave', t: T('غير متاح – في إجازة') };
+    const du = dutiesOn(s).filter(x => x.driverId === d.id && !isOffFor(s, x.type));
+    if (du.length) return { k: 'duty', t: T('مناوب اليوم: {type}', { type: du.map(x => T(TYPE_INFO[x.type].ar)).join('، ') }) };
+    if (isWeekend(s) && kindOf(d) !== 'guard') return { k: 'rest', t: offLabel(s) };
+    return { k: 'ok', t: T('متاح') };
   }
 
   // يُطلق عند تغيّر البيانات في تبويب آخر
@@ -1901,7 +2015,7 @@ const Store = (() => {
   return {
     get db() { return db; }, set db(v) { db = v; }, KEY, load, save, log, seed, uid, hash, ROTATION_DEFAULT,
     iso, parse, today, addDays, dayName, dayNameAr, fmt, fmtAr, fmtShort, hijri, weekStart, daysUntil, range,
-    driver, isWeekend, holidayOn, offLabel, onLeave, subFor, available, who, dutiesOn, typeName, typeNameAr, intlPhone, waLink, badilLink, waMode, setWaMode, esc, reminderText, alerts,
+    driver, isWeekend, isOffFor, offDayType, kindOf, people, busSup, showPub, statusOf, TYPES, TYPE_INFO, KINDS, KIND_PLURAL, holidayOn, offLabel, onLeave, subFor, available, who, dutiesOn, typeName, typeNameAr, intlPhone, waLink, badilLink, waMode, setWaMode, esc, reminderText, alerts,
     onChange, toggleTheme, toast, get DAYS() { return en() ? DAYS_EN : DAYS_AR; }, DEFAULT_TEMPLATE, fillTemplate, weekText, groupText, sampleDrivers, logo, schoolName, brand, readLogo
   };
 })();
@@ -1932,7 +2046,7 @@ const Cloud = (() => {
 
   // أسماء الأعمدة في قاعدة البيانات
   const COLS = {
-    drivers: ['id', 'name', 'area', 'phone', 'phone2', 'busNo', 'plate', 'capacity', 'licenseExp', 'insuranceExp', 'active', 'notes'],
+    drivers: ['id', 'name', 'area', 'phone', 'phone2', 'busNo', 'plate', 'capacity', 'licenseExp', 'insuranceExp', 'active', 'notes', 'kind'],
     duties: ['id', 'type', 'date', 'driverId', 'dest', 'note', 'done', 'remindedAt', 'auto'],
     leaves: ['id', 'driverId', 'from', 'to', 'reason'],
     subs: ['id', 'driverId', 'name', 'phone', 'busNo', 'from', 'to', 'note', 'source'],
@@ -2020,11 +2134,16 @@ const Cloud = (() => {
   }
   async function loadPublicDrivers() {
     const rows = await fetchAll(() => sb.from('public_drivers').select('*').eq('school_id', SID).order('id'));
-    mergeList(S().db.drivers, rows.map(r => ({ id: r.id, name: r.name || '', area: r.area || '', busNo: r.bus_no || '', active: !!r.active })));
+    mergeList(S().db.drivers, rows.map(r => ({ id: r.id, name: r.name || '', area: r.area || '', busNo: r.bus_no || '', active: !!r.active, kind: r.kind || 'driver' })));
   }
   async function loadPublicSubs() {
     const rows = await fetchAll(() => sb.from('public_subs').select('*').eq('school_id', SID).order('id'));
     mergeList(S().db.subs, rows.map(r => ({ id: r.id, driverId: r.driver_id || '', name: r.name || '', busNo: r.bus_no || '', from: r.date_from || '', to: r.date_to || '', phone: '', note: '' })));
+  }
+  // الإجازات للعامة (بدون السبب) لحساب حالة كل شخص
+  async function loadPublicLeaves() {
+    const rows = await fetchAll(() => sb.from('public_leaves').select('*').eq('school_id', SID).order('id'));
+    mergeList(S().db.leaves, rows.map(r => ({ id: r.id, driverId: r.driver_id || '', from: r.date_from || '', to: r.date_to || '', reason: '' })));
   }
   async function loadLog() {
     const rows = must(await sb.from('log').select('*').eq('school_id', SID).order('t', { ascending: false }).limit(60));
@@ -2043,6 +2162,7 @@ const Cloud = (() => {
           if (w === 'settings') await loadSettings();
           else if (w === 'public_drivers') await loadPublicDrivers();
           else if (w === 'public_subs') await loadPublicSubs().catch(() => {});
+          else if (w === 'public_leaves') await loadPublicLeaves().catch(() => {});
           else if (w === 'log') await loadLog();
           else if (w === 'profiles') { if (profile && profile.role === 'admin') await loadUsers(); }
           else await loadTable(w);
@@ -2063,9 +2183,9 @@ const Cloud = (() => {
   async function subscribePublic() {
     stop(); mode = 'public';
     if (!SID) return;
-    try { await Promise.all([loadSchool(), loadSettings(), loadPublicDrivers(), loadTable('duties'), loadPublicSubs().catch(() => {})]); changed(); } catch (e) { fail(e); }
+    try { await Promise.all([loadSchool(), loadSettings(), loadPublicDrivers(), loadTable('duties'), loadPublicSubs().catch(() => {}), loadPublicLeaves().catch(() => {})]); changed(); } catch (e) { fail(e); }
     listen(['settings', 'duties', 'subs'], { duties: ['duties', 'public_drivers'], subs: ['public_subs'] });
-    poll = setInterval(() => { if (!document.hidden) reload(['settings', 'public_drivers', 'duties', 'public_subs']); }, 120000);
+    poll = setInterval(() => { if (!document.hidden) reload(['settings', 'public_drivers', 'duties', 'public_subs', 'public_leaves']); }, 120000);
   }
   async function subscribeStaff() {
     stop(); mode = 'staff';
@@ -2348,12 +2468,16 @@ const Cloud = (() => {
 
   /* ========== أدوات العرض ========== */
   const plate = d => d && d.busNo ? `<span class="plate"><b>BUS</b><span>${S.esc(d.busNo)}</span></span>` : '<span class="plate empty"><span>—</span></span>';
-  const typeChip = t => `<span class="chip ${t}"><i class="fa-solid ${t === 'going' ? 'fa-bus' : 'fa-school'}"></i> ${t === 'going' ? T('ذهاب') : T('مدرسة')}</span>`;
+  const TI = t => S.TYPE_INFO[t] || S.TYPE_INFO.going;
+  const typeChip = t => `<span class="chip ${t}"><i class="fa-solid ${TI(t).icon}"></i> ${T(TI(t).short)}</span>`;
+  // أنواع المناوبات المستخدمة: الحراسة تظهر لما يكون فيه حرّاس أو مناوبات حراسة
+  const typesInUse = () => S.TYPES.filter(t => TI(t).kind === 'driver' || S.people('guard').length || db().duties.some(x => x.type === t));
+  const kindLabel = d => S.kindOf(d) === 'driver' ? '' : ` (${T(S.KINDS[S.kindOf(d)])})`;
   const subChip = w => w && w.sub ? ` <span class="chip sub" title="${S.esc(T('سائق بديل مؤقت'))}"><i class="fa-solid fa-user-clock"></i> ${S.esc(T('بديل عن {name}', { name: w.orig ? w.orig.name : '' }))}</span>` : '';
   const whoName = x => { const w = S.who(x); return w ? `<strong>${S.esc(w.name)}</strong>${subChip(w)}` : `<strong>${T('سائق محذوف')}</strong>`; };
   const autoChip = x => x.auto ? ` <span class="chip" title="${S.esc(T('من قائمة الدور'))}"><i class="fa-solid fa-arrows-rotate"></i></span>` : '';
   const waBtn = duty => { const w = S.who(duty); return w && w.phone ? `<a class="btn sm green" data-remind="${duty.id}" href="${S.waLink(w.phone, S.reminderText(duty))}" target="_blank" rel="noopener" title="${S.esc(T('إرسال تذكير واتساب'))}" aria-label="${S.esc(T('تذكير واتساب'))}"><i class="fa-brands fa-whatsapp"></i></a>` : ''; };
-  const activeDrivers = () => db().drivers.filter(d => d.active);
+  const activeDrivers = () => S.people('driver');
   const leaveNoSub = (id, day) => S.onLeave(id, day) && !S.subFor(id, day);
   function docChip(date, label) {
     if (!date) return '';
@@ -2380,8 +2504,8 @@ const Cloud = (() => {
     const t = S.today(), ws = S.weekStart(t), we = S.addDays(ws, 6), r = rot();
     const nG = r.start ? +r.goingPerDay || 0 : db().settings.goingPerDay, nS = r.start ? +r.schoolPerDay || 0 : db().settings.schoolPerDay;
     const weekDuties = db().duties.filter(x => x.date >= ws && x.date <= we);
-    const workdays = S.range(ws, we).filter(d => !S.isWeekend(d));
-    const gaps = workdays.filter(d => S.dutiesOn(d, 'going').length < nG || S.dutiesOn(d, 'school').length < nS).length;
+    const pdOf = t => r.start ? perDay(r, t) : t === 'going' ? nG : t === 'school' ? nS : 0;
+    const gaps = S.range(ws, we).filter(d => typesInUse().some(tp => pdOf(tp) && S.people(TI(tp).kind).length && !S.isOffFor(d, tp) && S.dutiesOn(d, tp).length < pdOf(tp))).length;
     const past = weekDuties.filter(x => x.date <= t);
     const rate = past.length ? Math.round(past.filter(x => x.done).length / past.length * 100) : 0;
     const al = S.alerts().filter(a => a.level !== 'info');
@@ -2448,21 +2572,22 @@ const Cloud = (() => {
   function renderSchedule() {
     $('#fFrom').value = sch.from; $('#fTo').value = sch.to;
     $('#printRange').textContent = T('جدول المناوبات من {from} إلى {to}', { from: S.fmt(sch.from), to: S.fmt(sch.to) });
-    const types = $('#fType').value ? [$('#fType').value] : ['going', 'school'];
-    const days = S.range(sch.from, sch.to).filter(d => !S.isWeekend(d));
+    const types = $('#fType').value ? [$('#fType').value] : typesInUse();
     const t = S.today();
     $('#scheduleTables').innerHTML = types.map(type => {
-      const going = type === 'going';
+      const going = type === 'going', drv = TI(type).kind === 'driver';
+      const days = S.range(sch.from, sch.to).filter(d => !S.isOffFor(d, type));
+      const cols = 7 + (going ? 1 : 0) + (drv ? 1 : 0);
       const rows = days.map(day => {
         const list = S.dutiesOn(day, type);
         const dayCells = `<td><strong>${S.dayName(day)}</strong>${day === t ? ` <span class="chip going">${T('اليوم')}</span>` : ''}</td><td class="num">${S.fmtShort(day)}</td>`;
-        if (!list.length) return `<tr>${dayCells}<td colspan="${going ? 7 : 6}" class="muted">${T('لم يُعيّن سائق')} <button class="btn sm no-print" data-new="${type}|${day}" style="margin-inline-start:8px"><i class="fa-solid fa-plus"></i> ${T('تعيين')}</button></td><td class="no-print"></td></tr>`;
+        if (!list.length) return `<tr>${dayCells}<td colspan="${cols - 3}" class="muted">${T('لم يُعيّن أحد')} <button class="btn sm no-print" data-new="${type}|${day}" style="margin-inline-start:8px"><i class="fa-solid fa-plus"></i> ${T('تعيين')}</button></td><td class="no-print"></td></tr>`;
         return list.map((x, i) => {
           const w = S.who(x);
           const leave = leaveNoSub(x.driverId, day) ? ` <span class="chip bad">${T('في إجازة')}</span>` : '';
           return `<tr class="${x.done ? 'done' : ''}">${i === 0 ? dayCells : '<td></td><td></td>'}
             <td>${whoName(x)}${leave}<span class="no-print">${autoChip(x)}</span></td>
-            <td>${plate(w)}</td><td>${S.esc(w ? w.area : '')}</td>
+            <td>${plate(w)}</td>${drv ? `<td>${(() => { const b = S.busSup(w && w.busNo); return b ? `${S.esc(b.name)}${b.phone ? `<br><small class="muted num">${S.esc(b.phone)}</small>` : ''}` : '<span class="muted">—</span>'; })()}</td>` : ''}<td>${S.esc(w ? w.area : '')}</td>
             <td class="num">${S.esc(w ? w.phone : '')}${w && w.phone2 ? '<br>' + S.esc(w.phone2) : ''}</td>
             ${going ? `<td>${x.dest ? `<span class="chip going">${S.esc(x.dest)}</span>` : '<span class="muted">—</span>'}</td>` : ''}
             <td>${S.esc(x.note)}</td>
@@ -2473,20 +2598,21 @@ const Cloud = (() => {
         }).join('');
       }).join('');
       return `<div class="card" style="overflow:hidden">
-        <div class="type-band ${type}"><i class="fa-solid ${going ? 'fa-bus' : 'fa-school'}"></i>
-          ${going ? T('مناوبة الذهاب إلى ({dests})', { dests: S.esc(db().settings.destinations.join(' - ')) }) : T('المناوبة اليومية في (المدرسة)')}</div>
+        <div class="type-band ${type}"><i class="fa-solid ${TI(type).icon}"></i>
+          ${going ? T('المناوبة الخارجية إلى ({dests})', { dests: S.esc(db().settings.destinations.join(' - ')) }) : type === 'school' ? T('المناوبة اليومية في (المدرسة)') : T(TI(type).ar)}</div>
         <div class="table-wrap" style="border-radius:0"><table class="data">
-          <thead><tr><th>${T('اليوم|day')}</th><th>${T('التاريخ')}</th><th>${T('السائق')}</th><th>${T('الحافلة')}</th><th>${T('المنطقة')}</th><th>${T('الهاتف')}</th>${going ? `<th>${T('الوجهة')}</th>` : ''}<th>${T('ملاحظات')}</th><th>${T('منفذة')}</th><th class="no-print"></th></tr></thead>
-          <tbody>${rows || `<tr><td colspan="10" class="empty-state">${T('لا توجد أيام عمل في هذه الفترة')}</td></tr>`}</tbody>
+          <thead><tr><th>${T('اليوم|day')}</th><th>${T('التاريخ')}</th><th>${drv ? T('السائق') : T('الحارس')}</th><th>${T('الحافلة')}</th>${drv ? `<th>${T('مشرف الحافلة')}</th>` : ''}<th>${T('المنطقة')}</th><th>${T('الهاتف')}</th>${going ? `<th>${T('الوجهة')}</th>` : ''}<th>${T('ملاحظات')}</th><th>${T('منفذة')}</th><th class="no-print"></th></tr></thead>
+          <tbody>${rows || `<tr><td colspan="${cols + 1}" class="empty-state">${T('لا توجد أيام عمل في هذه الفترة')}</td></tr>`}</tbody>
         </table></div></div>`;
     }).join('');
   }
 
   /* ========== نافذة المناوبة ========== */
   let editingDuty = null;
-  function fillDriverSelect(sel, date, current) {
-    const list = db().drivers.filter(d => d.active || d.id === current);
-    sel.innerHTML = `<option value="">${T('اختر السائق')}</option>` + list.map(d => {
+  function fillDriverSelect(sel, date, current, type) {
+    const kind = TI(type || $('#dType').value).kind;
+    const list = db().drivers.filter(d => (d.active && S.kindOf(d) === kind) || d.id === current);
+    sel.innerHTML = `<option value="">${kind === 'guard' ? T('اختر الحارس') : T('اختر السائق')}</option>` + list.map(d => {
       const n = date ? S.dutiesOn(date).filter(x => x.driverId === d.id && (!editingDuty || x.id !== editingDuty.id)).length : 0;
       const sub = date && S.subFor(d.id, date);
       const tag = sub ? ` (${T('ينوب عنه {name}', { name: sub.name })})` : date && S.onLeave(d.id, date) ? ` (${T('في إجازة')})` : n ? ` (${T('لديه مناوبة في هذا اليوم')})` : '';
@@ -2496,7 +2622,7 @@ const Cloud = (() => {
   function dutyWarn() {
     const date = $('#dDate').value, id = $('#dDriver').value, w = [];
     $('#dDestWrap').hidden = $('#dType').value !== 'going';
-    if (date && S.isWeekend(date)) w.push(S.offLabel(date) + ' – ' + T('هذا اليوم لا يظهر في جدول المناوبات.'));
+    if (date && S.isOffFor(date, $('#dType').value)) w.push(S.offLabel(date) + ' – ' + T('هذا اليوم لا يظهر في جدول المناوبات.'));
     if (date && id && leaveNoSub(id, date)) w.push(T('السائق مسجل في إجازة في هذا التاريخ.'));
     if (date && id && S.subFor(id, date)) w.push(T('سينفّذها البديل {name} نيابة عن السائق.', { name: S.subFor(id, date).name }));
     if (date && id && S.dutiesOn(date).some(x => x.driverId === id && (!editingDuty || x.id !== editingDuty.id))) w.push(T('السائق لديه مناوبة أخرى في نفس اليوم.'));
@@ -2508,14 +2634,16 @@ const Cloud = (() => {
     const x = duty || { type: preset.type || 'going', date: preset.date || S.today(), driverId: '', dest: '', note: '', done: false };
     $('#dutyTitle').textContent = duty ? T('تعديل مناوبة') : T('مناوبة جديدة');
     $('#dType').value = x.type; $('#dDate').value = x.date;
+    $$('#dType option').forEach(o => { o.hidden = !typesInUse().includes(o.value) && o.value !== x.type; });
     $('#dDest').innerHTML = '<option value="">—</option>' + db().settings.destinations.map(d => `<option${d === x.dest ? ' selected' : ''}>${S.esc(d)}</option>`).join('');
-    fillDriverSelect($('#dDriver'), x.date, x.driverId);
+    fillDriverSelect($('#dDriver'), x.date, x.driverId, x.type);
     $('#dNote').value = x.note; $('#dDone').checked = x.done;
     dutyWarn();
     $('#dutyDlg').returnValue = ''; $('#dutyDlg').showModal();
   }
   $('#dDate').onchange = () => { fillDriverSelect($('#dDriver'), $('#dDate').value, $('#dDriver').value); dutyWarn(); };
-  $('#dDriver').onchange = dutyWarn; $('#dType').onchange = dutyWarn;
+  $('#dDriver').onchange = dutyWarn;
+  $('#dType').onchange = () => { const cur = $('#dDriver').value, d = S.driver(cur); fillDriverSelect($('#dDriver'), $('#dDate').value, d && S.kindOf(d) === TI($('#dType').value).kind ? cur : ''); dutyWarn(); };
   $('#dutyDlg').addEventListener('close', () => {
     if ($('#dutyDlg').returnValue !== 'save') return;
     const data = { type: $('#dType').value, date: $('#dDate').value, driverId: $('#dDriver').value, dest: $('#dType').value === 'going' ? $('#dDest').value : '', note: $('#dNote').value.trim(), done: $('#dDone').checked };
@@ -2571,23 +2699,26 @@ const Cloud = (() => {
   /* ========== التوزيع بالدور ==========
      لكل نوع مناوبة قائمة دائرية خاصة: كل يوم عمل ياخذ التالي في ترتيبها، وكل سائق ياخذ دوراً واحداً في كل لفّة.
      أي سائق ينفّذ مناوبة من نفس النوع (تلقائية أو يدوية) يُحسب دوره، فاللي بعده ياخذ اليوم التالي. */
-  const TYPES = ['going', 'school'];
+  const TYPES = S.TYPES;
   const rot = () => db().rotation || (db().rotation = { ...S.ROTATION_DEFAULT, order: [] });
   const rotActive = () => !!(rot().start && rot().until && rot().autoAdjust !== false);
   // إعداد قائمة نوع معيّن (للنسخ القديمة: القائمتين تبدأ من الترتيب الموحّد)
-  const listCfg = (cfg, type) => (cfg.lists && cfg.lists[type]) || { order: (cfg.order || []).slice(), off: [] };
+  const listCfg = (cfg, type) => (cfg.lists && cfg.lists[type]) || { order: TI(type).kind === 'driver' ? (cfg.order || []).slice() : [], off: [] };
   function rotOrder(type, cfg = rot()) {
     const L = listCfg(cfg, type), off = new Set(L.off || []);
-    const act = activeDrivers().filter(d => !off.has(d.id)), ids = new Set(act.map(d => d.id));
+    const act = S.people(TI(type).kind).filter(d => !off.has(d.id)), ids = new Set(act.map(d => d.id));
     const ord = (L.order || []).filter((id, i, a) => ids.has(id) && a.indexOf(id) === i);
     act.forEach(d => { if (!ord.includes(d.id)) ord.push(d.id); });
     return ord;
   }
-  const perDay = (cfg, type) => Math.max(0, +(type === 'going' ? cfg.goingPerDay : cfg.schoolPerDay) || 0);
+  const perDay = (cfg, type) => Math.max(0, +(cfg[TI(type).per] ?? (TI(type).kind === 'guard' ? 1 : 0)) || 0);
   const rotUsable = cfg => TYPES.some(t => perDay(cfg, t) && rotOrder(t, cfg).length);
   function simulate(cfg) {
     const { start, until, from, rotateDest, overwrite } = cfg;
-    const types = TYPES.filter(t => perDay(cfg, t)).map(t => [t, perDay(cfg, t)]), tset = new Set(types.map(x => x[0]));
+    // الأنواع اللي لها عدد في اليوم وأشخاص في قائمتها
+    const types = TYPES.filter(t => perDay(cfg, t) && rotOrder(t, cfg).length).map(t => [t, perDay(cfg, t)]), tset = new Set(types.map(x => x[0]));
+    // الحراسة تشمل أيام العطل حسب الإعداد
+    const offOk = t => (t === 'guard_am' || t === 'guard_pm') && cfg.guardOffDays !== false;
     const dests = db().settings.destinations;
     // حالة كل قائمة: p موضع الدور العادي في اللفّة الحالية، served من أخذ دوره في هذه اللفّة
     const st = {};
@@ -2610,12 +2741,15 @@ const Cloud = (() => {
       return null;
     }
     if (types.length && start && until) S.range(start, until).forEach(day => {
-      if (S.isWeekend(day)) { if (day >= from) S.dutiesOn(day).filter(replaceable).forEach(x => drop.push(x)); return; }
+      const off = S.isWeekend(day), dset = new Set(types.map(x => x[0]).filter(t => !off || offOk(t)));
       const gen = day >= from, all = S.dutiesOn(day);
+      // مناوبات تلقائية في يوم عطلة لنوع ما يشتغل في العطل: تنحذف
+      if (gen) all.filter(x => tset.has(x.type) && !dset.has(x.type) && replaceable(x)).forEach(x => drop.push(x));
+      if (!dset.size) return;
       const keep = [];
-      all.filter(x => tset.has(x.type)).forEach(x => (gen && replaceable(x) ? drop : keep).push(x));
-      const used = new Set(all.filter(x => !(gen && replaceable(x))).map(x => x.driverId));
-      keep.sort((a, b) => (!!a.auto - !!b.auto) || (a.type === b.type ? 0 : a.type === 'going' ? -1 : 1)).forEach(x => {
+      all.filter(x => dset.has(x.type)).forEach(x => (gen && replaceable(x) ? drop : keep).push(x));
+      const used = new Set(all.filter(x => !(gen && replaceable(x) && tset.has(x.type))).map(x => x.driverId));
+      keep.sort((a, b) => (!!a.auto - !!b.auto) || (TYPES.indexOf(a.type) - TYPES.indexOf(b.type))).forEach(x => {
         // إعادة تمثيل المناوبات السابقة بنفس منطق الاختيار حتى تبقى النتيجة ثابتة
         const s = st[x.type];
         if (x.type === 'going') gi++;
@@ -2630,8 +2764,8 @@ const Cloud = (() => {
         mark(x.type, x.driverId);
       });
       if (!gen) return;
-      const row = { day, going: keep.filter(x => x.type === 'going').map(x => ({ x, keep: true })), school: keep.filter(x => x.type === 'school').map(x => ({ x, keep: true })) };
-      types.forEach(([type, k]) => {
+      const row = { day }; TYPES.forEach(t => { row[t] = keep.filter(x => x.type === t).map(x => ({ x, keep: true })); });
+      types.filter(([type]) => dset.has(type)).forEach(([type, k]) => {
         let need = k - keep.filter(x => x.type === type).length;
         while (need-- > 0) {
           const id = pick(type, day, used);
@@ -2701,11 +2835,12 @@ const Cloud = (() => {
         <button class="btn sm icon" data-mv="${k}|top" ${i ? '' : 'disabled'} title="${T('اجعله أول القائمة')}" aria-label="${T('اجعله أول القائمة')}"><i class="fa-solid fa-angles-up"></i></button>`}
         <button class="btn sm icon" data-tog="${type}|${id}" title="${off ? T('إرجاعه للقائمة') : T('إخراجه من هذه القائمة')}" aria-label="${off ? T('إرجاعه للقائمة') : T('إخراجه من هذه القائمة')}"><i class="fa-solid ${off ? 'fa-eye' : 'fa-eye-slash'}"></i></button></span></li>`;
     };
-    const el = type === 'going' ? $('#rListGoing') : $('#rListSchool');
-    el.innerHTML = (L.order.map((id, i) => row(id, i, false)).join('') + L.off.map(id => row(id, 0, true)).join(''))
-      || `<li class="empty-state" style="display:block">${T('لا يوجد سائقون نشطون. أضف السائقين أولاً.')}</li>`;
-    (type === 'going' ? $('#rCountGoing') : $('#rCountSchool')).textContent = on ? T('{n} سائق', { n: L.order.length }) : T('غير مستخدمة (0 في اليوم)');
-    (type === 'going' ? $('#rCardGoing') : $('#rCardSchool')).style.opacity = on ? '' : '.6';
+    const guard = TI(type).kind === 'guard';
+    const items = (L.order.map((id, i) => row(id, i, false)).join('') + L.off.map(id => row(id, 0, true)).join(''))
+      || `<li class="empty-state" style="display:block">${guard ? T('لا يوجد حرّاس نشطون. أضفهم من صفحة السائقون والحافلات ← الحرّاس.') : T('لا يوجد سائقون نشطون. أضف السائقين أولاً.')}</li>`;
+    return `<div class="card panel" style="opacity:${on ? 1 : .6}"><div class="panel-head"><h2><i class="fa-solid ${TI(type).icon}"></i> ${T('قائمة {type}', { type: T(TI(type).ar) })}</h2>
+      <span class="chip">${on ? (guard ? T('{n} حارس', { n: L.order.length }) : T('{n} سائق', { n: L.order.length })) : T('غير مستخدمة (0 في اليوم)')}</span></div>
+      <ol class="rot-list">${items}</ol></div>`;
   }
   function initAuto() {
     if (!draft || !draftDirty) freshDraft();
@@ -2715,16 +2850,19 @@ const Cloud = (() => {
     normLists(draft);
     $('#rStart').value = draft.start; $('#rUntil').value = draft.until;
     $('#rGoing').value = draft.goingPerDay; $('#rSchool').value = draft.schoolPerDay;
+    $('#rGuardAm').value = perDay(draft, 'guard_am'); $('#rGuardPm').value = perDay(draft, 'guard_pm'); $('#rGuardOff').checked = draft.guardOffDays !== false;
     $('#rAdjust').checked = draft.autoAdjust !== false; $('#rDest').checked = draft.rotateDest !== false;
     $('#rStartHint').textContent = draft.start ? T('القائمة تبدأ يوم {day} {date}', { day: S.dayName(draft.start), date: S.fmt(draft.start) }) + (S.isWeekend(draft.start) ? ' – ' + T('هذا اليوم عطلة، التوزيع يبدأ من أول يوم عمل بعده') : '') : '';
     // الدور القادم بعد نهاية الفترة المنشورة
     const live = r.start && r.until && !draftDirty ? simulate({ ...r, from: '9999-12-31' }) : null;
-    TYPES.forEach(t => renderList(t, live && live.next[t], live && r.until));
-    // تنبيه: القائمتين تبدآن بنفس السائق
-    const g = draft.lists.going.order[0], sc = draft.lists.school.order[0];
-    const clash = perDay(draft, 'going') && perDay(draft, 'school') && g && g === sc;
-    $('#rClash').hidden = !clash;
-    if (clash) $('#rClash').innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> ${S.esc(T('القائمتين تبدآن بنفس السائق ({name}). نفس السائق ما ياخذ مناوبتين في يوم واحد، فالأفضل تبدأ قائمة المدرسة بسائق مختلف.', { name: S.driver(g).name }))}`;
+    const guards = S.people('guard').length > 0;
+    $('#rGuardBox').hidden = !guards;
+    $('#rLists').innerHTML = TYPES.filter(t => TI(t).kind === 'driver' || guards).map(t => renderList(t, live && live.next[t], live && r.until)).join('');
+    // تنبيه: قائمتين تبدآن بنفس الشخص
+    const clashes = [['going', 'school', 'القائمتين تبدآن بنفس السائق ({name}). نفس السائق ما ياخذ مناوبتين في يوم واحد، فالأفضل تبدأ قائمة المدرسة بسائق مختلف.'], ['guard_am', 'guard_pm', 'قائمتا الحراسة تبدآن بنفس الحارس ({name}). نفس الحارس ما ياخذ الصباحية والليلية في يوم واحد، فالأفضل تبدأ الليلية بحارس مختلف.']]
+      .filter(([a, b]) => perDay(draft, a) && perDay(draft, b) && draft.lists[a].order[0] && draft.lists[a].order[0] === draft.lists[b].order[0]);
+    $('#rClash').hidden = !clashes.length;
+    $('#rClash').innerHTML = clashes.map(([a, , msg]) => `<div><i class="fa-solid fa-triangle-exclamation"></i> ${S.esc(T(msg, { name: S.driver(draft.lists[a].order[0]).name }))}</div>`).join('');
     const st = $('#rStatus');
     if (r.start && r.until) {
       const left = S.daysUntil(r.until);
@@ -2756,6 +2894,9 @@ const Cloud = (() => {
   $('#rUntil').onchange = e => { draft.until = e.target.value; touch(); };
   $('#rGoing').onchange = e => { draft.goingPerDay = Math.max(0, +e.target.value || 0); touch(); };
   $('#rSchool').onchange = e => { draft.schoolPerDay = Math.max(0, +e.target.value || 0); touch(); };
+  $('#rGuardAm').onchange = e => { draft.guardAmPerDay = Math.max(0, +e.target.value || 0); touch(); };
+  $('#rGuardPm').onchange = e => { draft.guardPmPerDay = Math.max(0, +e.target.value || 0); touch(); };
+  $('#rGuardOff').onchange = e => { draft.guardOffDays = e.target.checked; touch(); };
   $('#rAdjust').onchange = e => { draft.autoAdjust = e.target.checked; touch(); };
   $('#rDest').onchange = e => { draft.rotateDest = e.target.checked; touch(); };
   $('#rOverwrite').onchange = () => { proposal = null; $('#rPreviewCard').hidden = true; };
@@ -2764,7 +2905,7 @@ const Cloud = (() => {
   $('#rRun').onclick = () => {
     const c = draft;
     if (!c.start || !c.until || c.until < c.start) return S.toast(T('حدد فترة صحيحة'), true);
-    if (!(+c.goingPerDay) && !(+c.schoolPerDay)) return S.toast(T('حدد عدد السائقين في اليوم'), true);
+    if (!TYPES.some(t => perDay(c, t))) return S.toast(T('حدد عدد السائقين في اليوم'), true);
     if (!rotUsable(c)) return S.toast(T('لا يوجد سائقون نشطون'), true);
     const r = rot(), fresh = !r.start || r.start !== c.start;
     const from = fresh ? c.start : maxDate(S.today(), c.start);
@@ -2775,15 +2916,15 @@ const Cloud = (() => {
     proposal = { c, res, outside, from, overwrite };
     const name = id => { const d = S.driver(id); return d ? d.name : '—'; };
     const cell = list => list.length ? list.map(({ x, keep }) => { const w = S.who(x); return `<div>${keep ? '' : '<i class="fa-solid fa-arrows-rotate" style="color:var(--bus);font-size:11px"></i> '}${S.esc(w ? w.name : name(x.driverId))}${w && w.sub ? ` <small class="muted">(${S.esc(T('بديل عن {name}', { name: w.orig ? w.orig.name : '' }))})</small>` : ''}${keep && !x.auto ? ` <small class="muted">(${T('يدوي')})</small>` : ''}${x.type === 'going' && x.dest ? ` <small class="muted">– ${S.esc(x.dest)}</small>` : ''}</div>`; }).join('') : '<span class="muted">—</span>';
-    const nG = +c.goingPerDay, nS = +c.schoolPerDay;
+    const cols = TYPES.filter(t => perDay(c, t) && rotOrder(t, c).length);
     $('#rPreviewCard').hidden = false;
     $('#rPreview').innerHTML = `<div class="panel-head"><h2>${T('معاينة التوزيع')}</h2><span class="muted">${T('من {from} إلى {to}', { from: S.fmt(from), to: S.fmt(c.until) })}</span></div>
       <div class="alert-row" style="background:var(--bus-soft);flex-wrap:wrap"><i class="fa-solid fa-circle-info"></i>
         ${T('مناوبات جديدة: {a} · تُحذف: {d} · بدون تغيير: {k}', { a: res.add.length, d: res.drop.length + outside.length, k: res.reuse.length })}
         ${TYPES.filter(t => perDay(c, t) && res.next[t]).map(t => ` · ${T('الدور القادم في {list}: {name}', { list: S.typeName(t), name: S.esc(name(res.next[t])) })}`).join('')}</div>
       ${res.short.length ? `<div class="alert-row" style="background:var(--red-soft);color:var(--red)"><i class="fa-solid fa-triangle-exclamation"></i> ${T('لا يوجد سائق متاح في: {list}', { list: res.short.slice(0, 6).join('، ') + (res.short.length > 6 ? '…' : '') })}</div>` : ''}
-      <div class="table-wrap" style="border:1px solid var(--line);max-height:460px;overflow:auto"><table class="data"><thead><tr><th>${T('اليوم|day')}</th><th>${T('التاريخ')}</th>${nG ? `<th>${T('مناوبة الذهاب')}</th>` : ''}${nS ? `<th>${T('المناوبة في المدرسة')}</th>` : ''}</tr></thead><tbody>
-      ${res.days.map((r, i, a) => `<tr${i && S.weekStart(a[i - 1].day) !== S.weekStart(r.day) ? ' style="border-top:3px solid var(--bus)"' : ''}><td><strong>${S.dayName(r.day)}</strong></td><td class="num">${S.fmtShort(r.day)}</td>${nG ? `<td>${cell(r.going)}</td>` : ''}${nS ? `<td>${cell(r.school)}</td>` : ''}</tr>`).join('') || `<tr><td colspan="4" class="empty-state">${T('لا توجد أيام عمل في هذه الفترة')}</td></tr>`}
+      <div class="table-wrap" style="border:1px solid var(--line);max-height:460px;overflow:auto"><table class="data"><thead><tr><th>${T('اليوم|day')}</th><th>${T('التاريخ')}</th>${cols.map(t => `<th>${T(TI(t).ar)}</th>`).join('')}</tr></thead><tbody>
+      ${res.days.map((r, i, a) => `<tr${i && S.weekStart(a[i - 1].day) !== S.weekStart(r.day) ? ' style="border-top:3px solid var(--bus)"' : ''}><td><strong>${S.dayName(r.day)}</strong></td><td class="num">${S.fmtShort(r.day)}</td>${cols.map(t => `<td>${S.isOffFor(r.day, t) ? '<span class="muted">—</span>' : cell(r[t] || [])}</td>`).join('')}</tr>`).join('') || `<tr><td colspan="${cols.length + 2}" class="empty-state">${T('لا توجد أيام عمل في هذه الفترة')}</td></tr>`}
       </tbody></table></div>
       <div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn primary" id="rApply"><i class="fa-solid fa-check"></i> ${T('اعتماد ونشر القائمة')}</button><button class="btn ghost" id="rCancel">${T('إلغاء')}</button></div>`;
     $('#rApply').onclick = () => {
@@ -2805,7 +2946,7 @@ const Cloud = (() => {
   function fillOne(x) {
     const count = id => db().duties.filter(y => y.driverId === id).length;
     const used = new Set(S.dutiesOn(x.date).map(y => y.driverId));
-    const c = activeDrivers().filter(d => !used.has(d.id) && S.available(d.id, x.date)).sort((a, b) => count(a.id) - count(b.id))[0];
+    const c = S.people(TI(x.type).kind).filter(d => !used.has(d.id) && S.available(d.id, x.date)).sort((a, b) => count(a.id) - count(b.id))[0];
     return c ? { id: S.uid(), type: x.type, date: x.date, driverId: c.id, dest: x.dest, note: '', done: false, auto: false } : null;
   }
 
@@ -2872,30 +3013,46 @@ const Cloud = (() => {
 
   /* ========== السائقون ========== */
   let editingDriver = null;
+  // صفحة الأشخاص: السائقون / مشرفو الحافلات / الحرّاس
+  let drvKind = 'driver';
+  const NEW_LBL = { driver: 'سائق جديد', bus_sup: 'مشرف حافلة جديد', guard: 'حارس جديد' };
+  const EDIT_LBL = { driver: 'تعديل بيانات السائق', bus_sup: 'تعديل بيانات مشرف الحافلة', guard: 'تعديل بيانات الحارس' };
+  const HINT = { driver: '', bus_sup: 'كل مشرف مربوط بحافلة برقمها، ويظهر مع سائق الحافلة في الجدول والتقويم والرسائل.', guard: 'الحرّاس لهم قائمتين في التوزيع بالدور: الحراسة الصباحية والليلية.' };
+  const statusChip = (d, day) => { const st = S.statusOf(d, day); return `<span class="chip st-${st.k}">${S.esc(st.t)}</span>`; };
+  $('#drvTabs').addEventListener('click', e => { const b = e.target.closest('[data-kind]'); if (!b) return; drvKind = b.dataset.kind; renderDrivers(); });
   function renderDrivers() {
-    const q = $('#drvSearch').value.trim();
-    const list = db().drivers.filter(d => !q || [d.name, d.area, d.phone, d.phone2, d.busNo, d.plate].join(' ').includes(q));
-    const t = S.today();
-    $('#drvCount').textContent = T('{n} سائق', { n: db().drivers.length });
+    const q = $('#drvSearch').value.trim(), t = S.today();
+    $$('#drvTabs [data-kind]').forEach(b => b.classList.toggle('on', b.dataset.kind === drvKind));
+    $$('#drvTabs [data-kcount]').forEach(c => { c.textContent = S.people(c.dataset.kcount, true).length; });
+    $('#addDriverLbl').textContent = T(NEW_LBL[drvKind]); $('#drvHint').textContent = HINT[drvKind] ? T(HINT[drvKind]) : ''; $('#drvHint').hidden = !HINT[drvKind];
+    const list = S.people(drvKind, true).filter(d => !q || [d.name, d.area, d.phone, d.phone2, d.busNo, d.plate].join(' ').includes(q));
+    const head = { driver: ['الاسم', 'المنطقة', 'الهاتف', 'هاتف آخر', 'الحافلة', 'مشرف الحافلة', 'السعة', 'الوثائق', 'الحالة اليوم'], bus_sup: ['الاسم', 'المنطقة', 'الهاتف', 'هاتف آخر', 'الحافلة', 'سائق الحافلة', 'الحالة اليوم'], guard: ['الاسم', 'المنطقة', 'الهاتف', 'هاتف آخر', 'الحالة اليوم'] }[drvKind];
+    $('#drvHead').innerHTML = `<tr>${head.map(h => `<th>${T(h)}</th>`).join('')}<th></th></tr>`;
+    const busDrivers = no => S.people('driver').filter(x => no && String(x.busNo).trim() === String(no).trim());
     $('#drvBody').innerHTML = list.map(d => {
-      const sub = S.subFor(d.id, t);
-      return `<tr>
-      <td><strong>${S.esc(d.name)}</strong>${d.notes ? `<br><small class="muted">${S.esc(d.notes)}</small>` : ''}</td>
-      <td>${S.esc(d.area)}</td><td class="num">${S.esc(d.phone)}</td><td class="num">${S.esc(d.phone2)}</td>
-      <td>${plate(d)}${d.plate ? `<br><small class="muted">${S.esc(d.plate)}</small>` : ''}</td>
-      <td class="num">${S.esc(d.capacity) || '—'}</td>
-      <td style="display:flex;gap:4px;flex-wrap:wrap">${docChip(d.licenseExp, 'الرخصة')}${docChip(d.insuranceExp, 'التأمين')}${!d.licenseExp && !d.insuranceExp ? '<span class="muted">—</span>' : ''}</td>
-      <td>${d.active ? `<span class="chip ok">${T('نشط')}</span>` : `<span class="chip">${T('غير نشط')}</span>`}${S.onLeave(d.id, t) ? ` <span class="chip warn">${T('في إجازة')}</span>` : ''}${sub ? ` <span class="chip sub">${S.esc(T('ينوب عنه {name}', { name: sub.name }))}</span>` : ''}</td>
-      <td style="white-space:nowrap">${d.phone ? `<a class="btn sm green icon" href="${S.waLink(d.phone, '')}" target="_blank" rel="noopener" aria-label="${T('واتساب')}"><i class="fa-brands fa-whatsapp"></i></a>` : ''}
+      const sup = drvKind === 'driver' ? S.busSup(d.busNo) : null;
+      const cells = [`<td><strong>${S.esc(d.name)}</strong>${d.active ? '' : ` <span class="chip">${T('غير نشط')}</span>`}${d.notes ? `<br><small class="muted">${S.esc(d.notes)}</small>` : ''}</td>`,
+        `<td>${S.esc(d.area)}</td>`, `<td class="num">${S.esc(d.phone)}</td>`, `<td class="num">${S.esc(d.phone2)}</td>`];
+      if (drvKind !== 'guard') cells.push(`<td>${plate(d)}${d.plate ? `<br><small class="muted">${S.esc(d.plate)}</small>` : ''}</td>`);
+      if (drvKind === 'driver') cells.push(`<td>${sup ? S.esc(sup.name) : '<span class="muted">—</span>'}</td>`, `<td class="num">${S.esc(d.capacity) || '—'}</td>`,
+        `<td><div style="display:flex;gap:4px;flex-wrap:wrap;justify-content:center">${docChip(d.licenseExp, 'الرخصة')}${docChip(d.insuranceExp, 'التأمين')}${!d.licenseExp && !d.insuranceExp ? '<span class="muted">—</span>' : ''}</div></td>`);
+      if (drvKind === 'bus_sup') { const ds = busDrivers(d.busNo); cells.push(`<td>${ds.length ? ds.map(x => S.esc(x.name)).join('<br>') : `<span class="muted">${d.busNo ? T('ما فيه سائق بهذا الرقم') : '—'}</span>`}</td>`); }
+      cells.push(`<td>${statusChip(d, t)}</td>`);
+      cells.push(`<td style="white-space:nowrap">${d.phone ? `<a class="btn sm green icon" href="${S.waLink(d.phone, '')}" target="_blank" rel="noopener" aria-label="${T('واتساب')}"><i class="fa-brands fa-whatsapp"></i></a>` : ''}
         <button class="btn sm icon" data-edit-driver="${d.id}" aria-label="${T('تعديل')}"><i class="fa-solid fa-pen"></i></button>
-        <button class="btn sm icon" data-del-driver="${d.id}" aria-label="${T('حذف')}"><i class="fa-solid fa-trash" style="color:var(--red)"></i></button></td></tr>`;
-    }).join('') || `<tr><td colspan="9" class="empty-state">${T('لا يوجد سائق مطابق')}</td></tr>`;
+        <button class="btn sm icon" data-del-driver="${d.id}" aria-label="${T('حذف')}"><i class="fa-solid fa-trash" style="color:var(--red)"></i></button></td>`);
+      return `<tr>${cells.join('')}</tr>`;
+    }).join('') || `<tr><td colspan="${head.length + 1}" class="empty-state">${q ? T('لا يوجد سائق مطابق') : T('القائمة فاضية. اضغط "{label}" للإضافة.', { label: T(NEW_LBL[drvKind]) })}</td></tr>`;
   }
   $('#drvSearch').oninput = renderDrivers;
   const F = { vName: 'name', vArea: 'area', vPhone: 'phone', vPhone2: 'phone2', vBus: 'busNo', vPlate: 'plate', vCap: 'capacity', vLic: 'licenseExp', vIns: 'insuranceExp', vNotes: 'notes' };
+  let editKind = 'driver';
   function openDriver(d) {
     editingDriver = d || null;
-    $('#drvTitle').textContent = d ? T('تعديل بيانات السائق') : T('سائق جديد');
+    editKind = d ? S.kindOf(d) : drvKind;
+    $('#drvTitle').textContent = T(d ? EDIT_LBL[editKind] : NEW_LBL[editKind]);
+    $$('#drvForm [data-kinds]').forEach(l => { l.hidden = !l.dataset.kinds.split(' ').includes(editKind); });
+    $('#vBusHint').hidden = editKind !== 'bus_sup';
     Object.entries(F).forEach(([id, k]) => $('#' + id).value = d ? d[k] || '' : '');
     $('#vActive').checked = d ? d.active : true;
     $('#drvDlg').returnValue = ''; $('#drvDlg').showModal();
@@ -2903,21 +3060,23 @@ const Cloud = (() => {
   $('#addDriver').onclick = () => openDriver(null);
   $('#drvDlg').addEventListener('close', () => {
     if ($('#drvDlg').returnValue !== 'save') return;
-    const data = { active: $('#vActive').checked };
+    const data = { active: $('#vActive').checked, kind: editKind };
     Object.entries(F).forEach(([id, k]) => data[k] = $('#' + id).value.trim());
+    if (editKind !== 'driver') { data.plate = data.capacity = data.licenseExp = data.insuranceExp = ''; }
+    if (editKind === 'guard') data.busNo = '';
     if (editingDriver) { const wasActive = editingDriver.active; Object.assign(editingDriver, data); commit(`تعديل بيانات ${data.name}`, wasActive !== data.active ? S.today() : null); }
     else {
       // السائق الجديد ينضاف تلقائياً آخر قائمة الدور
       const d = { id: S.uid(), ...data }; db().drivers.push(d);
-      commit(`إضافة السائق ${data.name}`, d.active ? S.today() : null);
+      commit(`إضافة ${S.KINDS[editKind]} ${data.name}`, d.active ? S.today() : null);
     }
-    S.toast(T('تم حفظ بيانات السائق'));
+    S.toast(T('تم حفظ البيانات'));
   });
 
   /* ========== الإجازات ========== */
   function renderLeaves() {
     const cur = $('#lDriver').value;
-    $('#lDriver').innerHTML = `<option value="">${T('اختر السائق')}</option>` + db().drivers.map(d => `<option value="${d.id}"${d.id === cur ? ' selected' : ''}>${S.esc(d.name)}</option>`).join('');
+    $('#lDriver').innerHTML = `<option value="">${T('اختر الشخص')}</option>` + db().drivers.map(d => `<option value="${d.id}"${d.id === cur ? ' selected' : ''}>${S.esc(d.name)}${kindLabel(d)}</option>`).join('');
     const t = S.today();
     const list = db().leaves.slice().sort((a, b) => b.from.localeCompare(a.from));
     $('#leaveBody').innerHTML = list.map(l => {
@@ -2971,7 +3130,7 @@ const Cloud = (() => {
   $('#bDriver').onchange = subInfo;
   function renderSubs() {
     const cur = $('#bDriver').value;
-    $('#bDriver').innerHTML = `<option value="">${T('اختر السائق')}</option>` + db().drivers.filter(d => d.active || d.id === cur).map(d => `<option value="${d.id}"${d.id === cur ? ' selected' : ''}>${S.esc(d.name)}${d.busNo ? ' – ' + T('حافلة') + ' ' + S.esc(d.busNo) : ''}</option>`).join('');
+    $('#bDriver').innerHTML = `<option value="">${T('اختر الشخص')}</option>` + db().drivers.filter(d => d.active || d.id === cur).map(d => `<option value="${d.id}"${d.id === cur ? ' selected' : ''}>${S.esc(d.name)}${kindLabel(d)}${d.busNo ? ' – ' + T('حافلة') + ' ' + S.esc(d.busNo) : ''}</option>`).join('');
     if (!$('#bFrom').value) { $('#bFrom').value = S.today(); $('#bTo').value = endAfter(S.today(), Math.max(1, +$('#bDays').value || 1)); }
     subInfo();
     const t = S.today();
@@ -3002,27 +3161,32 @@ const Cloud = (() => {
   /* ========== التقارير ========== */
   function renderReports() {
     if (!$('#rFrom').value) [$('#rFrom').value, $('#rTo').value] = monthRange(S.today());
-    const from = $('#rFrom').value, to = $('#rTo').value;
-    const rows = db().drivers.map(d => {
+    const from = $('#rFrom').value, to = $('#rTo').value, types = typesInUse();
+    $('#repHead').innerHTML = `<tr><th>${T('الاسم')}</th><th>${T('الحافلة')}</th>${types.map(t => `<th>${T(TI(t).short)}</th>`).join('')}<th>${T('المجموع')}</th><th>${T('المنفذة')}</th><th>${T('نسبة التنفيذ')}</th><th>${T('أيام الإجازة')}</th></tr>`;
+    const rows = db().drivers.filter(d => S.kindOf(d) !== 'bus_sup').map(d => {
       const ds = db().duties.filter(x => x.driverId === d.id && x.date >= from && x.date <= to);
-      const g = ds.filter(x => x.type === 'going').length, s = ds.length - g, done = ds.filter(x => x.done).length;
+      const by = Object.fromEntries(types.map(t => [t, ds.filter(x => x.type === t).length])), done = ds.filter(x => x.done).length;
       const leaveDays = S.range(from, to).filter(day => !S.isWeekend(day) && S.onLeave(d.id, day)).length;
       const subDays = ds.filter(x => S.subFor(d.id, x.date)).length;
-      return { d, g, s, total: ds.length, done, leaveDays, subDays };
-    }).sort((a, b) => b.total - a.total);
-    $('#repBody').innerHTML = rows.map(r => `<tr><td><strong>${S.esc(r.d.name)}</strong>${r.d.active ? '' : ` <span class="chip">${T('غير نشط')}</span>`}${r.subDays ? ` <span class="chip sub" title="${S.esc(T('مناوبات نفّذها البديل'))}"><i class="fa-solid fa-user-clock"></i> ${r.subDays}</span>` : ''}</td><td>${plate(r.d)}</td>
-      <td class="num">${r.g}</td><td class="num">${r.s}</td><td class="num"><strong>${r.total}</strong></td><td class="num">${r.done}</td>
+      return { d, by, total: ds.length, done, leaveDays, subDays };
+    }).sort((a, b) => S.kindOf(a.d).localeCompare(S.kindOf(b.d)) || b.total - a.total);
+    $('#repBody').innerHTML = rows.map(r => `<tr><td><strong>${S.esc(r.d.name)}</strong>${S.kindOf(r.d) === 'guard' ? ` <span class="chip guard_am">${T('حارس')}</span>` : ''}${r.d.active ? '' : ` <span class="chip">${T('غير نشط')}</span>`}${r.subDays ? ` <span class="chip sub" title="${S.esc(T('مناوبات نفّذها البديل'))}"><i class="fa-solid fa-user-clock"></i> ${r.subDays}</span>` : ''}</td><td>${S.kindOf(r.d) === 'guard' ? '—' : plate(r.d)}</td>
+      ${types.map(t => `<td class="num">${r.by[t]}</td>`).join('')}<td class="num"><strong>${r.total}</strong></td><td class="num">${r.done}</td>
       <td>${r.total ? `<span class="chip ${r.done / r.total >= .8 ? 'ok' : r.done / r.total >= .5 ? 'warn' : 'bad'}">${Math.round(r.done / r.total * 100)}%</span>` : '—'}</td><td class="num">${r.leaveDays || '—'}</td></tr>`).join('');
   }
   $('#rFrom').onchange = renderReports; $('#rTo').onchange = renderReports;
   $('#rPrint').onclick = () => window.print();
 
   /* ========== الإعدادات ========== */
+  // خيارات العرض في الصفحة العامة
+  const PUB_OPTS = [['going', 'التقويم: المناوبة الخارجية'], ['school', 'التقويم: المناوبة في المدرسة'], ['guard_am', 'التقويم: الحراسة الصباحية'], ['guard_pm', 'التقويم: الحراسة الليلية'],
+    ['busSup', 'اسم مشرف الحافلة مع السائق'], ['status', 'حالة كل شخص (متاح / غير متاح)'], ['dirDrivers', 'دليل السائقين'], ['dirSups', 'دليل مشرفي الحافلات'], ['dirGuards', 'دليل الحرّاس'], ['feedback', 'نموذج الملاحظات والشكاوى']];
   function renderSettings() {
     const st = db().settings;
     $('#sSchool').value = st.school; $('#sDest').value = st.destinations.join('، '); $('#sAlert').value = st.alertDays;
     $('#sTpl').value = st.template || S.DEFAULT_TEMPLATE; tplPreview();
     weekendBoxes($('#sWeekend'), st.weekend);
+    $('#sPublic').innerHTML = PUB_OPTS.map(([k, l]) => `<label><input type="checkbox" value="${k}" ${S.showPub(k) ? 'checked' : ''}> ${T(l)}</label>`).join('');
     renderHolidays();
   }
   /* ========== الإجازات الرسمية ========== */
@@ -3062,6 +3226,7 @@ const Cloud = (() => {
     st.template = $('#sTpl').value.trim() || S.DEFAULT_TEMPLATE;
     const wk = $$('#sWeekend input:checked').map(i => +i.value), wkChanged = wk.join() !== st.weekend.join();
     st.weekend = wk;
+    st.publicShow = Object.fromEntries($$('#sPublic input').map(i => [i.value, i.checked]));
     commit('تحديث الإعدادات', wkChanged ? S.today() : null); S.toast(T('تم حفظ الإعدادات'));
   };
   function tplPreview() {
